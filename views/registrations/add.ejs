@@ -1,0 +1,50 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cart-plus"></i> Đăng ký Gói tập cho Hội viên</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="/registrations/add" method="POST">
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">Chọn Hội viên</label>
+                            <select name="member_id" class="form-select form-select-lg" required>
+                                <option value="" disabled selected>-- Vui lòng chọn hội viên --</option>
+                                <% members.forEach(member => { %>
+                                    <option value="<%= member.id %>">
+                                        ID: <%= member.id %> - <%= member.fullname %> (<%= member.phone %>)
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">Chọn Gói tập</label>
+                            <select name="package_id" class="form-select form-select-lg" required>
+                                <option value="" disabled selected>-- Vui lòng chọn gói tập --</option>
+                                <% packages.forEach(pkg => { %>
+                                    <option value="<%= pkg.id %>">
+                                        <%= pkg.package_name %> - <%= pkg.price.toLocaleString('vi-VN') %> VNĐ (<%= pkg.duration_days %> ngày)
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Xác nhận Đăng ký & Thanh toán
+                            </button>
+                            <a href="/members" class="btn btn-outline-secondary">Hủy bỏ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

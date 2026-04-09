@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm Hội Viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Đăng ký Hội viên mới</h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/members/add" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Họ và Tên</label>
+                                <input type="text" name="fullname" class="form-control" placeholder="Nguyễn Văn A" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" name="phone" class="form-control" placeholder="090..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Giới tính</label>
+                                <select name="gender" class="form-select">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success">Lưu hội viên</button>
+                                <a href="/members" class="btn btn-outline-secondary">Quay lại</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

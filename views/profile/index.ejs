@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 15px;">
+                <div class="card-body p-4 text-center">
+                    <h5 class="text-warning fw-bold mb-4"><i class="bi bi-star-fill"></i> THẺ HỘI VIÊN GYM PRO</h5>
+                    
+                    <div class="mb-3">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= user.phone %>" 
+                             alt="QR Code" class="img-thumbnail rounded bg-white p-2" width="120">
+                    </div>
+                    
+                    <h3 class="fw-bold text-uppercase"><%= user.fullname %></h3>
+                    <p class="mb-0"><i class="bi bi-telephone"></i> <%= user.phone %></p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-white fw-bold text-dark">
+                    <i class="bi bi-box-seam text-primary"></i> Gói Tập Hiện Tại
+                </div>
+                <div class="card-body">
+                    <% if (package) { %>
+                        <h5 class="text-primary fw-bold"><%= package.package_name %></h5>
+                        <p class="mb-1 text-muted">Trạng thái: 
+                            <span class="badge <%= package.status === 'Active' ? 'bg-success' : 'bg-danger' %>">
+                                <%= package.status %>
+                            </span>
+                        </p>
+                        <p class="mb-0 text-muted">Ngày hết hạn: 
+                            <strong class="text-danger"><%= new Date(package.expiration_date).toLocaleDateString('vi-VN') %></strong>
+                        </p>
+                    <% } else { %>
+                        <div class="text-center py-3">
+                            <h6 class="text-muted">Bạn chưa đăng ký gói tập nào.</h6>
+                            <p class="small text-secondary">Vui lòng liên hệ quầy lễ tân để đăng ký.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

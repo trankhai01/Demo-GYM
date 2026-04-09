@@ -1,0 +1,68 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark text-uppercase">Danh sách Gói tập</h3>
+    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addPackageModal">
+        <i class="bi bi-plus-lg"></i> Thêm gói mới
+    </button>
+</div>
+
+<div class="row">
+    <% packages.forEach(pkg => { %>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="display-6 fw-bold text-primary mb-2">
+                    <%= pkg.price.toLocaleString('vi-VN') %> <small style="font-size: 15px;">VNĐ</small>
+                </div>
+                <h5 class="card-title fw-bold text-uppercase"><%= pkg.package_name %></h5>
+                <p class="text-muted">Thời hạn: <span class="badge bg-dark"><%= pkg.duration_days %> ngày</span></p>
+                <hr>
+                <ul class="list-unstyled text-start ps-3">
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i> Tập luyện tự do</li>
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i> Đầy đủ thiết bị</li>
+                </ul>
+            </div>
+            <div class="card-footer bg-white border-0 pb-3">
+    <a href="/packages/delete/<%= pkg.id %>" 
+       class="btn btn-outline-danger btn-sm" 
+       onclick="return confirm('Bạn có chắc muốn xóa gói này?')">
+       <i class="bi bi-trash"></i> Xóa gói
+    </a>
+</div>
+        </div>
+    </div>
+    <% }) %>
+</div>
+
+<div class="modal fade" id="addPackageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/packages/add" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Gói tập mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên gói tập</label>
+                        <input type="text" name="package_name" class="form-control" placeholder="VD: Gói 1 Tháng" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giá tiền (VNĐ)</label>
+                        <input type="number" name="price" class="form-control" placeholder="300000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thời hạn (Ngày)</label>
+                        <input type="number" name="duration_days" class="form-control" placeholder="30" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
