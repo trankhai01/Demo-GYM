@@ -35,8 +35,8 @@ router.post('/login', (req, res) => {
 
 // 3. Xử lý Đăng xuất
 router.get('/logout', (req, res) => {
-    req.session.destroy(); // Xóa phiên đăng nhập
-    res.redirect('/login'); // Đẩy về trang đăng nhập
+    req.session.destroy(); 
+    res.redirect('/login'); 
 });
 
 module.exports = router;

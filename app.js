@@ -26,15 +26,22 @@ const memberRoutes = require('./routes/member');
 const packageRoutes = require('./routes/package');
 const registrationRoutes = require('./routes/registration');
 const profileRoutes = require('./routes/profile');
+const reportRoutes = require('./routes/report');
 
 app.use('/', authRoutes); 
 app.use('/members', memberRoutes);
 app.use('/packages', packageRoutes);
 app.use('/registrations', registrationRoutes);
 app.use('/my-profile', profileRoutes);
+app.use('/reports', reportRoutes);
 
+
+app.get('/', (req, res) => {
+    res.render('home'); 
+});
 // Khởi động server
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server chạy tại: http://localhost:${PORT}`);
 });
+
