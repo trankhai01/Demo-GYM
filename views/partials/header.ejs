@@ -13,12 +13,18 @@
         .sidebar a.active { background: #0d6efd; color: #fff; border-radius: 5px; margin: 0 10px; }
         .main-content { margin-left: 240px; padding: 30px; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: #e50914 !important; 
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
    <div class="sidebar shadow">
     <div class="p-4 mb-2 text-center border-bottom border-secondary">
-        <h4 class="text-white fw-bold"><i class="bi bi-lightning-fill text-warning"></i> GYM PRO</h4>
+        <h4 class="navbar-brand" href="/home">GYM BRO</class=> </h4>
         
         <% if (user) { %>
             <div class="text-success small mt-2"><i class="bi bi-person-circle"></i> Xin chào, <%= user.fullname %></div>
@@ -30,6 +36,8 @@
         <a href="/members"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
         <a href="/packages"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
         <a href="/registrations/add"><i class="bi bi-cart-plus me-2"></i> Bán gói tập</a>
+        <a href="/reports/revenue"><i class="bi bi-bar-chart-line me-2"></i> Báo cáo Doanh thu</a>
+        
     <% } %>
 
     <% if (user && user.role === 'member') { %>

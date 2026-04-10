@@ -14,8 +14,6 @@ function requireMember(req, res, next) {
 // Trang Dashboard cá nhân
 router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
-
-    // Câu lệnh SQL "khét" nhất: Nối bảng để tìm gói tập mới nhất của người này
     const sql = `
         SELECT p.package_name, r.expiration_date, r.status 
         FROM registrations r
@@ -26,10 +24,7 @@ router.get('/', requireMember, (req, res) => {
 
     db.query(sql, [memberId], (err, results) => {
         if (err) throw err;
-        
-        // Nếu có kết quả thì gán vào biến, không thì gán null
         const currentPackage = results.length > 0 ? results[0] : null;
-        
         res.render('profile/index', { package: currentPackage });
     });
 });

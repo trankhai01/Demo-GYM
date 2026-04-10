@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gia nhập Power Gym</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #121212;
+        color: white;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+      }
+      .register-card {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      h2 {
+        font-family: "Oswald", sans-serif;
+        color: #e50914;
+        letter-spacing: 1px;
+      }
+      .form-control {
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: white;
+      }
+      .form-control:focus {
+        background: #333;
+        border-color: #e50914;
+        color: white;
+        box-shadow: none;
+      }
+      .btn-gym {
+        background: #e50914;
+        border: none;
+        font-weight: bold;
+      }
+      .btn-gym:hover {
+        background: #b20710;
+      }
+      a {
+        color: #e50914;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-5">
+          <div class="register-card">
+            <div class="text-center mb-4">
+              <h2 class="display-6">TRỞ THÀNH HỘI VIÊN</h2>
+              <p class="text small">
+                Bắt đầu hành trình lột xác của bạn ngay hôm nay
+              </p>
+            </div>
+
+            <form action="/register" method="POST">
+              <div class="mb-3">
+                <label class="form-label">Họ và Tên</label>
+                <input
+                  type="text"
+                  name="fullname"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Giới tính</label>
+                <select name="gender" class="form-control">
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <input type="tel" name="phone" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-danger w-100">
+                ĐĂNG KÝ
+              </button>
+            </form>
+
+            <div class="text-center mt-4">
+              <span class="text">Đã có tài khoản?</span>
+              <a href="/login">Đăng nhập</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
