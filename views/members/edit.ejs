@@ -1,0 +1,42 @@
+<%- include('../partials/header') %>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-header border-secondary">
+                    <h4 class="mb-0 text-danger">CHỈNH SỬA HỘI VIÊN #<%= member.id %></h4>
+                </div>
+                <div class="card-body">
+                    <form action="/members/edit/<%= member.id %>" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Họ và Tên</label>
+                            <input type="text" name="fullname" class="form-control bg-secondary text-white border-0" value="<%= member.fullname %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control bg-secondary text-white border-0" value="<%= member.phone %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Giới tính</label>
+                            <select name="gender" class="form-select bg-secondary text-white border-0">
+                                <option value="Nam" <%= member.gender === 'Nam' ? 'selected' : '' %>>Nam</option>
+                                <option value="Nữ" <%= member.gender === 'Nữ' ? 'selected' : '' %>>Nữ</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Quyền hạn</label>
+                            <select name="role" class="form-select bg-secondary text-white border-0">
+                                <option value="member" <%= member.role === 'member' ? 'selected' : '' %>>Member</option>
+                                <option value="admin" <%= member.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="/members" class="btn btn-outline-light">Quay lại</a>
+                            <button type="submit" class="btn btn-danger px-4">LƯU THAY ĐỔI</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

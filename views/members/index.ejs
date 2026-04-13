@@ -1,45 +1,72 @@
-
-        <%- include('../partials/header') %>
+<%- include('../partials/header') %>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-dark text-uppercase">Quản lý Hội viên</h3>
-    <a href="/members/add" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+    <h3 class="fw-bold text-white text-uppercase">QUẢN LÝ <span style="color: #e50914;">HỘI VIÊN</span></h3>
+    
+    <form action="/members" method="GET" class="d-flex w-50">
+        <input type="text" name="q" class="form-control bg-dark text-white border-secondary me-2" 
+               placeholder="Tìm theo tên hoặc số điện thoại..." value="<%= searchQuery %>">
+        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-search"></i></button>
+    </form>
+
+    <a href="/members/add" class="btn btn-danger fw-bold shadow-sm"><i class="bi bi-plus-lg"></i> THÊM MỚI</a>
 </div>
 
-<div class="card">
+<div class="card bg-dark border-secondary shadow-lg">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr class="text-secondary">
-                    <th class="ps-4">ID</th>
+        <table class="table table-dark table-hover mb-0 align-middle">
+            <thead>
+                <tr class="table-custom-header">
+                    <th class="ps-4 py-3">ID</th>
                     <th>Họ và Tên</th>
                     <th>Liên hệ</th>
                     <th>Giới tính</th>
-                    <th>Ngày tham gia</th>
                     <th class="text-end pe-4">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
-                <% members.forEach(member => { %>
-                <tr style="vertical-align: middle;">
-                    <td class="ps-4 text-muted">#<%= member.id %></td>
-                    <td><span class="fw-semibold"><%= member.fullname %></span></td>
-                    <td><i class="bi bi-telephone text-muted me-1"></i> <%= member.phone %></td>
-                    <td>
-                        <span class="badge <%= member.gender === 'Nam' ? 'bg-primary-subtle text-primary' : 'bg-danger-subtle text-danger' %> p-2">
-                            <%= member.gender %>
-                        </span>
-                    </td>
-                    <td class="text-muted"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-outline-warning btn-sm border-0"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-                <% }) %>
+                <% if(members.length > 0) { %>
+                    <% members.forEach(member => { %>
+                        <tr>
+                            <td class="ps-4 text-white-50">#<%= member.id %></td>
+                            <td class="fw-bold"><%= member.fullname %></td>
+                            <td><%= member.phone %></td>
+                            <td><span class="badge <%= member.gender==='Nam'?'bg-primary':'bg-danger' %>"><%= member.gender %></span></td>
+                            <td class="text-end pe-4">
+                                <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                                <a href="/members/delete/<%= member.id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa?')"><i class="bi bi-trash"></i></a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Không tìm thấy hội viên nào.</td></tr>
+                <% } %>
             </tbody>
         </table>
     </div>
 </div>
+
+<% if (totalPages > 1) { %>
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+            <a class="page-link bg-dark border-secondary text-white" 
+               href="/members?page=<%= currentPage - 1 %>&q=<%= searchQuery %>">Trước</a>
+        </li>
+
+        <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link <%= currentPage === i ? 'bg-danger border-danger' : 'bg-dark border-secondary text-white' %>" 
+                   href="/members?page=<%= i %>&q=<%= searchQuery %>"><%= i %></a>
+            </li>
+        <% } %>
+
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+            <a class="page-link bg-dark border-secondary text-white" 
+               href="/members?page=<%= currentPage + 1 %>&q=<%= searchQuery %>">Sau</a>
+        </li>
+    </ul>
+</nav>
+<% } %>
 
 <%- include('../partials/footer') %>

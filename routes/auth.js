@@ -23,26 +23,20 @@ router.post('/login', (req, res) => {
             // KIỂM TRA MẬT KHẨU
             let isMatch = false;
             if (user.password.startsWith('$2b$')) {
-                // Nếu mật khẩu đã mã hóa (bcrypt), dùng compare
                 isMatch = await bcrypt.compare(password, user.password);
             } else {
-                // Nếu mật khẩu cũ là text thuần (như 123456 trong ảnh của bạn)
                 isMatch = (password === user.password);
             }
-
             if (isMatch) {
-                // Lưu session (Dùng fullname để hiển thị ở góc nhỏ)
                 req.session.user = { 
                     id: user.id, 
                     username: user.fullname, 
                     role: user.role 
                 };
-
-                // Phân quyền chuyển hướng
                 if (user.role === 'admin') {
-                    res.redirect('/reports/revenue'); // Admin thì cho xem doanh thu cho "oai"
+                    res.redirect('/');
                 } else {
-                    res.redirect('/'); // Member về trang chủ
+                    res.redirect('/');
                 }
             } else {
                 res.send("<h1>Sai mật khẩu!</h1><a href='/login'>Quay lại</a>");
@@ -60,15 +54,11 @@ router.get('/register', (req, res) => {
 
 // 4. Xử lý Đăng ký
 router.post('/register', async (req, res) => {
-    // Đổi username thành fullname cho khớp DB của bạn
     const { fullname, phone, password, gender } = req.body;
     const join_date = new Date().toISOString().split('T')[0];
 
     try {
-        // Mã hóa mật khẩu để bảo mật
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Dùng đúng tên cột: fullname, phone, gender, join_date, password, role
         const sql = "INSERT INTO members (fullname, phone, gender, join_date, password, role) VALUES (?, ?, ?, ?, ?, 'member')";
         
         db.query(sql, [fullname, phone, gender || 'Nam', join_date, hashedPassword], (err, result) => {
