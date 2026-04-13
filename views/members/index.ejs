@@ -7,14 +7,25 @@
     .table-custom-dark thead th { background-color: #2a2a2a; color: #e50914; border-bottom: 2px solid #e50914; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
     /* Chỉnh dòng kẻ của bảng */
     .table-custom-dark td { border-color: #333 !important; color: #e0e0e0; }
-    /* Đổi màu chữ của mấy cái nút cho sáng lên */
+    /* Đổi màu chữ của nút Sửa */
     .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
     .btn-outline-warning:hover { color: #000; background-color: #ffc107; }
+    /* Phân trang Dark Mode */
+    .pagination .page-link:focus { box-shadow: none; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-white text-uppercase" style="letter-spacing: 1px;">QUẢN LÝ <span style="color: #e50914;">HỘI VIÊN</span></h3>
-    <a href="/members/add" class="btn btn-danger shadow-sm fw-bold"><i class="bi bi-plus-lg"></i> THÊM MỚI</a>
+    
+    <form action="/members" method="GET" class="d-flex w-50 mx-3">
+        <input type="text" name="q" class="form-control bg-dark text-white border-secondary me-2" 
+               placeholder="Tìm theo tên hoặc số điện thoại..." value="<%= locals.searchQuery || '' %>">
+        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-search"></i></button>
+    </form>
+
+    <button type="button" class="btn btn-danger shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+        <i class="bi bi-plus-lg"></i> THÊM MỚI
+    </button>
 </div>
 
 <div class="card bg-dark border-secondary shadow-lg">
@@ -31,33 +42,107 @@
                 </tr>
             </thead>
             <tbody>
-                <% members.forEach(member => { %>
-                <tr>
-                    <td class="ps-4 text-white-50">#<%= member.id %></td>
-                    <td><span class="fw-bold text-white"><%= member.fullname %></span></td>
-                    <td><i class="bi bi-telephone text-white-50 me-2"></i><%= member.phone %></td>
-                    <td>
-                        <% if (member.gender === 'Nam') { %>
-                            <span class="badge bg-primary px-3 py-2">Nam</span>
-                        <% } else { %>
-                            <span class="badge bg-danger px-3 py-2">Nữ</span>
-                        <% } %>
-                    </td>
-                    <td class="text-white-50"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
-                    <td class="text-end pe-4">
-                        <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning me-2 shadow-sm">
-                            <i class="bi bi-pencil"></i> Sửa
-                        </a>
-                        <a href="/members/delete/<%= member.id %>" 
-                           class="btn btn-sm btn-outline-danger shadow-sm" 
-                           onclick="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
-                            <i class="bi bi-trash"></i> Xóa
-                        </a>
-                    </td>
-                </tr>
-                <% }) %>
+                <% if(members.length > 0) { %>
+                    <% members.forEach(member => { %>
+                    <tr>
+                        <td class="ps-4 text-white-50">#<%= member.id %></td>
+                        <td><span class="fw-bold text-white"><%= member.fullname %></span></td>
+                        <td><i class="bi bi-telephone text-white-50 me-2"></i><%= member.phone %></td>
+                        <td>
+                            <% if (member.gender === 'Nam') { %>
+                                <span class="badge bg-primary px-3 py-2">Nam</span>
+                            <% } else { %>
+                                <span class="badge bg-danger px-3 py-2">Nữ</span>
+                            <% } %>
+                        </td>
+                        <td class="text-white-50"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
+                        <td class="text-end pe-4">
+                            <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning me-2 shadow-sm">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <a href="/members/delete/<%= member.id %>" 
+                               class="btn btn-sm btn-outline-danger shadow-sm" 
+                               onclick="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
+                                <i class="bi bi-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-white-50">
+                            <i class="bi bi-search fs-1 d-block mb-2"></i>
+                            Không tìm thấy hội viên nào khớp với từ khóa.
+                        </td>
+                    </tr>
+                <% } %>
             </tbody>
         </table>
+    </div>
+</div>
+
+<% if (locals.totalPages && totalPages > 1) { %>
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+            <a class="page-link bg-dark border-secondary text-white" 
+               href="/members?page=<%= currentPage - 1 %>&q=<%= locals.searchQuery || '' %>">Trước</a>
+        </li>
+
+        <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link <%= currentPage === i ? 'bg-danger border-danger text-white' : 'bg-dark border-secondary text-white-50' %>" 
+                   href="/members?page=<%= i %>&q=<%= locals.searchQuery || '' %>"><%= i %></a>
+            </li>
+        <% } %>
+
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+            <a class="page-link bg-dark border-secondary text-white" 
+               href="/members?page=<%= currentPage + 1 %>&q=<%= locals.searchQuery || '' %>">Sau</a>
+        </li>
+    </ul>
+</nav>
+<% } %>
+
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-uppercase" id="addMemberModalLabel" style="color: #e50914; letter-spacing: 1px;">
+                    <i class="bi bi-person-plus-fill me-2"></i>Thêm Hội Viên Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form action="/members/add" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Họ và Tên</label>
+                        <input type="text" name="fullname" class="form-control bg-dark text-white border-secondary" placeholder="Nhập họ và tên..." required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Số điện thoại</label>
+                        <input type="tel" name="phone" class="form-control bg-dark text-white border-secondary" placeholder="SĐT dùng để đăng nhập..." required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small text-uppercase">Giới tính</label>
+                        <select name="gender" class="form-select bg-dark text-white border-secondary">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger fw-bold px-4">LƯU HỘI VIÊN</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
 </div>
 
