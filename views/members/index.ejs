@@ -124,9 +124,16 @@
                     
                     <div class="mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Số điện thoại</label>
-                        <input type="tel" name="phone" class="form-control bg-dark text-white border-secondary" placeholder="SĐT dùng để đăng nhập..." required>
+                        <input type="tel" name="phone" 
+                               class="form-control bg-dark text-white <%= locals.error === 'duplicate_phone' ? 'border-danger shadow-none' : 'border-secondary' %>" 
+                               placeholder="SĐT dùng để đăng nhập..." required>
+                        
+                        <% if (locals.error === 'duplicate_phone') { %>
+                            <div class="text-danger mt-2 fw-bold" style="font-size: 0.9rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Số điện thoại này đã được đăng ký!
+                            </div>
+                        <% } %>
                     </div>
-                    
                     <div class="mb-4">
                         <label class="form-label text-white-50 small text-uppercase">Giới tính</label>
                         <select name="gender" class="form-select bg-dark text-white border-secondary">
@@ -147,3 +154,15 @@
 </div>
 
 <%- include('../partials/footer') %>
+<% if (locals.error === 'duplicate_phone') { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Tìm cái Popup có id là addMemberModal và bắt nó mở lên
+        var myModal = new bootstrap.Modal(document.getElementById('addMemberModal'));
+        myModal.show();
+        
+        // (Tùy chọn) Xóa chữ báo lỗi trên URL cho đẹp
+        window.history.replaceState({}, document.title, "/members");
+    });
+</script>
+<% } %>

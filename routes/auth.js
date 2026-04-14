@@ -11,16 +11,12 @@ router.get('/login', (req, res) => {
 // 2. Xử lý Đăng nhập
 router.post('/login', (req, res) => {
     const { phone, password } = req.body;
-    
-    // Tìm user theo số điện thoại
     const sql = "SELECT * FROM members WHERE phone = ?";
     db.query(sql, [phone], async (err, results) => {
         if (err) return res.status(500).send("Lỗi server");
 
         if (results.length > 0) {
             const user = results[0];
-
-            // KIỂM TRA MẬT KHẨU
             let isMatch = false;
             if (user.password.startsWith('$2b$')) {
                 isMatch = await bcrypt.compare(password, user.password);
@@ -33,16 +29,18 @@ router.post('/login', (req, res) => {
                     username: user.fullname, 
                     role: user.role 
                 };
-                if (user.role === 'admin') {
-                    res.redirect('/');
-                } else {
-                    res.redirect('/');
-                }
+                res.redirect('/'); 
             } else {
-                res.send("<h1>Sai mật khẩu!</h1><a href='/login'>Quay lại</a>");
+                res.render('login', { 
+                    error: 'Sai mật khẩu! Vui lòng thử lại.',
+                    phone: phone 
+                });
             }
         } else {
-            res.send("<h1>Số điện thoại không tồn tại!</h1><a href='/login'>Quay lại</a>");
+            res.render('login', { 
+                error: 'Số điện thoại không tồn tại trên hệ thống!',
+                phone: phone
+            });
         }
     });
 });

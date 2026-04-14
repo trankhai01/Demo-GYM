@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Middleware chặn: Chỉ khách hàng mới được vào
 function requireMember(req, res, next) {
     if (req.session.user && req.session.user.role === 'member') {
         next();
@@ -11,7 +10,6 @@ function requireMember(req, res, next) {
     }
 }
 
-// Trang Dashboard cá nhân
 router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
     const sql = `
