@@ -57,6 +57,9 @@
                         </td>
                         <td class="text-white-50"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
                         <td class="text-end pe-4">
+                            <a href="/members/view/<%= member.id %>" class="btn btn-sm btn-outline-info me-2 shadow-sm">
+                                <i class="bi bi-eye"></i> Xem
+                            </a>
                             <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning me-2 shadow-sm">
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>

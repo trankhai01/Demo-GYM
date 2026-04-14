@@ -1,42 +1,72 @@
 <%- include('../partials/header') %>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card bg-dark text-white border-secondary shadow">
-                <div class="card-header border-secondary">
-                    <h4 class="mb-0 text-danger">CHỈNH SỬA HỘI VIÊN #<%= member.id %></h4>
+
+<div class="container mt-4 mb-5">
+    <div class="card bg-dark text-white border-secondary shadow-lg">
+        <div class="card-header border-secondary py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 text-uppercase fw-bold" style="color: #e50914;">Chỉnh sửa hội viên #<%= member.id %></h4>
+            <span class="badge bg-secondary">ID: <%= member.id %></span>
+        </div>
+        <div class="card-body p-4">
+            <form action="/members/edit/<%= member.id %>" method="POST">
+                
+                <h6 class="text-danger border-bottom border-secondary pb-2 mb-3">1. Thông tin định danh</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Họ và Tên</label>
+                        <input type="text" name="fullname" class="form-control bg-dark text-white border-secondary" value="<%= member.fullname %>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Số điện thoại</label>
+                        <input type="tel" name="phone" class="form-control bg-dark text-white border-secondary" value="<%= member.phone %>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Số CCCD</label>
+                        <input type="text" name="cccd" class="form-control bg-dark text-white border-secondary" value="<%= member.cccd %>">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Giới tính</label>
+                        <select name="gender" class="form-select bg-dark text-white border-secondary">
+                            <option value="Nam" <%= member.gender === 'Nam' ? 'selected' : '' %>>Nam</option>
+                            <option value="Nữ" <%= member.gender === 'Nữ' ? 'selected' : '' %>>Nữ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Năm sinh</label>
+                        <input type="number" name="birth_year" class="form-control bg-dark text-white border-secondary" value="<%= member.birth_year %>">
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form action="/members/edit/<%= member.id %>" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label text-white-50">Họ và Tên</label>
-                            <input type="text" name="fullname" class="form-control bg-secondary text-white border-0" value="<%= member.fullname %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50">Số điện thoại</label>
-                            <input type="text" name="phone" class="form-control bg-secondary text-white border-0" value="<%= member.phone %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50">Giới tính</label>
-                            <select name="gender" class="form-select bg-secondary text-white border-0">
-                                <option value="Nam" <%= member.gender === 'Nam' ? 'selected' : '' %>>Nam</option>
-                                <option value="Nữ" <%= member.gender === 'Nữ' ? 'selected' : '' %>>Nữ</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50">Quyền hạn</label>
-                            <select name="role" class="form-select bg-secondary text-white border-0">
-                                <option value="member" <%= member.role === 'member' ? 'selected' : '' %>>Member</option>
-                                <option value="admin" <%= member.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                            </select>
-                        </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="/members" class="btn btn-outline-light">Quay lại</a>
-                            <button type="submit" class="btn btn-danger px-4">LƯU THAY ĐỔI</button>
-                        </div>
-                    </form>
+
+                <h6 class="text-danger border-bottom border-secondary pb-2 mb-3 mt-4">2. Chỉ số cơ thể</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Chiều cao (cm)</label>
+                        <input type="number" step="0.1" name="height" class="form-control bg-dark text-white border-secondary" value="<%= member.height %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" name="weight" class="form-control bg-dark text-white border-secondary" value="<%= member.weight %>">
+                    </div>
                 </div>
-            </div>
+
+                <h6 class="text-danger border-bottom border-secondary pb-2 mb-3 mt-4">3. Địa chỉ & Quê quán</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Quê quán</label>
+                        <input type="text" name="hometown" class="form-control bg-dark text-white border-secondary" value="<%= member.hometown %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Địa chỉ hiện tại</label>
+                        <input type="text" name="address" class="form-control bg-dark text-white border-secondary" value="<%= member.address %>">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-5 pt-3 border-top border-secondary">
+                    <a href="/members" class="btn btn-outline-light px-4">QUAY LẠI</a>
+                    <button type="submit" class="btn btn-danger px-5 fw-bold text-uppercase">Lưu thay đổi</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<%- include('../partials/footer') %>

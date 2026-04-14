@@ -1,0 +1,195 @@
+<%- include('../partials/header') %>
+
+<style>
+    .view-wrapper { padding: 20px 0 50px 0; color: #e0e0e0; }
+    .hero-header { background: linear-gradient(135deg, #1e1e1e 0%, #0a0a0a 100%); border: 1px solid #333; border-radius: 20px; padding: 35px 30px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+    .hero-header::after { content: 'MEMBER'; position: absolute; top: -10px; right: -10px; font-family: 'Oswald', sans-serif; font-size: 7rem; font-weight: 900; color: rgba(229, 9, 20, 0.03); transform: rotate(-5deg); pointer-events: none; }
+    .glass-card { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .section-title { color: #e50914; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-size: 1.1rem; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 25px; }
+    .info-group { margin-bottom: 20px; }
+    .info-label { color: #888; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+    .info-value { color: #fff; font-size: 1.1rem; font-weight: 600; padding-left: 24px; }
+    .avatar-circle { width: 110px; height: 110px; background: #2a2a2a; border: 3px solid #e50914; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(229, 9, 20, 0.2); }
+    .stat-box { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 15px; padding: 20px 10px; text-align: center; }
+    .bmi-display { background: #111; border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #333; }
+    .table-dark-gym { background-color: transparent; color: white; }
+    .table-dark-gym th { background-color: #1a1a1a; color: #888; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #333; padding: 15px; }
+    .table-dark-gym td { background-color: transparent; border-bottom: 1px solid #333; padding: 15px; vertical-align: middle; color: #e0e0e0 !important; }
+</style>
+
+<div class="container view-wrapper">
+    <div class="hero-header mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-4">
+            <div class="avatar-circle">
+                <i class="bi bi-person-fill text-white" style="font-size: 4.5rem;"></i>
+            </div>
+            <div>
+                <h1 class="fw-bold mb-1 text-uppercase text-white" style="letter-spacing: 1px;"><%= member.fullname %></h1>
+                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill mt-1">
+                    <i class="bi bi-patch-check-fill me-1"></i> HỘI VIÊN CHÍNH THỨC
+                </span>
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="text-white-50 text-uppercase small letter-spacing-1 mb-1">Mã số hội viên</div>
+            <div class="h1 fw-bold text-white mb-0" style="font-family: 'Oswald', sans-serif;">#<%= member.id %></div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3 mb-4">
+                    <h5 class="section-title border-0 pb-0 mb-0"><i class="bi bi-person-vcard me-2"></i> Hồ sơ định danh</h5>
+                    <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Sửa</a>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-telephone text-danger"></i> Số điện thoại</div>
+                        <div class="info-value"><%= member.phone %></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-credit-card text-danger"></i> CCCD</div>
+                        <div class="info-value"><%= member.cccd || '---' %></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-gender-ambiguous text-danger"></i> Giới tính</div>
+                        <div class="info-value"><span class="badge <%= member.gender === 'Nam' ? 'bg-primary' : 'bg-danger' %>"><%= member.gender %></span></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-calendar-event text-danger"></i> Năm sinh</div>
+                        <div class="info-value"><%= member.birth_year || '---' %></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-geo-alt text-danger"></i> Quê quán</div>
+                        <div class="info-value"><%= member.hometown || '---' %></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-clock-history text-danger"></i> Ngày tham gia</div>
+                        <div class="info-value"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="glass-card d-flex flex-column">
+                <h5 class="section-title"><i class="bi bi-activity me-2"></i> Chỉ số cơ thể</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="text-white-50 small text-uppercase mb-2">Chiều cao</div>
+                            <div class="h2 text-white fw-bold mb-0"><%= member.height || '--' %> <span class="fs-6 text-white-50">cm</span></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="text-white-50 small text-uppercase mb-2">Cân nặng</div>
+                            <div class="h2 text-white fw-bold mb-0"><%= member.weight || '--' %> <span class="fs-6 text-white-50">kg</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title border-0 mb-0"><i class="bi bi-tags-fill me-2"></i> Lịch sử Gói tập</h5>
+            <button class="btn btn-danger fw-bold shadow" data-bs-toggle="modal" data-bs-target="#registerPackageModal">
+                <i class="bi bi-plus-circle me-1"></i> ĐĂNG KÝ GÓI MỚI
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark-gym table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Tên Gói</th>
+                        <th>Huấn luyện viên</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày hết hạn</th>
+                        <th>Lịch tập</th>
+                        <th>Giá trị</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(history && history.length > 0) { %>
+                        <% history.forEach(item => { %>
+                            <tr>
+                                <td class="fw-bold text-white"><%= item.package_name %></td>
+                                <td><%= item.trainer_name || '<span class="text-white-50">Tự do</span>' %></td>
+                                <td><%= new Date(item.registration_date).toLocaleDateString('vi-VN') %></td>
+                                <td class="text-warning"><%= new Date(item.expiration_date).toLocaleDateString('vi-VN') %></td>
+                                <td><span class="small"><%= item.schedule || '---' %></span></td>
+                                <td class="fw-bold"><%= item.price.toLocaleString('vi-VN') %> đ</td>
+                                <td>
+                                    <% 
+                                        let isExpired = new Date(item.expiration_date) < new Date();
+                                        if(isExpired) { 
+                                    %>
+                                        <span class="badge bg-secondary">Đã hết hạn</span>
+                                    <% } else { %>
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="7" class="text-center text-white-50 py-4">Chưa có dữ liệu đăng ký gói tập.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="/members" class="btn btn-outline-light px-4 py-2 fw-bold"><i class="bi bi-arrow-left me-2"></i> QUAY LẠI</a>
+    </div>
+</div>
+
+<div class="modal fade" id="registerPackageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-danger text-uppercase">Đăng ký gói tập mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/members/view/<%= member.id %>/register" method="POST">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Chọn Gói Tập *</label>
+                        <select name="package_id" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="">-- Chọn gói --</option>
+                            <% packages.forEach(pkg => { %>
+                                <option value="<%= pkg.id %>"><%= pkg.package_name %> (<%= pkg.duration_months %> tháng) - <%= pkg.price.toLocaleString('vi-VN') %>đ</option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Chọn Huấn Luyện Viên (Tùy chọn)</label>
+                        <select name="trainer_id" class="form-select bg-dark text-white border-secondary">
+                            <option value="">-- Tự do (Không kèm PT) --</option>
+                            <% trainers.forEach(pt => { %>
+                                <option value="<%= pt.id %>"><%= pt.fullname %> - <%= pt.specialty %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small text-uppercase">Ghi chú Lịch tập</label>
+                        <input type="text" name="schedule" class="form-control bg-dark text-white border-secondary" placeholder="VD: 2-4-6 từ 18h-20h">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2 text-uppercase">Tạo Hóa Đơn Mới</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,9 +1,9 @@
 const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
-    host: 'localhost', // Nếu không được, hãy thử thay bằng IP của XAMPP Mac
+    host: 'localhost', 
     user: 'root',
-    password: '',      // Mặc định XAMPP không có mật khẩu
+    password: '',     
     database: 'quan_ly_gym'
 });
 
