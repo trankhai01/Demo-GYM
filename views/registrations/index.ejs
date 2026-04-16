@@ -1,0 +1,199 @@
+<%- include('../partials/header') %>
+
+<style>
+    .schedule-selector th { color: #888; font-size: 0.8rem; font-weight: normal; }
+    .schedule-cell { 
+    background: #2a2a2a; 
+    border: 1px solid #444; 
+    border-radius: 6px; 
+    height: 35px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    color: transparent; 
+    }
+    .schedule-cell:hover { border-color: #e50914; }
+    .schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
+    .pos-container { margin-top: 20px; margin-bottom: 50px; }
+    .glass-panel { background: rgba(30, 30, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .invoice-preview { background: #0a0a0a; border: 1px dashed #444; border-radius: 15px; padding: 30px; position: relative; }
+    .invoice-preview::before, .invoice-preview::after { content: ''; position: absolute; width: 30px; height: 30px; background: #121212; border-radius: 50%; top: -15px; }
+    .invoice-preview::before { left: -15px; border-right: 1px dashed #444; }
+    .invoice-preview::after { right: -15px; border-left: 1px dashed #444; }
+    .invoice-row { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+    .invoice-label { color: #888; font-size: 0.85rem; text-transform: uppercase; }
+    .invoice-value { color: #fff; font-weight: bold; text-align: right; }
+    .total-price { color: #e50914; font-size: 2.5rem; font-family: 'Oswald', sans-serif; font-weight: bold; line-height: 1; }
+</style>
+
+<div class="container pos-container">
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <i class="bi bi-cart-check-fill text-danger fs-2 me-3"></i>
+        <h2 class="fw-bold text-white text-uppercase m-0" style="letter-spacing: 1px;">Hệ thống bán gói tập (POS)</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="glass-panel">
+                <form action="/registrations/add" method="POST" id="posForm">
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small text-uppercase">1. Chọn Hội Viên *</label>
+                        <select name="member_id" id="memberSelect" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="">-- Tìm kiếm hội viên --</option>
+                            <% members.forEach(m => { %>
+                                <option value="<%= m.id %>" data-name="<%= m.fullname %>">#<%= m.id %> - <%= m.fullname %> (<%= m.phone %>)</option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small text-uppercase">2. Chọn Gói Tập *</label>
+                        <select name="package_id" id="packageSelect" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="" data-price="0" data-months="0">-- Chọn gói dịch vụ --</option>
+                            <% packages.forEach(pkg => { %>
+                                <option value="<%= pkg.id %>" data-price="<%= pkg.price %>" data-months="<%= pkg.duration_months %>" data-name="<%= pkg.package_name %>">
+                                    <%= pkg.package_name %> - <%= pkg.price.toLocaleString('vi-VN') %>đ
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small text-uppercase">3. Huấn luyện viên</label>
+                            <select name="trainer_id" id="trainerSelect" class="form-select bg-dark text-white border-secondary">
+                                <option value="">Tập tự do</option>
+                                <% trainers.forEach(pt => { %>
+                                    <option value="<%= pt.id %>" data-name="<%= pt.fullname %>"><%= pt.fullname %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-4 schedule-container">
+    <label class="form-label text-white-50 small text-uppercase">Lịch tập dự kiến</label>
+    <div class="table-responsive">
+        <table class="table table-borderless text-center mb-0">
+            <thead>
+                <tr>
+                    <th></th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th><th>CN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% ['Sáng', 'Chiều', 'Tối'].forEach(session => { %>
+                    <tr>
+                        <td class="align-middle text-black-50 small pe-2"><%= session %></td>
+                        <% [2, 3, 4, 5, 6, 7, 8].forEach(day => { %>
+                            <td class="p-1">
+                                <div class="schedule-cell" data-day="<%= day == 8 ? 'CN' : 'T' + day %>" data-session="<%= session %>">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+                            </td>
+                        <% }) %>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <input type="hidden" name="schedule" class="schedule-input">
+</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100 py-3 fw-bold text-uppercase fs-5 shadow mt-3">
+                        <i class="bi bi-check2-circle me-2"></i> XÁC NHẬN THANH TOÁN
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="invoice-preview shadow-lg">
+                <div class="text-center mb-4 pb-3 border-bottom border-secondary">
+                    <h4 class="text-danger fw-bold font-oswald letter-spacing-1 m-0">GYM BRO</h4>
+                    <span class="text-white-50 small">Phiếu Đăng Ký Dịch Vụ</span>
+                </div>
+
+                <div class="invoice-row">
+                    <span class="invoice-label">Khách hàng</span>
+                    <span class="invoice-value" id="inv-member">---</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Gói tập</span>
+                    <span class="invoice-value text-warning" id="inv-package">---</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">PT Hướng dẫn</span>
+                    <span class="invoice-value" id="inv-trainer">Tập tự do</span>
+                </div>
+                
+                <div class="row mt-4 mb-4">
+                    <div class="col-6 text-center border-end border-secondary">
+                        <div class="invoice-label mb-1">Ngày bắt đầu</div>
+                        <div class="text-white fw-bold" id="inv-start"><%= new Date().toLocaleDateString('vi-VN') %></div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="invoice-label mb-1">Ngày hết hạn</div>
+                        <div class="text-danger fw-bold" id="inv-end">---</div>
+                    </div>
+                </div>
+
+                <div class="bg-dark p-3 rounded text-center border border-secondary mt-2">
+                    <div class="invoice-label mb-2">Tổng thanh toán</div>
+                    <div class="total-price" id="inv-price">0<span class="fs-4 text-white-50 ms-1">đ</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const packageSelect = document.getElementById('packageSelect');
+    const memberSelect = document.getElementById('memberSelect');
+    const trainerSelect = document.getElementById('trainerSelect');
+
+    function updateInvoice() {
+        const pkgOption = packageSelect.options[packageSelect.selectedIndex];
+        const memOption = memberSelect.options[memberSelect.selectedIndex];
+        const ptOption = trainerSelect.options[trainerSelect.selectedIndex];
+
+        // Tên khách & Gói & PT
+        document.getElementById('inv-member').innerText = memOption.value ? memOption.dataset.name : '---';
+        document.getElementById('inv-package').innerText = pkgOption.value ? pkgOption.dataset.name : '---';
+        document.getElementById('inv-trainer').innerText = ptOption.value ? ptOption.dataset.name : 'Tập tự do';
+
+        // Tính tiền
+        const price = parseInt(pkgOption.dataset.price) || 0;
+        document.getElementById('inv-price').innerHTML = price.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">đ</span>';
+
+        // Tính ngày hết hạn
+        const months = parseInt(pkgOption.dataset.months) || 0;
+        if (months > 0) {
+            let expDate = new Date();
+            expDate.setMonth(expDate.getMonth() + months);
+            document.getElementById('inv-end').innerText = expDate.toLocaleDateString('vi-VN');
+        } else {
+            document.getElementById('inv-end').innerText = '---';
+        }
+    }
+
+    packageSelect.addEventListener('change', updateInvoice);
+    memberSelect.addEventListener('change', updateInvoice);
+    trainerSelect.addEventListener('change', updateInvoice);
+</script>
+
+<script>
+    document.querySelectorAll('.schedule-cell').forEach(cell => {
+        cell.addEventListener('click', function() {
+            this.classList.toggle('active');
+            let container = this.closest('.schedule-container');
+            let input = container.querySelector('.schedule-input');
+            let selected = [];
+            container.querySelectorAll('.schedule-cell.active').forEach(item => {
+                selected.push(`${item.dataset.day}(${item.dataset.session})`);
+            });
+            input.value = selected.join(', ');
+        });
+    });
+</script>
+<%- include('../partials/footer') %>

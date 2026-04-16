@@ -1,67 +1,95 @@
 <%- include('../partials/header') %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-dark text-uppercase">Danh sách Gói tập</h3>
-    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addPackageModal">
-        <i class="bi bi-plus-lg"></i> Thêm gói mới
-    </button>
-</div>
+<style>
+    .pricing-card { 
+        background: linear-gradient(145deg, #1e1e1e 0%, #111 100%); 
+        border: 1px solid #333; 
+        border-radius: 24px; 
+        transition: all 0.3s ease; 
+        overflow: hidden; 
+    }
+    .pricing-card:hover { 
+        transform: translateY(-10px); 
+        border-color: #e50914; 
+        box-shadow: 0 15px 35px rgba(229, 9, 20, 0.15); 
+    }
+    .duration-badge { 
+        background: rgba(229, 9, 20, 0.1); 
+        color: #e50914; 
+        padding: 6px 16px; 
+        border-radius: 20px; 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        letter-spacing: 1px;
+    }
+    .price-amount { 
+        font-family: 'Oswald', sans-serif; 
+        font-size: 3.2rem; 
+        font-weight: 700; 
+        color: #fff; 
+        line-height: 1.2;
+    }
+    .feature-list { 
+        list-style: none; 
+        padding: 0; 
+        color: #aaa; 
+        text-align: left; 
+    }
+    .feature-list li { 
+        margin-bottom: 15px; 
+        font-size: 0.95rem; 
+    }
+    .feature-list i { 
+        color: #47cf73; 
+        margin-right: 12px; 
+        font-size: 1.1rem;
+    }
+    .action-box { 
+        background: rgba(0, 0, 0, 0.4); 
+        padding: 20px; 
+        border-top: 1px solid #333; 
+    }
+</style>
 
-<div class="row">
-    <% packages.forEach(pkg => { %>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm text-center">
-            <div class="card-body">
-                <div class="display-6 fw-bold text-primary mb-2">
-                    <%= pkg.price.toLocaleString('vi-VN') %> <small style="font-size: 15px;">VNĐ</small>
-                </div>
-                <h5 class="card-title fw-bold text-uppercase"><%= pkg.package_name %></h5>
-                <p class="text-muted">Thời hạn: <span class="badge bg-dark"><%= pkg.duration_days %> ngày</span></p>
-                <hr>
-                <ul class="list-unstyled text-start ps-3">
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i> Tập luyện tự do</li>
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i> Đầy đủ thiết bị</li>
-                </ul>
-            </div>
-            <div class="card-footer bg-white border-0 pb-3">
-    <a href="/packages/delete/<%= pkg.id %>" 
-       class="btn btn-outline-danger btn-sm" 
-       onclick="return confirm('Bạn có chắc muốn xóa gói này?')">
-       <i class="bi bi-trash"></i> Xóa gói
-    </a>
-</div>
-        </div>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-bold text-white text-uppercase m-0" style="letter-spacing: 1.5px;">Danh sách gói tập</h2>
+        <a href="/packages/add" class="btn btn-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>Thêm gói mới
+        </a>
     </div>
-    <% }) %>
-</div>
 
-<div class="modal fade" id="addPackageModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="/packages/add" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Thêm Gói tập mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tên gói tập</label>
-                        <input type="text" name="package_name" class="form-control" placeholder="VD: Gói 1 Tháng" required>
+    <div class="row g-4">
+        <% packages.forEach(pkg => { %>
+        <div class="col-lg-4 col-md-6">
+            <div class="pricing-card text-center h-100 d-flex flex-column">
+                <div class="p-4 flex-grow-1 mt-2">
+                    <div class="mb-4">
+                        <span class="duration-badge text-uppercase"><%= pkg.duration_months %> Tháng</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Giá tiền (VNĐ)</label>
-                        <input type="number" name="price" class="form-control" placeholder="300000" required>
+                    
+                    <h5 class="text-white-50 text-uppercase fw-bold mb-3"><%= pkg.package_name %></h5>
+                    
+                    <div class="price-amount mb-4">
+                        <%= pkg.price.toLocaleString('vi-VN') %><span class="fs-5 text-white-50 ms-2">VNĐ</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Thời hạn (Ngày)</label>
-                        <input type="number" name="duration_days" class="form-control" placeholder="30" required>
-                    </div>
+                    
+                    <hr class="border-secondary mx-3 opacity-50 mb-4">
+                    
+                    <ul class="feature-list px-3">
+                        <li><i class="bi bi-check-circle-fill"></i> Tập luyện tự do không giới hạn</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Sử dụng toàn bộ thiết bị</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Tủ đồ & Phòng tắm VIP</li>
+                    </ul>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Lưu lại</button>
+                
+                <div class="action-box d-flex gap-2 justify-content-center">
+                    <a href="/packages/edit/<%= pkg.id %>" class="btn btn-outline-light w-50 rounded-pill fw-bold">Sửa</a>
+                    <a href="/packages/delete/<%= pkg.id %>" class="btn btn-outline-danger w-50 rounded-pill fw-bold" onclick="return confirm('Bạn chắc chắn muốn xóa gói này?')">Xóa</a>
                 </div>
-            </form>
+            </div>
         </div>
+        <% }) %>
     </div>
 </div>
 

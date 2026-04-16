@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+
+<style>
+    .glass-form { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+</style>
+
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-form">
+            <h3 class="fw-bold text-white text-uppercase mb-4 border-bottom border-secondary pb-3">
+                <i class="bi bi-pencil-square text-warning me-2"></i>Cập nhật Gói Tập
+            </h3>
+            
+            <form action="/packages/edit/<%= pkg.id %>" method="POST">
+                <div class="mb-4">
+                    <label class="form-label text-white-50 small text-uppercase">Tên gói tập *</label>
+                    <input type="text" name="package_name" class="form-control bg-dark text-white border-secondary py-2" value="<%= pkg.package_name %>" required>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Thời hạn (Tháng) *</label>
+                        <input type="number" name="duration_months" class="form-control bg-dark text-white border-secondary py-2" min="1" value="<%= pkg.duration_months %>" required>
+                    </div>
+                    <div class="col-md-6 mt-4 mt-md-0">
+                        <label class="form-label text-white-50 small text-uppercase">Giá tiền (VNĐ) *</label>
+                        <input type="number" name="price" class="form-control bg-dark text-white border-secondary py-2" min="0" step="1000" value="<%= pkg.price %>" required>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mt-5">
+                    <a href="/packages" class="btn btn-outline-light w-50 py-2 fw-bold">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-warning w-50 py-2 fw-bold text-dark text-uppercase shadow">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
