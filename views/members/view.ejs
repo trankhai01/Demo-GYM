@@ -74,24 +74,54 @@
         </div>
 
         <div class="col-lg-5">
-            <div class="glass-card d-flex flex-column">
-                <h5 class="section-title"><i class="bi bi-activity me-2"></i> Chỉ số cơ thể</h5>
-                <div class="row g-3 mb-4">
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <div class="text-white-50 small text-uppercase mb-2">Chiều cao</div>
-                            <div class="h2 text-white fw-bold mb-0"><%= member.height || '--' %> <span class="fs-6 text-white-50">cm</span></div>
-                        </div>
+    <div class="glass-card d-flex flex-column">
+        <h5 class="section-title"><i class="bi bi-activity me-2"></i> Chỉ số cơ thể</h5>
+        
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <div class="stat-box h-100">
+                    <div class="text-white-50 small text-uppercase mb-2">Chiều cao</div>
+                    <div class="h2 text-white fw-bold mb-0">
+                        <%= member.height || '--' %> <span class="fs-6 text-white-50">cm</span>
                     </div>
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <div class="text-white-50 small text-uppercase mb-2">Cân nặng</div>
-                            <div class="h2 text-white fw-bold mb-0"><%= member.weight || '--' %> <span class="fs-6 text-white-50">kg</span></div>
-                        </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-box h-100">
+                    <div class="text-white-50 small text-uppercase mb-2">Cân nặng</div>
+                    <div class="h2 text-white fw-bold mb-0">
+                        <%= member.weight || '--' %> <span class="fs-6 text-white-50">kg</span>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="bmi-display flex-grow-1 d-flex flex-column justify-content-center mt-2 p-4 rounded" style="background: rgba(0,0,0,0.3); border: 1px solid #333; transition: 0.3s;">
+            <% 
+                let bmi = 0;
+                let bmiText = "Chưa có dữ liệu";
+                let bmiColor = "text-secondary";
+                
+                if (member.height && member.weight && member.height > 0) {
+                    let h = member.height / 100;
+                    bmi = (member.weight / (h * h)).toFixed(1);
+                    
+                    if (bmi < 18.5) { bmiText = "Thiếu cân"; bmiColor = "text-info"; }
+                    else if (bmi < 25) { bmiText = "Bình thường"; bmiColor = "text-success"; }
+                    else if (bmi < 30) { bmiText = "Thừa cân"; bmiColor = "text-warning"; }
+                    else { bmiText = "Béo phì"; bmiColor = "text-danger"; }
+                }
+            %>
+            <div class="text-white-50 small text-uppercase letter-spacing-1 mb-2">Chỉ số BMI</div>
+            <div class="display-3 fw-bold text-white mb-2" style="font-family: 'Oswald', sans-serif;"><%= bmi > 0 ? bmi : '--' %></div>
+            <div class="h5 fw-bold <%= bmiColor %> text-uppercase m-0">
+                <% if (bmi > 0) { %><i class="bi bi-heart-pulse-fill me-1"></i><% } %>
+                <%= bmiText %>
+            </div>
+        </div>
+        
+    </div>
+</div>
     </div>
 
     <div class="glass-card">

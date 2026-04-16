@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 
 function requireMember(req, res, next) {
-    if (req.session.user && req.session.user.role === 'member') {
+    if (req.session.user && req.session.user.role && req.session.user.role.trim().toLowerCase() === 'member') {
         next();
     } else {
         res.redirect('/login');

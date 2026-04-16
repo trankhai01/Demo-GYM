@@ -29,7 +29,11 @@ router.post('/login', (req, res) => {
                     username: user.fullname, 
                     role: user.role 
                 };
-                res.redirect('/'); 
+                
+                req.session.save((err) => {
+                    if(err) console.error("Lỗi lưu session", err);
+                    res.redirect('/'); 
+                });
             } else {
                 res.render('login', { 
                     error: 'Sai mật khẩu! Vui lòng thử lại.',
