@@ -1,0 +1,183 @@
+<%- include('../partials/header') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .report-container {
+    margin-top: 20px;
+    margin-bottom: 50px;
+  }
+  .stat-card {
+    background: linear-gradient(135deg, #1e1e1e 0%, #111 100%);
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(
+      circle,
+      rgba(229, 9, 20, 0.1) 0%,
+      rgba(0, 0, 0, 0) 70%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .stat-title {
+    color: #888;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-family: "Oswald", sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0;
+  }
+  .chart-container {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 25px;
+    margin-top: 30px;
+  }
+</style>
+
+<div class="container report-container">
+  <div
+    class="d-flex align-items-center mb-5 pb-3 border-bottom border-secondary"
+  >
+    <i class="bi bi-bar-chart-line-fill text-danger fs-2 me-3"></i>
+    <h2
+      class="fw-bold text-white text-uppercase m-0"
+      style="letter-spacing: 1px"
+    >
+      Báo cáo Doanh thu
+    </h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-title">Doanh thu tháng này</div>
+            <div class="stat-value text-danger">
+              <%= current.total_revenue ? Number(current.total_revenue).toLocaleString('vi-VN') : '0' %> <span class="fs-4 text-white-50 ms-2 text-lowercase">vnđ</span>
+            </div>
+          </div>
+          <div class="bg-dark p-3 rounded-circle border border-secondary">
+            <i class="bi bi-wallet2 text-white fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-title">Gói tập đã bán (Tháng này)</div>
+            <div class="stat-value text-info">
+              <%= current.total_sold || 0 %><span
+                class="fs-5 text-white-50 ms-2"
+                >Gói</span
+              >
+            </div>
+          </div>
+          <div class="bg-dark p-3 rounded-circle border border-secondary">
+            <i class="bi bi-tags text-white fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-container shadow-lg">
+        <h5 class="fw-bold text-white text-uppercase mb-4">Biểu đồ doanh thu 10 ngày gần nhất</h5>
+        
+        <% 
+            let labels = [];
+            let dataPoints = [];
+            if (chartData && chartData.length > 0) {
+                labels = chartData.map(item => item.day_month);
+                dataPoints = chartData.map(item => item.revenue);
+            }
+        %>
+
+        <canvas id="revenueChart" height="100" 
+                data-labels="<%= JSON.stringify(labels) %>" 
+                data-points="<%= JSON.stringify(dataPoints) %>">
+        </canvas>
+    </div>
+</div> <script>
+    const canvas = document.getElementById('revenueChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Đọc dữ liệu từ dataset của thẻ canvas
+    const chartLabels = JSON.parse(canvas.dataset.labels || '[]');
+    const chartDataPoints = JSON.parse(canvas.dataset.points || '[]');
+    
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(229, 9, 20, 0.5)'); 
+    gradient.addColorStop(1, 'rgba(229, 9, 20, 0.0)'); 
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels, 
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: chartDataPoints, 
+                borderColor: '#e50914',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#e50914',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw || 0;
+                            return Number(value).toLocaleString('vi-VN') + ' vnđ';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#888' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888' }
+                }
+            }
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

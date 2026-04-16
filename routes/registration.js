@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Giao diện POS Bán gói
 router.get('/', (req, res) => {
     db.query("SELECT id, fullname, phone FROM members ORDER BY id DESC", (err, members) => {
         db.query("SELECT * FROM packages", (err, packages) => {
             db.query("SELECT * FROM trainers", (err, trainers) => {
-                res.render('registrations/index', { 
-                    members: members || [], 
-                    packages: packages || [], 
-                    trainers: trainers || [] 
+                db.query("SELECT * FROM products WHERE status = 'Active' AND stock_quantity > 0", (err, products) => {
+                    res.render('registrations/index', { 
+                        members: members || [], 
+                        packages: packages || [], 
+                        trainers: trainers || [],
+                        products: products || [] 
+                    });
                 });
             });
         });

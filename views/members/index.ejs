@@ -1,16 +1,11 @@
 <%- include('../partials/header') %>
 
 <style>
-    /* Bo góc cho bảng */
     .table-custom-dark { border-radius: 12px; overflow: hidden; }
-    /* Chỉnh màu tiêu đề bảng thành đỏ thương hiệu */
     .table-custom-dark thead th { background-color: #2a2a2a; color: #e50914; border-bottom: 2px solid #e50914; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
-    /* Chỉnh dòng kẻ của bảng */
     .table-custom-dark td { border-color: #333 !important; color: #e0e0e0; }
-    /* Đổi màu chữ của nút Sửa */
     .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
     .btn-outline-warning:hover { color: #000; background-color: #ffc107; }
-    /* Phân trang Dark Mode */
     .pagination .page-link:focus { box-shadow: none; }
 </style>
 
@@ -38,7 +33,7 @@
                     <th class="py-3">Liên hệ</th>
                     <th class="py-3">Giới tính</th>
                     <th class="py-3">Ngày tham gia</th>
-                    <th class="text-end pe-4 py-3">Thao tác</th>
+                    <th class="text-center pe-4 py-3">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -50,9 +45,9 @@
                         <td><i class="bi bi-telephone text-white-50 me-2"></i><%= member.phone %></td>
                         <td>
                             <% if (member.gender === 'Nam') { %>
-                                <span class="badge bg-primary px-3 py-2">Nam</span>
+                                <span class="badge bg-primary px-3 py-2" style="width: 60px; display: inline-block; text-align: center;">Nam</span>
                             <% } else { %>
-                                <span class="badge bg-danger px-3 py-2">Nữ</span>
+                                <span class="badge bg-danger px-3 py-2" style="width: 60px; display: inline-block; text-align: center;">Nữ</span>
                             <% } %>
                         </td>
                         <td class="text-white-50"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
@@ -160,11 +155,8 @@
 <% if (locals.error === 'duplicate_phone') { %>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Tìm cái Popup có id là addMemberModal và bắt nó mở lên
         var myModal = new bootstrap.Modal(document.getElementById('addMemberModal'));
         myModal.show();
-        
-        // (Tùy chọn) Xóa chữ báo lỗi trên URL cho đẹp
         window.history.replaceState({}, document.title, "/members");
     });
 </script>

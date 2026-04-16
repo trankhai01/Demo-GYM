@@ -1,36 +1,57 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db'); 
+const db = require('../config/db');
 
-function requireAdmin(req, res, next) {
-    if (req.session.user && req.session.user.role === 'admin') {
-        next();
-    } else {
-        res.status(403).send("Bạn không có quyền truy cập trang này!");
-    }
-}
-
-router.get('/revenue', requireAdmin, (req, res) => {
-    const sql = `
-        SELECT MONTH(payment_date) AS month, SUM(amount) AS total_revenue
-        FROM payments
-        WHERE YEAR(payment_date) = YEAR(CURRENT_DATE)
-        GROUP BY MONTH(payment_date)
-        ORDER BY MONTH(payment_date)
+router.get('/', (req, res) => {
+    // 1. Tính Tổng doanh thu và số lượng của Tháng Hiện Tại
+    const currentMonthSql = `
+        SELECT 
+            SUM(price) as total_revenue, 
+            COUNT(id) as total_sold
+        FROM registrations 
+        WHERE MONTH(registration_date) = MONTH(CURRENT_DATE()) 
+        AND YEAR(registration_date) = YEAR(CURRENT_DATE())
     `;
 
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error("Lỗi truy vấn SQL: ", err);
-            return res.status(500).send("Lỗi server");
-        }
-        let monthlyData = new Array(12).fill(0);
-        results.forEach(row => {
-            monthlyData[row.month - 1] = row.total_revenue;
-        });
-        res.render('reports/revenue', { 
-            chartData: JSON.stringify(monthlyData),
-            currentYear: new Date().getFullYear()
+    const chartDataSql = `
+        SELECT 
+            DATE_FORMAT(registration_date, '%d/%m') as day_month,
+            SUM(price) as revenue
+        FROM registrations
+        WHERE registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 9 DAY)
+        GROUP BY DATE(registration_date), day_month
+        ORDER BY DATE(registration_date) ASC
+    `;
+
+    db.query(currentMonthSql, (err, currentResult) => {
+        if (err) return res.status(500).send("Lỗi tải dữ liệu");
+        
+        db.query(chartDataSql, (err, chartResult) => {
+            if (err) return res.status(500).send("Lỗi biểu đồ");
+
+            const currentData = currentResult[0] || { total_revenue: 0, total_sold: 0 };
+            
+            const last10Days = [];
+            for (let i = 9; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dayStr = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+                last10Days.push({ day_month: dayStr, revenue: 0 });
+            }
+
+            if (chartResult && chartResult.length > 0) {
+                chartResult.forEach(dbRow => {
+                    const foundIndex = last10Days.findIndex(item => item.day_month === dbRow.day_month);
+                    if (foundIndex !== -1) {
+                        last10Days[foundIndex].revenue = dbRow.revenue; 
+                    }
+                });
+            }
+
+            res.render('reports/index', { 
+                current: currentData,
+                chartData: last10Days 
+            });
         });
     });
 });
