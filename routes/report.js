@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../config/db');
 
 router.get('/', (req, res) => {
-    // 1. Tính Tổng doanh thu và số lượng của Tháng Hiện Tại
     const currentMonthSql = `
         SELECT 
             SUM(price) as total_revenue, 

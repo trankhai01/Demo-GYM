@@ -2,20 +2,9 @@
 
 <style>
     .schedule-selector th { color: #888; font-size: 0.8rem; font-weight: normal; }
-.schedule-cell { 
-    background: #2a2a2a; 
-    border: 1px solid #444; 
-    border-radius: 6px; 
-    height: 35px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    cursor: pointer; 
-    transition: 0.2s; 
-    color: transparent; 
-}
-.schedule-cell:hover { border-color: #e50914; }
-.schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
+    .schedule-cell { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
+    .schedule-cell:hover { border-color: #e50914; }
+    .schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
     .view-wrapper { padding: 20px 0 50px 0; color: #e0e0e0; }
     .hero-header { background: linear-gradient(135deg, #1e1e1e 0%, #0a0a0a 100%); border: 1px solid #333; border-radius: 20px; padding: 35px 30px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
     .hero-header::after { content: 'MEMBER'; position: absolute; top: -10px; right: -10px; font-family: 'Oswald', sans-serif; font-size: 7rem; font-weight: 900; color: rgba(229, 9, 20, 0.03); transform: rotate(-5deg); pointer-events: none; }
@@ -89,55 +78,102 @@
         </div>
 
         <div class="col-lg-5">
-    <div class="glass-card d-flex flex-column">
-        <h5 class="section-title"><i class="bi bi-activity me-2"></i> Chỉ số cơ thể</h5>
-        
-        <div class="row g-3 mb-3">
-            <div class="col-6">
-                <div class="stat-box h-100">
-                    <div class="text-white-50 small text-uppercase mb-2">Chiều cao</div>
-                    <div class="h2 text-white fw-bold mb-0">
-                        <%= member.height || '--' %> <span class="fs-6 text-white-50">cm</span>
+            <div class="glass-card d-flex flex-column">
+                <h5 class="section-title"><i class="bi bi-activity me-2"></i> Chỉ số cơ thể</h5>
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="stat-box h-100">
+                            <div class="text-white-50 small text-uppercase mb-2">Chiều cao</div>
+                            <div class="h2 text-white fw-bold mb-0">
+                                <%= member.height || '--' %> <span class="fs-6 text-white-50">cm</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box h-100">
+                            <div class="text-white-50 small text-uppercase mb-2">Cân nặng</div>
+                            <div class="h2 text-white fw-bold mb-0">
+                                <%= member.weight || '--' %> <span class="fs-6 text-white-50">kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bmi-display flex-grow-1 d-flex flex-column justify-content-center mt-2 p-4 rounded" style="background: rgba(0,0,0,0.3); border: 1px solid #333; transition: 0.3s;">
+                    <% 
+                        let bmi = 0;
+                        let bmiText = "Chưa có dữ liệu";
+                        let bmiColor = "text-secondary";
+                        
+                        if (member.height && member.weight && member.height > 0) {
+                            let h = member.height / 100;
+                            bmi = (member.weight / (h * h)).toFixed(1);
+                            
+                            if (bmi < 18.5) { bmiText = "Thiếu cân"; bmiColor = "text-info"; }
+                            else if (bmi < 25) { bmiText = "Bình thường"; bmiColor = "text-success"; }
+                            else if (bmi < 30) { bmiText = "Thừa cân"; bmiColor = "text-warning"; }
+                            else { bmiText = "Béo phì"; bmiColor = "text-danger"; }
+                        }
+                    %>
+                    <div class="text-white-50 small text-uppercase letter-spacing-1 mb-2">Chỉ số BMI</div>
+                    <div class="display-3 fw-bold text-white mb-2" style="font-family: 'Oswald', sans-serif;"><%= bmi > 0 ? bmi : '--' %></div>
+                    <div class="h5 fw-bold <%= bmiColor %> text-uppercase m-0">
+                        <% if (bmi > 0) { %><i class="bi bi-heart-pulse-fill me-1"></i><% } %>
+                        <%= bmiText %>
                     </div>
                 </div>
             </div>
-            <div class="col-6">
-                <div class="stat-box h-100">
-                    <div class="text-white-50 small text-uppercase mb-2">Cân nặng</div>
-                    <div class="h2 text-white fw-bold mb-0">
-                        <%= member.weight || '--' %> <span class="fs-6 text-white-50">kg</span>
-                    </div>
-                </div>
+        </div>
+    </div>
+
+    <% 
+        if (history && history.length > 0) {
+            let activePtPackages = history.filter(h => new Date(h.expiration_date) >= new Date() && h.total_sessions > 0);
+            if (activePtPackages.length > 0) {
+                activePtPackages.forEach(pkg => {
+                    let used = pkg.used_sessions || 0;
+                    let total = pkg.total_sessions || 0;
+                    let percent = Math.round((used / total) * 100);
+                    let isCompleted = used >= total;
+    %>
+    <div class="glass-card mb-4" style="border-left: 4px solid #e50914;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="section-title border-0 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Tiến độ khóa học PT: <%= pkg.package_name %></h5>
+            <span class="badge bg-danger fs-6"><%= total %> Buổi</span>
+        </div>
+        
+        <div class="d-flex justify-content-between text-white-50 small mb-1">
+            <span>Đã tập: <strong class="text-white"><%= used %> buổi</strong></span>
+            <span>Còn lại: <strong class="text-white"><%= total - used %> buổi</strong></span>
+        </div>
+        
+        <div class="progress mb-4 bg-black" style="height: 20px; border: 1px solid #333;">
+            <div class="progress-bar <%= isCompleted ? 'bg-success' : 'bg-danger progress-bar-striped progress-bar-animated' %>" 
+                role="progressbar" 
+                style="width: <%= percent + '%' %>;" 
+                aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100">
+                <%= percent %>%
             </div>
         </div>
 
-        <div class="bmi-display flex-grow-1 d-flex flex-column justify-content-center mt-2 p-4 rounded" style="background: rgba(0,0,0,0.3); border: 1px solid #333; transition: 0.3s;">
-            <% 
-                let bmi = 0;
-                let bmiText = "Chưa có dữ liệu";
-                let bmiColor = "text-secondary";
-                
-                if (member.height && member.weight && member.height > 0) {
-                    let h = member.height / 100;
-                    bmi = (member.weight / (h * h)).toFixed(1);
-                    
-                    if (bmi < 18.5) { bmiText = "Thiếu cân"; bmiColor = "text-info"; }
-                    else if (bmi < 25) { bmiText = "Bình thường"; bmiColor = "text-success"; }
-                    else if (bmi < 30) { bmiText = "Thừa cân"; bmiColor = "text-warning"; }
-                    else { bmiText = "Béo phì"; bmiColor = "text-danger"; }
-                }
-            %>
-            <div class="text-white-50 small text-uppercase letter-spacing-1 mb-2">Chỉ số BMI</div>
-            <div class="display-3 fw-bold text-white mb-2" style="font-family: 'Oswald', sans-serif;"><%= bmi > 0 ? bmi : '--' %></div>
-            <div class="h5 fw-bold <%= bmiColor %> text-uppercase m-0">
-                <% if (bmi > 0) { %><i class="bi bi-heart-pulse-fill me-1"></i><% } %>
-                <%= bmiText %>
-            </div>
-        </div>
-        
+        <form action="/members/deduct-session" method="POST" class="d-flex gap-2 align-items-center">
+            <input type="hidden" name="registration_id" value="<%= pkg.id %>">
+            <input type="hidden" name="member_id" value="<%= member.id %>">
+            <input type="hidden" name="trainer_id" value="<%= pkg.trainer_id %>">
+            
+            <input type="text" name="note" class="form-control bg-transparent text-white border-secondary w-50" placeholder="Ghi chú buổi tập (Tập ngực, chân...)" autocomplete="off">
+            
+            <button type="submit" class="btn btn-danger w-50 fw-bold" <%= isCompleted ? 'disabled' : '' %> onclick="return confirm('Xác nhận trừ 1 buổi tập PT?')">
+                <i class="bi bi-check2-square me-2"></i> ĐIỂM DANH (-1 BUỔI)
+            </button>
+        </form>
     </div>
-</div>
-    </div>
+    <% 
+                });
+            }
+        } 
+    %>
 
     <div class="glass-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -165,23 +201,21 @@
                         <% history.forEach(item => { %>
                             <tr>
                                 <td class="fw-bold text-white"><%= item.package_name %></td>
-                                <td><%= item.trainer_name || '<span class="text-white-50">Tự do</span>' %></td>
+                                <td><%- item.trainer_name || '<span class="text-white-50">Tự do</span>' %></td>
                                 <td><%= new Date(item.registration_date).toLocaleDateString('vi-VN') %></td>
                                 <td class="text-warning"><%= new Date(item.expiration_date).toLocaleDateString('vi-VN') %></td>
                                 <td style="max-width: 200px;">
-    <div class="d-flex align-items-start justify-content-between">
-        <span class="small text-break"><%= item.schedule || '---' %></span>
-        
-        <button class="btn btn-sm btn-link text-warning p-0 ms-2" title="Sửa lịch tập" 
-                data-regid="<%= item.id %>"
-                data-memberid="<%= member.id %>"
-                data-schedule="<%= item.schedule || '' %>"
-                onclick="openEditScheduleModal(this.dataset.regid, this.dataset.memberid, this.dataset.schedule)">
-            <i class="bi bi-pencil-square fs-6"></i>
-        </button>
-        
-    </div>
-</td>
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <span class="small text-break"><%= item.schedule || '---' %></span>
+                                        <button class="btn btn-sm btn-link text-warning p-0 ms-2" title="Sửa lịch tập" 
+                                                data-regid="<%= item.id %>"
+                                                data-memberid="<%= member.id %>"
+                                                data-schedule="<%= item.schedule || '' %>"
+                                                onclick="openEditScheduleModal(this.dataset.regid, this.dataset.memberid, this.dataset.schedule)">
+                                            <i class="bi bi-pencil-square fs-6"></i>
+                                        </button>
+                                    </div>
+                                </td>
                                 
                                 <td class="fw-bold"><%= item.price.toLocaleString('vi-VN') %> đ</td>
                                 <td>
@@ -207,7 +241,9 @@
     <div class="mt-4">
         <a href="/members" class="btn btn-outline-light px-4 py-2 fw-bold"><i class="bi bi-arrow-left me-2"></i> QUAY LẠI</a>
     </div>
-</div> <div class="modal fade" id="registerPackageModal" tabindex="-1">
+</div> 
+
+<div class="modal fade" id="registerPackageModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
             <div class="modal-header border-secondary">
@@ -315,7 +351,6 @@
 </div>
 
 <script>
-    // Logic click chọn ô trên tất cả các bảng lịch (cả Đăng ký & Sửa)
     document.querySelectorAll('.schedule-cell').forEach(cell => {
         cell.addEventListener('click', function() {
             this.classList.toggle('active');

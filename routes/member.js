@@ -86,29 +86,32 @@ router.get('/view/:id', (req, res) => {
 });
 
 router.post('/view/:id/register', (req, res) => {
-    const member_id = req.params.id;
+    const memberId = req.params.id;
     const { package_id, trainer_id, schedule } = req.body;
-    const registration_date = new Date().toISOString().split('T')[0];
 
-    db.query("SELECT price, duration_months FROM packages WHERE id = ?", [package_id], (err, pkgResult) => {
-        if (err || pkgResult.length === 0) return res.status(500).send("Lỗi dữ liệu gói tập");
-        
-        const price = pkgResult[0].price;
-        const duration = pkgResult[0].duration_months;
-        
-        let expDate = new Date();
-        expDate.setMonth(expDate.getMonth() + duration);
-        const expiration_date = expDate.toISOString().split('T')[0];
-        
-        const t_id = trainer_id ? trainer_id : null;
+    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active'", [memberId], (err, activePkgs) => {
+        if (activePkgs && activePkgs.length > 0) {
+            return res.send("<script>alert('TỪ CHỐI: Hội viên này đang có gói tập chưa hết hạn!'); window.history.back();</script>");
+        }
+        db.query("SELECT * FROM packages WHERE id = ?", [package_id], (err, pkgs) => {
+            if (err || pkgs.length === 0) return res.status(500).send("Lỗi gói tập");
 
-        const insertSql = `
-            INSERT INTO registrations (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        `;
-        db.query(insertSql, [member_id, package_id, t_id, price, registration_date, expiration_date, schedule], (err, result) => {
-            if (err) return res.status(500).send("Lỗi xử lý đăng ký");
-            res.redirect(`/members/view/${member_id}`);
+            const pkg = pkgs[0];
+            const regDate = new Date().toISOString().split('T')[0];
+            
+            let expDate = new Date();
+            expDate.setMonth(expDate.getMonth() + pkg.duration_months);
+            const expDateStr = expDate.toISOString().split('T')[0];
+
+            const sql = `
+                INSERT INTO registrations 
+                (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, total_sessions, payment_status, payment_method, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Success', 'Tiền mặt', 'active')
+            `;
+            db.query(sql, [memberId, package_id, trainer_id || null, pkg.price, regDate, expDateStr, schedule, pkg.pt_sessions || 0], (err) => {
+                if (err) console.log(err);
+                res.redirect('/members/view/' + memberId);
+            });
         });
     });
 });
@@ -178,4 +181,26 @@ router.post("/edit/:id", (req, res) => {
     });
 });
 
+router.post('/deduct-session', (req, res) => {
+    const { registration_id, member_id, trainer_id, note } = req.body;
+
+    // 1. Kiểm tra xem gói tập này còn buổi nào không
+    db.query("SELECT total_sessions, used_sessions FROM registrations WHERE id = ?", [registration_id], (err, results) => {
+        if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
+        
+        const reg = results[0];
+        if (reg.used_sessions >= reg.total_sessions) {
+            return res.status(400).send("Gói tập này đã hết số buổi!");
+        }
+
+        // 2. Tăng số buổi đã tập lên 1
+        db.query("UPDATE registrations SET used_sessions = used_sessions + 1 WHERE id = ?", [registration_id], (err) => {
+            if (err) return res.status(500).send("Lỗi cập nhật số buổi");
+            db.query("INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)", 
+            [registration_id, member_id, trainer_id, note || 'Hoàn thành buổi tập'], (err) => {
+                res.redirect('/members/view/' + member_id);
+            });
+        });
+    });
+});
 module.exports = router;

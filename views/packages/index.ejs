@@ -76,11 +76,20 @@
                     
                     <hr class="border-secondary mx-3 opacity-50 mb-4">
                     
-                    <ul class="feature-list px-3">
-                        <li><i class="bi bi-check-circle-fill"></i> Tập luyện tự do không giới hạn</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Sử dụng toàn bộ thiết bị</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Tủ đồ & Phòng tắm VIP</li>
-                    </ul>
+                    <div class="text-start mt-4 mb-4" style="min-height: 120px;">
+    <% if (pkg.description) { %>
+        <% 
+            let benefits = pkg.description.split(/\r?\n/).filter(line => line.trim() !== ''); 
+        %>
+        <% benefits.forEach(benefit => { %>
+            <div class="text-white-50 small mb-2 text-truncate" title="<%= benefit.trim() %>">
+                <i class="bi bi-check-circle-fill text-success me-2"></i><%= benefit.trim() %>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <div class="text-white-50 small fst-italic">Chưa có mô tả quyền lợi.</div>
+    <% } %>
+</div>
                 </div>
                 
                 <div class="action-box d-flex gap-2 justify-content-center">

@@ -1,0 +1,128 @@
+<%- include('../partials/header') %>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<div class="container mt-5 mb-5 d-flex flex-column align-items-center">
+    
+    <div class="text-center mb-4">
+        <h1 class="fw-bold text-white font-oswald mt-2 text-uppercase letter-spacing-1">Hệ Thống Kiểm Soát Ra Vào</h1>
+        <p class="text-white-50">Đưa mã QR của hội viên vào khung hình hoặc gõ SĐT</p>
+    </div>
+
+    <div class="row w-100 justify-content-center g-4" style="max-width: 900px;">
+        
+        <div class="col-md-6 d-flex flex-column align-items-center">
+            <div id="reader" class="bg-dark rounded-4 overflow-hidden border border-secondary shadow-lg w-100" style="min-height: 300px;"></div>
+            
+            <form id="checkinForm" onsubmit="handleCheckin(event)" class="w-100 mt-4">
+                <div class="input-group input-group-lg shadow-lg">
+                    <span class="input-group-text bg-danger border-danger text-white"><i class="bi bi-keyboard"></i></span>
+                    <input type="text" id="searchInput" class="form-control bg-dark text-white border-danger form-control-lg py-3 fs-5 text-center" 
+                           placeholder="Hoặc gõ SĐT / ID..." autocomplete="off">
+                    <button class="btn btn-danger px-3 fw-bold" type="submit">CHECK</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-6 d-flex justify-content-center align-items-start">
+            <div id="resultCard" class="card w-100 text-center shadow-lg border-0 rounded-4 overflow-hidden opacity-50" style="transition: 0.3s; min-height: 380px;">
+                <div class="card-header py-3 bg-secondary text-white" id="resultHeader">
+                    <h4 class="m-0 fw-bold font-oswald text-uppercase" id="resultStatus"><i class="bi bi-camera-video me-2"></i>Sẵn sàng quét</h4>
+                </div>
+                <div class="card-body bg-dark p-4 border border-top-0 border-secondary rounded-bottom-4 d-flex flex-column justify-content-center">
+                    <h2 class="text-white fw-bold mb-2" id="resName">---</h2>
+                    <p class="text-white-50 fs-5 mb-4" id="resPhone">Chưa có dữ liệu</p>
+                    
+                    <div id="expBox" class="d-inline-block bg-black px-4 py-2 rounded-pill border border-secondary d-none mx-auto">
+                        <span class="text-white-50 me-2">Ngày hết hạn:</span>
+                        <span class="text-white fw-bold fs-5" id="resDate">--/--/----</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" preload="auto"></audio>
+<audio id="errorSound" src="https://www.soundjay.com/buttons/sounds/buzzer-14.mp3" preload="auto"></audio>
+
+<script>
+    function playBeep() {
+        document.getElementById('beepSound').play().catch(()=>{});
+    }
+
+    function playError() {
+        document.getElementById('errorSound').play().catch(()=>{});
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        const input = document.getElementById('searchInput');
+        input.value = decodedText;
+        
+        document.getElementById('checkinForm').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+
+    function onScanFailure(error) {
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: {width: 250, height: 250} },
+      false);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+    function handleCheckin(e) {
+        e.preventDefault();
+        const input = document.getElementById('searchInput');
+        const val = input.value.trim();
+        if (!val) return;
+
+        const resultCard = document.getElementById('resultCard');
+        const resultHeader = document.getElementById('resultHeader');
+        const resultStatus = document.getElementById('resultStatus');
+        
+        resultCard.classList.remove('opacity-50');
+
+        fetch('/checkin/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ search_val: val })
+        })
+        .then(res => res.json())
+        .then(data => {
+            input.value = ''; 
+            input.focus(); 
+
+            if (data.status === 'Not Found') {
+                playError();
+                resultHeader.className = 'card-header py-3 bg-secondary text-white';
+                resultStatus.innerHTML = '<i class="bi bi-question-circle me-2"></i>Không tìm thấy';
+                document.getElementById('resName').innerText = 'Dữ liệu không hợp lệ';
+                document.getElementById('resPhone').innerText = 'Kiểm tra lại SĐT hoặc ID';
+                document.getElementById('expBox').classList.add('d-none');
+            } 
+            else if (data.status === 'Success') {
+                playBeep();
+                resultHeader.className = 'card-header py-3 bg-success text-white';
+                resultStatus.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Hợp lệ - Mời vào';
+                document.getElementById('resName').innerText = data.member.fullname;
+                document.getElementById('resPhone').innerText = data.member.phone;
+                document.getElementById('expBox').classList.remove('d-none');
+                document.getElementById('expBox').className = 'd-inline-block bg-black px-4 py-2 rounded-pill border border-success mx-auto';
+                
+                const dateObj = new Date(data.expiration_date);
+                document.getElementById('resDate').innerText = dateObj.toLocaleDateString('vi-VN');
+            } 
+            else {
+                playError();
+                resultHeader.className = 'card-header py-3 bg-danger text-white';
+                resultStatus.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Thẻ Hết Hạn';
+                document.getElementById('resName').innerText = data.member.fullname;
+                document.getElementById('resPhone').innerText = data.member.phone;
+                document.getElementById('expBox').classList.add('d-none');
+            }
+        });
+    }
+</script>
+
+<%- include('../partials/footer') %>

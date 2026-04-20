@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-secondary">
+            <i class="bi bi-wallet2 text-danger fs-2 me-3"></i>
+            <h2 class="fw-bold text-white text-uppercase m-0">Thanh Toán Hóa Đơn #<%= invoice.id %></h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="bg-dark p-4 rounded border border-secondary h-100 shadow">
+                    <h5 class="text-white-50 text-uppercase mb-4">Chi tiết giao dịch</h5>
+                    
+                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Khách hàng:</span> <strong class="fs-5"><%= invoice.fullname %></strong></p>
+                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">SĐT:</span> <%= invoice.phone %></p>
+                    <hr class="border-secondary">
+                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Gói tập:</span> <%= invoice.package_name || 'Mua lẻ sản phẩm' %></p>
+                    <p class="text-white mb-4"><span class="text-secondary d-inline-block" style="width: 100px;">Trạng thái:</span> 
+                        <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-hourglass-split me-1"></i>Chờ thanh toán</span>
+                    </p>
+
+                    <div class="bg-black p-3 rounded text-center border border-danger">
+                        <p class="text-secondary mb-1 text-uppercase small">Cần thu khách (VNĐ)</p>
+                        <h2 class="text-danger fw-bold m-0" style="font-family: 'Oswald', sans-serif;"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="bg-dark p-4 rounded border border-secondary h-100 shadow text-center">
+                    
+                    <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#qr-tab" type="button">Quét mã QR</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#cash-tab" type="button">Tiền mặt</button>
+                        </li>
+                    </ul>
+
+                    <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm">
+                        <div class="tab-content" id="pills-tabContent">
+                            <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
+                                <div class="bg-white p-3 rounded d-inline-block mb-3 shadow">
+                                    <img src="https://img.vietqr.io/image/mbbank-0123456789-compact2.png?amount=<%= invoice.price %>&addInfo=GYMBRO%20<%= invoice.id %>&accountName=POWER%20GYM" 
+                                         alt="Mã QR Thanh Toán" width="200" class="img-fluid rounded">
+                                </div>
+                                <p class="text-info small"><i class="bi bi-info-circle me-1"></i>Khách hàng dùng App Ngân hàng hoặc MoMo quét mã trên để thanh toán.</p>
+                                <input type="hidden" name="payment_method" value="Chuyển khoản" id="methodInput">
+                            </div>
+
+                            <div class="tab-pane fade" id="cash-tab" role="tabpanel">
+                                <i class="bi bi-cash-stack text-success" style="font-size: 5rem;"></i>
+                                <p class="text-white mt-3 fs-5">Nhận tiền mặt tại quầy</p>
+                                <p class="text-white-50 small">Vui lòng kiểm đếm đủ <strong class="text-white"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</strong> trước khi bấm xác nhận.</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold mt-4 shadow" onclick="return confirm('Bạn xác nhận ĐÃ THU TIỀN thành công?')">
+                            <i class="bi bi-check-circle-fill me-2"></i>XÁC NHẬN ĐÃ THU TIỀN
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logic nhỏ để đổi giá trị Input khi Lễ tân chuyển qua lại giữa 2 Tab
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.addEventListener('click', function() {
+            if(this.dataset.bsTarget === '#cash-tab') {
+                document.getElementById('methodInput').value = 'Tiền mặt';
+            } else {
+                document.getElementById('methodInput').value = 'Chuyển khoản';
+            }
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>

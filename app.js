@@ -9,6 +9,8 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(
   session({
@@ -36,6 +38,9 @@ app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
+app.use('/trainers', require('./routes/trainer'));
+app.use('/products', require('./routes/product'));
+app.use('/checkin', require('./routes/checkin'));
 
 app.get("/", (req, res) => {
   res.render("home");
