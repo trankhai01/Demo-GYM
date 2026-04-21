@@ -75,4 +75,3 @@ router.post('/my-profile/edit', requireMember, (req, res) => {
     });
 });
 module.exports = router;
-module.exports = router;

@@ -29,7 +29,7 @@ router.post('/add', (req, res) => {
 router.get('/edit/:id', (req, res) => {
     db.query("SELECT * FROM trainers WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/trainers');
-        res.render('trainers/edit', { pt: result[0] });
+        res.render('trainers/edit', { trainer: result[0] });
     });
 });
 

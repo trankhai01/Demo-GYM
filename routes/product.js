@@ -29,7 +29,7 @@ router.post('/add', (req, res) => {
 router.get('/edit/:id', (req, res) => {
     db.query("SELECT * FROM products WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/products');
-        res.render('products/edit', { prod: result[0] });
+        res.render('products/edit', { product: result[0] });
     });
 });
 

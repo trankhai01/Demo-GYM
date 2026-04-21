@@ -82,7 +82,7 @@
         
         <% if (user) { %>
             <div class="mt-3" style="color: #a0a0a0; font-size: 0.9rem;">
-                <i class="bi bi-person-circle"></i> Xin chào, <strong class="text-white"><%= user.fullname %></strong>
+                <i class="bi bi-person-circle "></i> Xin chào, <strong class="text-white "><%= user.fullname %></strong>
             </div>
             <a href="/logout" class="btn btn-outline-danger btn-sm mt-3 w-100"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
         <% } %>
@@ -90,13 +90,13 @@
 
     <div class="mt-3">
         <% if (user && user.role === 'admin') { %>
-            <a href="/members" class="nav-item"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
-            <a href="/checkin" class="nav-item text-warning fw-bold"><i class="bi bi-upc-scan me-2"></i> Máy Check-in</a>
-            <a href="/packages" class="nav-item"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
-            <a href="/trainers" class="nav-item"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>
-            <a href="/products" class="nav-item"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
-            <a href="/registrations" class="nav-item"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
-            <a href="/reports" class="nav-item"><i class="bi bi-bar-chart-line me-2"></i> Báo cáo Doanh thu</a>
+            <a href="/members" class="nav-item fw-bold"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
+            <a href="/checkin" class="nav-item fw-bold"><i class="bi bi-upc-scan me-2"></i> Máy Check-in</a>
+            <a href="/packages" class="nav-item fw-bold"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
+            <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>
+            <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
+            <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
+            <a href="/reports" class="nav-item fw-bold"><i class="bi bi-bar-chart-line me-2"></i> Báo cáo Doanh thu</a>
         <% } %>
 
         <% if (user && user.role === 'member') { %>
