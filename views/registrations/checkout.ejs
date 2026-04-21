@@ -43,7 +43,7 @@
                         <div class="tab-content" id="pills-tabContent">
                             <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
                                 <div class="bg-white p-3 rounded d-inline-block mb-3 shadow">
-                                    <img src="https://img.vietqr.io/image/mbbank-0123456789-compact2.png?amount=<%= invoice.price %>&addInfo=GYMBRO%20<%= invoice.id %>&accountName=POWER%20GYM" 
+                                    <img src="https://img.vietqr.io/image/mbbank-0123456789-compact2.png?amount=<%= invoice.price %>&addInfo=GYMBRO%20<%= invoice.id %>&accountName=GYM%20BRO" 
                                          alt="Mã QR Thanh Toán" width="200" class="img-fluid rounded">
                                 </div>
                                 <p class="text-info small"><i class="bi bi-info-circle me-1"></i>Khách hàng dùng App Ngân hàng hoặc MoMo quét mã trên để thanh toán.</p>
@@ -68,7 +68,6 @@
 </div>
 
 <script>
-    // Logic nhỏ để đổi giá trị Input khi Lễ tân chuyển qua lại giữa 2 Tab
     document.querySelectorAll('.nav-link').forEach(tab => {
         tab.addEventListener('click', function() {
             if(this.dataset.bsTarget === '#cash-tab') {

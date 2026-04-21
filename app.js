@@ -14,7 +14,7 @@ app.use(express.json());
 
 app.use(
   session({
-    secret: "bi_mat_cua_gym",
+    secret: "1234567890",
     resave: false,
     saveUninitialized: true,
   }),
@@ -41,6 +41,7 @@ app.use("/reports", reportRoutes);
 app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
+app.use('/profile', require('./routes/profile'));
 
 app.get("/", (req, res) => {
   res.render("home");

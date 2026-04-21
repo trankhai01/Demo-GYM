@@ -1,0 +1,86 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center mb-4 text-center">
+        <div class="col-md-10">
+            <h2 class="text-white text-uppercase fw-bold m-0" style="letter-spacing: 1px;">
+                <i class="bi bi-calendar2-check-fill text-danger me-2"></i>Thông Tin Tập Luyện
+            </h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center g-4">
+        <div class="col-md-5">
+            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary h-100">
+                <h5 class="text-white-50 text-uppercase mb-4 fw-bold small">
+                    <i class="bi bi-card-heading me-2"></i>Gói tập & Lịch trình
+                </h5>
+                <% if (regInfo) { %>
+                    <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
+                        <span class="text-white-50">Gói đăng ký:</span>
+                        <span class="text-warning fw-bold"><%= regInfo.package_name %></span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
+                        <span class="text-white-50">Ngày hết hạn:</span>
+                        <span class="text-danger fw-bold"><%= new Date(regInfo.expiration_date).toLocaleDateString('vi-VN') %></span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-white-50 mb-2">Lịch tập dự kiến:</div>
+                        <div class="bg-black p-3 rounded-3 border border-secondary text-info fw-bold text-center">
+                            <%= regInfo.schedule || 'Chưa đăng ký' %>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-4 text-white-50">Chưa có gói tập hoạt động</div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary h-100 text-center">
+                <h5 class="text-white-50 text-uppercase mb-4 fw-bold small">Thẻ Check-in</h5>
+                <div class="bg-white p-2 d-inline-block rounded-3 mb-3">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= user.id %>" class="img-fluid">
+                </div>
+                <div class="text-white fw-bold"><%= user.fullname %></div>
+                <div class="text-white-50 small">ID: <%= user.id %></div>
+            </div>
+        </div>
+
+        <div class="col-md-10 mt-4">
+            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary">
+                <h5 class="text-white-50 text-uppercase mb-3 fw-bold small">
+                    <i class="bi bi-clock-history me-2"></i>Lịch sử 10 buổi tập gần nhất
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover border-secondary">
+                        <thead>
+                            <tr class="text-white-50 small">
+                                <th>Ngày giờ</th>
+                                <th>Trạng thái</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (history && history.length > 0) { %>
+                                <% history.forEach(h => { %>
+                                    <tr>
+                                        <td><%= new Date(h.checkin_time).toLocaleString('vi-VN') %></td>
+                                        <td><span class="badge bg-success">Thành công</span></td>
+                                        <td class="text-white-50"><%= h.note %></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="3" class="text-center text-white-50 py-3">Chưa có dữ liệu tập luyện</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

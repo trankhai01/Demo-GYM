@@ -196,7 +196,7 @@
                         <tbody>
                             <% ['Sáng', 'Chiều', 'Tối'].forEach(session => { %>
                                 <tr>
-                                    <td class="align-middle text-white-50 small pe-2"><%= session %></td>
+                                    <td class="align-middle text-black small pe-2"><%= session %></td>
                                     <% [2, 3, 4, 5, 6, 7, 8].forEach(day => { %>
                                         <td class="p-1">
                                             <div class="schedule-cell" data-day="<%= day == 8 ? 'CN' : 'T' + day %>" data-session="<%= session %>">
@@ -325,7 +325,7 @@ function renderCart() {
 
     $(document).ready(function() {
         $('#globalMemberSelect').select2({
-            placeholder: "-- Gõ tên, SĐT hoặc ID để tìm --",
+            placeholder: "-- Nhập tên, SĐT hoặc ID để tìm --",
             allowClear: true
         });
         $('#globalMemberSelect').on('change', function() {

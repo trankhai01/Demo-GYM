@@ -1,198 +1,157 @@
 <%- include('../partials/header') %>
 
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-<div class="container mt-5 mb-5 d-flex flex-column align-items-center">
-    
-    <div class="text-center mb-4">
-        <h1 class="fw-bold text-white font-oswald mt-2 text-uppercase letter-spacing-1">Hệ Thống Kiểm Soát Ra Vào</h1>
-        <p class="text-white-50">Đưa mã QR của hội viên vào khung hình hoặc gõ SĐT</p>
-    </div>
+<div class="container mt-4 text-center mb-5">
+    <h2 class="text-white text-uppercase mb-4 fw-bold" style="letter-spacing: 1px;">
+        <i class="bi bi-qr-code-scan text-danger me-2"></i>MÁY CHECK-IN TỰ ĐỘNG
+    </h2>
 
-    <div class="row w-100 justify-content-center g-4" style="max-width: 900px;">
-        
-        <div class="col-md-6 d-flex flex-column align-items-center">
-            <div id="reader" class="bg-dark rounded-4 overflow-hidden border border-secondary shadow-lg w-100" style="min-height: 300px;"></div>
-            
-            <form id="checkinForm" onsubmit="handleCheckin(event)" class="w-100 mt-4">
-                <div class="input-group input-group-lg shadow-lg">
-                    <span class="input-group-text bg-danger border-danger text-white"><i class="bi bi-keyboard"></i></span>
-                    <input type="text" id="searchInput" class="form-control bg-dark text-white border-danger form-control-lg py-3 fs-5 text-center" 
-                           placeholder="Hoặc gõ SĐT / ID..." autocomplete="off">
-                    <button class="btn btn-danger px-3 fw-bold" type="submit">CHECK</button>
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="bg-dark p-3 rounded-4 border border-secondary shadow-lg mb-4">
+                <div id="reader" width="100%"></div>
+            </div>
+
+            <div class="bg-dark p-4 rounded-4 border border-secondary shadow-lg">
+                <h6 class="text-white-50 text-uppercase mb-3 small fw-bold">Hoặc nhập thủ công</h6>
+                <div class="input-group">
+                    <input type="text" id="manual-input" class="form-control bg-dark text-white border-secondary" placeholder="Nhập Số điện thoại hoặc ID..." onkeypress="handleManualInput(event)">
+                    <button class="btn btn-warning fw-bold" type="button" onclick="processManualCheckin()">
+                        <i class="bi bi-search"></i> KIỂM TRA
+                    </button>
                 </div>
-            </form>
-        </div>
+            </div>
 
-        <div class="col-md-6 d-flex justify-content-center align-items-start">
-            <div id="resultCard" class="card w-100 text-center shadow-lg border-0 rounded-4 overflow-hidden opacity-50" style="transition: 0.3s; min-height: 380px;">
-                <div class="card-header py-3 bg-secondary text-white" id="resultHeader">
-                    <h4 class="m-0 fw-bold font-oswald text-uppercase" id="resultStatus"><i class="bi bi-camera-video me-2"></i>Sẵn sàng quét</h4>
-                </div>
-                <div class="card-body bg-dark p-4 border border-top-0 border-secondary rounded-bottom-4 d-flex flex-column justify-content-center">
-                    <h2 class="text-white fw-bold mb-2" id="resName">---</h2>
-                    <p class="text-white-50 fs-5 mb-4" id="resPhone">Chưa có dữ liệu</p>
-                    
-                    <div id="expBox" class="d-inline-block bg-black px-4 py-2 rounded-pill border border-secondary d-none mx-auto">
-                        <span class="text-white-50 me-2">Ngày hết hạn:</span>
-                        <span class="text-white fw-bold fs-5" id="resDate">--/--/----</span>
-                    </div>
+            <div id="result-box" class="mt-4 p-4 rounded-4 shadow-lg" style="display: none;">
+                <h3 id="result-name" class="fw-bold mb-2 text-uppercase"></h3>
+                <h5 id="result-msg" class="mb-3 fw-bold"></h5>
+                
+                <div class="d-flex gap-3 mt-3" id="action-buttons" style="display: none;">
+                    <button class="btn btn-outline-light fw-bold w-50 py-2" onclick="cancelCheckin()">
+                        <i class="bi bi-x-circle me-2"></i> HỦY
+                    </button>
+                    <button class="btn btn-light text-success fw-bold w-50 py-2" onclick="confirmCheckin()">
+                        <i class="bi bi-check-circle-fill me-2"></i> XÁC NHẬN
+                    </button>
                 </div>
             </div>
         </div>
-        
-        
     </div>
-    <div id="result-box" class="mt-4 p-4 rounded-4 shadow-lg" style="display: none;">
-            <h3 id="result-name" class="fw-bold mb-2 text-uppercase letter-spacing-1"></h3>
-            <h5 id="result-msg" class="mb-3 fw-bold"></h5>
-            
-            <button id="btn-confirm" class="btn btn-light text-success fw-bold w-100 py-2" style="display: none;" onclick="confirmCheckin()">
-                <i class="bi bi-check-circle-fill me-2"></i> XÁC NHẬN VÀO TẬP
-            </button>
-        </div>
 </div>
 
-<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" preload="auto"></audio>
-<audio id="errorSound" src="https://www.soundjay.com/buttons/sounds/buzzer-14.mp3" preload="auto"></audio>
-
 <script>
-    function playBeep() {
-        document.getElementById('beepSound').play().catch(()=>{});
-    }
+    let isScanning = false;
+    let currentMemberId = null;
+    const audioSuccess = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+    const audioError = new Audio('https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3');
 
-    function playError() {
-        document.getElementById('errorSound').play().catch(()=>{});
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-        const input = document.getElementById('searchInput');
-        input.value = decodedText;
-        
-        document.getElementById('checkinForm').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-    }
-
-    function onScanFailure(error) {
-    }
-
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: {width: 250, height: 250} },
-      false);
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-    function handleCheckin(e) {
-        e.preventDefault();
-        const input = document.getElementById('searchInput');
-        const val = input.value.trim();
-        if (!val) return;
-
-        const resultCard = document.getElementById('resultCard');
-        const resultHeader = document.getElementById('resultHeader');
-        const resultStatus = document.getElementById('resultStatus');
-        
-        resultCard.classList.remove('opacity-50');
+    // Hàm gọi API xử lý (Dùng chung cho cả Quét QR và Nhập tay)
+    function processCheckin(searchVal) {
+        if (isScanning) return;
+        isScanning = true;
 
         fetch('/checkin/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ search_val: val })
+            body: JSON.stringify({ search_val: searchVal })
         })
         .then(res => res.json())
         .then(data => {
-            input.value = ''; 
-            input.focus(); 
+            const resBox = document.getElementById('result-box');
+            const resName = document.getElementById('result-name');
+            const resMsg = document.getElementById('result-msg');
+            const actionBtns = document.getElementById('action-buttons');
 
-            if (data.status === 'Not Found') {
-                playError();
-                resultHeader.className = 'card-header py-3 bg-secondary text-white';
-                resultStatus.innerHTML = '<i class="bi bi-question-circle me-2"></i>Không tìm thấy';
-                document.getElementById('resName').innerText = 'Dữ liệu không hợp lệ';
-                document.getElementById('resPhone').innerText = 'Kiểm tra lại SĐT hoặc ID';
-                document.getElementById('expBox').classList.add('d-none');
-            } 
-            else if (data.status === 'Success') {
-                playBeep();
-                resultHeader.className = 'card-header py-3 bg-success text-white';
-                resultStatus.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Hợp lệ - Mời vào';
-                document.getElementById('resName').innerText = data.member.fullname;
-                document.getElementById('resPhone').innerText = data.member.phone;
-                document.getElementById('expBox').classList.remove('d-none');
-                document.getElementById('expBox').className = 'd-inline-block bg-black px-4 py-2 rounded-pill border border-success mx-auto';
+            resBox.style.display = 'block';
+            resName.innerText = data.member ? data.member.fullname : 'KHÔNG XÁC ĐỊNH';
+            resMsg.innerText = data.message || (data.status === 'Success' ? 'Hợp lệ' : 'Lỗi');
+
+            if (data.status === 'Success') {
+                resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-success text-white';
+                actionBtns.style.display = 'flex';
+                currentMemberId = data.member.id;
+                audioSuccess.play().catch(() => {});
+            } else {
+                resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-danger text-white';
+                actionBtns.style.display = 'none';
+                currentMemberId = null;
+                audioError.play().catch(() => {});
                 
-                const dateObj = new Date(data.expiration_date);
-                document.getElementById('resDate').innerText = dateObj.toLocaleDateString('vi-VN');
-            } 
-            else {
-                playError();
-                resultHeader.className = 'card-header py-3 bg-danger text-white';
-                resultStatus.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Thẻ Hết Hạn';
-                document.getElementById('resName').innerText = data.member.fullname;
-                document.getElementById('resPhone').innerText = data.member.phone;
-                document.getElementById('expBox').classList.add('d-none');
+                setTimeout(() => {
+                    resBox.style.display = 'none';
+                    isScanning = false;
+                }, 3000);
             }
+            
+            // Xóa trắng ô nhập sau khi kiểm tra xong
+            document.getElementById('manual-input').value = '';
+        })
+        .catch(() => {
+            isScanning = false;
         });
     }
-    let currentMemberId = null;
 
-function onScanSuccess(decodedText, decodedResult) {
-    if (isScanning) return;
-    isScanning = true;
+    // Xử lý khi quét QR thành công
+    function onScanSuccess(decodedText) {
+        processCheckin(decodedText);
+    }
 
-    fetch('/checkin/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: decodedText })
-    })
-    .then(res => res.json())
-    .then(data => {
-        const resBox = document.getElementById('result-box');
-        const resName = document.getElementById('result-name');
-        const resMsg = document.getElementById('result-msg');
-        const btnConfirm = document.getElementById('btn-confirm');
-
-        resBox.style.display = 'block';
-        resName.innerText = data.member ? data.member.fullname : 'KHÔNG XÁC ĐỊNH';
-        resMsg.innerText = data.message;
-
-        if (data.status === 'Success') {
-            resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-success text-white';
-            btnConfirm.style.display = 'block';
-            currentMemberId = data.member.id; 
-        } else {
-            resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-danger text-white';
-            btnConfirm.style.display = 'none';
-            currentMemberId = null;
-            
-            setTimeout(() => {
-                resBox.style.display = 'none';
-                isScanning = false;
-            }, 3000);
+    // Xử lý khi bấm nút "Kiểm tra" ở ô nhập tay
+    function processManualCheckin() {
+        const inputVal = document.getElementById('manual-input').value.trim();
+        if (inputVal === '') {
+            alert("Vui lòng nhập Số điện thoại hoặc ID!");
+            return;
         }
-    });
-}
+        processCheckin(inputVal);
+    }
 
-function confirmCheckin() {
-    if (!currentMemberId) return;
-    
-    fetch('/checkin/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: currentMemberId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        const resMsg = document.getElementById('result-msg');
-        resMsg.innerText = data.message;
-        
-        document.getElementById('btn-confirm').style.display = 'none';
-        
-        setTimeout(() => {
-            document.getElementById('result-box').style.display = 'none';
-            isScanning = false; 
-        }, 2000);
-    });
-}
+    // Xử lý khi gõ phím Enter trong ô nhập tay
+    function handleManualInput(event) {
+        if (event.key === "Enter") {
+            processManualCheckin();
+        }
+    }
+
+    // Hàm bấm Xác nhận
+    function confirmCheckin() {
+        if (!currentMemberId) return;
+
+        fetch('/checkin/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ member_id: currentMemberId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const resMsg = document.getElementById('result-msg');
+            const actionBtns = document.getElementById('action-buttons');
+            
+            resMsg.innerText = data.message;
+            actionBtns.style.display = 'none';
+
+            setTimeout(() => {
+                document.getElementById('result-box').style.display = 'none';
+                isScanning = false;
+            }, 2000);
+        })
+        .catch(() => {
+            isScanning = false;
+        });
+    }
+
+    // Hàm bấm Hủy
+    function cancelCheckin() {
+        document.getElementById('result-box').style.display = 'none';
+        document.getElementById('action-buttons').style.display = 'none';
+        currentMemberId = null;
+        isScanning = false;
+    }
+
+    // Khởi tạo máy quét QR
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    html5QrcodeScanner.render(onScanSuccess, () => {});
 </script>
 
 <%- include('../partials/footer') %>

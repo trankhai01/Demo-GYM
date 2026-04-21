@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const bcrypt = require('bcrypt');
 
 function requireMember(req, res, next) {
     if (req.session.user && req.session.user.role && req.session.user.role.trim().toLowerCase() === 'member') {
@@ -74,4 +75,84 @@ router.post('/my-profile/edit', requireMember, (req, res) => {
         });
     });
 });
+
+router.get('/change-password', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    res.render('profile/change-password');
+});
+
+router.post('/change-password', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    const { old_password, new_password, confirm_password } = req.body;
+    const userId = req.session.user.id; 
+
+    if (new_password !== confirm_password) {
+        return res.send('<script>alert("Mật khẩu mới không khớp!"); window.history.back();</script>');
+    }
+    db.query("SELECT password FROM members WHERE id = ?", [userId], async (err, results) => {
+        if (err || results.length === 0) {
+            return res.send('<script>alert("Lỗi hệ thống!"); window.history.back();</script>');
+        }
+        const dbPassword = results[0].password;
+        let isMatch = false;
+        if (dbPassword.startsWith('$2b$')) { 
+            isMatch = await bcrypt.compare(old_password, dbPassword);
+        } else {
+            isMatch = (old_password === dbPassword);
+        }
+        
+        if (!isMatch) {
+            return res.send('<script>alert("Mật khẩu hiện tại không đúng!"); window.history.back();</script>');
+        }
+        const hashedNewPassword = await bcrypt.hash(new_password, 10);
+
+        db.query("UPDATE members SET password = ? WHERE id = ?", [hashedNewPassword, userId], (err) => {
+            if (err) return res.send('<script>alert("Lỗi cập nhật!"); window.history.back();</script>');
+            
+            res.send('<script>alert("Đổi mật khẩu thành công!"); window.location.href="/";</script>');
+        });
+    });
+});
+
+router.get('/schedule', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'member') {
+        return res.redirect('/login');
+    }
+    const userId = req.session.user.id;
+    
+    const sqlPackage = `
+        SELECT r.schedule, p.package_name, t.fullname as trainer_name, r.expiration_date
+        FROM registrations r
+        LEFT JOIN packages p ON r.package_id = p.id
+        LEFT JOIN trainers t ON r.trainer_id = t.id
+        WHERE r.member_id = ? AND (r.status = 'Active' OR r.status = 'active')
+        ORDER BY r.expiration_date DESC LIMIT 1
+    `;
+
+    const sqlHistory = `
+        SELECT checkin_time, status, note 
+        FROM checkin_history 
+        WHERE member_id = ? AND status = 'Success'
+        ORDER BY checkin_time DESC LIMIT 10
+    `;
+
+    db.query(sqlPackage, [userId], (err, packageResults) => {
+        if (err) return res.send('<script>alert("Lỗi hệ thống"); window.history.back();</script>');
+        
+        db.query(sqlHistory, [userId], (err, historyResults) => {
+            if (err) return res.send('<script>alert("Lỗi hệ thống"); window.history.back();</script>');
+            
+            res.render('profile/schedule', { 
+                regInfo: packageResults.length > 0 ? packageResults[0] : null,
+                history: historyResults 
+            });
+        });
+    });
+});
+
+
 module.exports = router;
