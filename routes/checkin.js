@@ -2,18 +2,18 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// 1. Render giao diện Check-in
 router.get('/', (req, res) => {
     res.render('checkin/index');
 });
 
-// 2. API Xử lý khi Lễ tân gõ SĐT hoặc ID (Dùng Fetch API)
 router.post('/process', (req, res) => {
-    const searchVal = req.body.search_val;
+    const searchVal = req.body.search_val || req.body.member_id;
+    
     db.query("SELECT * FROM members WHERE phone = ? OR id = ?", [searchVal, searchVal], (err, members) => {
         if (err || members.length === 0) {
             return res.json({ status: 'Not Found', message: 'Không tìm thấy hội viên trong hệ thống!' });
         }
+        
         const member = members[0];
         const sqlCheckPackage = `
             SELECT expiration_date, package_id 
@@ -23,24 +23,32 @@ router.post('/process', (req, res) => {
         `;
 
         db.query(sqlCheckPackage, [member.id], (err, regs) => {
-            let checkinStatus = 'Expired'; 
-            let expDate = null;
-            let note = 'Thẻ đã hết hạn hoặc chưa đăng ký gói.';
-
-            if (regs && regs.length > 0) {
-                checkinStatus = 'Success'; 
-                expDate = regs[0].expiration_date;
-                note = 'Hợp lệ';
-            }
-            db.query("INSERT INTO checkin_history (member_id, status, note) VALUES (?, ?, ?)", 
-            [member.id, checkinStatus, note], (err) => {
-                res.json({
-                    status: checkinStatus,
-                    member: member,
-                    expiration_date: expDate
+            if (!regs || regs.length === 0) {
+                return res.json({ 
+                    status: 'Expired', 
+                    member: member, 
+                    expiration_date: null,
+                    message: 'Thẻ đã hết hạn hoặc chưa đăng ký gói.'
                 });
+            }
+
+            res.json({ 
+                status: 'Success', 
+                member: member, 
+                expiration_date: regs[0].expiration_date,
+                message: 'Hợp lệ. Vui lòng bấm Xác nhận!'
             });
         });
+    });
+});
+
+router.post('/confirm', (req, res) => {
+    const { member_id } = req.body;
+    
+    db.query("INSERT INTO checkin_history (member_id, status, note) VALUES (?, 'Success', 'Hợp lệ')", [member_id], (err) => {
+        if (err) return res.status(500).json({ status: 'Error', message: 'Lỗi lưu lịch sử' });
+        
+        res.json({ status: 'Success', message: 'Đã lưu lịch sử check-in thành công!' });
     });
 });
 

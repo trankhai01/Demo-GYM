@@ -40,7 +40,17 @@
                 </div>
             </div>
         </div>
+        
+        
     </div>
+    <div id="result-box" class="mt-4 p-4 rounded-4 shadow-lg" style="display: none;">
+            <h3 id="result-name" class="fw-bold mb-2 text-uppercase letter-spacing-1"></h3>
+            <h5 id="result-msg" class="mb-3 fw-bold"></h5>
+            
+            <button id="btn-confirm" class="btn btn-light text-success fw-bold w-100 py-2" style="display: none;" onclick="confirmCheckin()">
+                <i class="bi bi-check-circle-fill me-2"></i> XÁC NHẬN VÀO TẬP
+            </button>
+        </div>
 </div>
 
 <audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" preload="auto"></audio>
@@ -123,6 +133,66 @@
             }
         });
     }
+    let currentMemberId = null;
+
+function onScanSuccess(decodedText, decodedResult) {
+    if (isScanning) return;
+    isScanning = true;
+
+    fetch('/checkin/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: decodedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const resBox = document.getElementById('result-box');
+        const resName = document.getElementById('result-name');
+        const resMsg = document.getElementById('result-msg');
+        const btnConfirm = document.getElementById('btn-confirm');
+
+        resBox.style.display = 'block';
+        resName.innerText = data.member ? data.member.fullname : 'KHÔNG XÁC ĐỊNH';
+        resMsg.innerText = data.message;
+
+        if (data.status === 'Success') {
+            resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-success text-white';
+            btnConfirm.style.display = 'block';
+            currentMemberId = data.member.id; 
+        } else {
+            resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-danger text-white';
+            btnConfirm.style.display = 'none';
+            currentMemberId = null;
+            
+            setTimeout(() => {
+                resBox.style.display = 'none';
+                isScanning = false;
+            }, 3000);
+        }
+    });
+}
+
+function confirmCheckin() {
+    if (!currentMemberId) return;
+    
+    fetch('/checkin/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: currentMemberId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const resMsg = document.getElementById('result-msg');
+        resMsg.innerText = data.message;
+        
+        document.getElementById('btn-confirm').style.display = 'none';
+        
+        setTimeout(() => {
+            document.getElementById('result-box').style.display = 'none';
+            isScanning = false; 
+        }, 2000);
+    });
+}
 </script>
 
 <%- include('../partials/footer') %>
