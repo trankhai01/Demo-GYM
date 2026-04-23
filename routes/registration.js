@@ -61,14 +61,31 @@ router.post('/add-complex', (req, res) => {
     const { member_id, package_id, trainer_id, schedule, cart_items, total_price } = req.body;
     const reg_date = new Date().toISOString().split('T')[0];
 
-    let exp_date = reg_date;
+    const finalizeInvoice = (invoiceId) => {
+        if (cart_items && cart_items.length > 0) {
+            const details = cart_items.map(item => [invoiceId, item.id, item.qty, item.price]);
+            
+            db.query(
+                "INSERT INTO registration_details (registration_id, product_id, quantity, price) VALUES ?", 
+                [details], 
+                (err) => {
+                    if (err) console.error("Lỗi lưu chi tiết đơn hàng (Nhưng vẫn cho qua):", err);
+                    return res.json({ invoiceId: invoiceId });
+                }
+            );
+        } else {
+            return res.json({ invoiceId: invoiceId });
+        }
+    };
 
     if (package_id) {
         db.query("SELECT duration_months, pt_sessions FROM packages WHERE id = ?", [package_id], (err, pkg) => {
+            if (err) return res.status(500).json({ error: "Lỗi truy vấn database gói tập" });
+
             let exp_date = reg_date;
             let totalPt = 0; 
 
-            if (!err && pkg.length > 0) {
+            if (pkg.length > 0) {
                 let expDate = new Date();
                 expDate.setMonth(expDate.getMonth() + pkg[0].duration_months);
                 exp_date = expDate.toISOString().split('T')[0];
@@ -82,62 +99,92 @@ router.post('/add-complex', (req, res) => {
             `;
             
             db.query(sql, [member_id, package_id, trainer_id || null, total_price, reg_date, exp_date, schedule, totalPt], (err, result) => {
-                if (err) return res.status(500).json({ error: "Lỗi tạo hóa đơn" });
-                
-                if (cart_items && cart_items.length > 0) {
-                    cart_items.forEach(item => {
-                        db.query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", [item.qty, item.id]);
-                    });
-                }
-                res.json({ invoiceId: result.insertId });
+                if (err) return res.status(500).json({ error: err.message });
+                finalizeInvoice(result.insertId);
             });
         });
-    } else {
-        insertInvoice();
-    }
-
-    function insertInvoice() {
+    } 
+    else {
         const sql = `
-            INSERT INTO registrations (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, payment_status, payment_method, status) 
+            INSERT INTO registrations 
+            (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, payment_status, payment_method, status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
         `;
-        db.query(sql, [member_id, package_id, trainer_id, total_price, reg_date, exp_date, schedule], (err, result) => {
+        db.query(sql, [member_id || null, null, trainer_id || null, total_price, reg_date, reg_date, schedule], (err, result) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ error: "Lỗi tạo hóa đơn" });
+                console.log("LỖI SQL BÁN LẺ:", err);
+                return res.status(500).json({ error: err.message });
             }
-
-            if (cart_items && cart_items.length > 0) {
-                cart_items.forEach(item => {
-                    db.query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", [item.qty, item.id]);
-                });
-            }
-            res.json({ invoiceId: result.insertId });
+            finalizeInvoice(result.insertId);
         });
     }
 });
 
 router.get('/checkout/:id', (req, res) => {
-    const sql = `
-        SELECT r.*, m.fullname, m.phone, p.package_name 
+    const invoiceId = req.params.id;
+    const sqlInvoice = `
+        SELECT r.*, m.fullname AS member_name, p.package_name AS package_name 
         FROM registrations r
-        JOIN members m ON r.member_id = m.id
+        LEFT JOIN members m ON r.member_id = m.id
         LEFT JOIN packages p ON r.package_id = p.id
         WHERE r.id = ?
     `;
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err || result.length === 0) return res.redirect('/registrations');
-        res.render('registrations/checkout', { invoice: result[0] });
+
+    db.query(sqlInvoice, [invoiceId], (err, invoiceResult) => {
+        if (err || invoiceResult.length === 0) {
+            console.error("Lỗi tìm hóa đơn:", err);
+            return res.status(404).send("Không tìm thấy hóa đơn!");
+        }
+        const invoice = invoiceResult[0];
+        const sqlDetails = `
+            SELECT rd.*, pr.product_name 
+            FROM registration_details rd
+            JOIN products pr ON rd.product_id = pr.id
+            WHERE rd.registration_id = ?
+        `;
+
+        db.query(sqlDetails, [invoiceId], (err, detailsResult) => {
+            if (err) {
+                console.error("Lỗi lấy chi tiết sản phẩm:", err);
+                return res.status(500).send("Lỗi lấy chi tiết sản phẩm");
+            }
+            res.render('registrations/checkout', {
+                invoice: invoice,
+                details: detailsResult
+            });
+        });
     });
 });
 
 router.post('/checkout/confirm/:id', (req, res) => {
+    const registrationId = req.params.id;
     const { payment_method } = req.body;
+
     db.query("UPDATE registrations SET payment_status = 'Success', payment_method = ? WHERE id = ?", 
-    [payment_method, req.params.id], (err, result) => {
+    [payment_method, registrationId], (err, result) => {
         if (err) return res.status(500).send("Lỗi cập nhật thanh toán");
-        res.redirect('/reports'); 
+
+        db.query("SELECT product_id, quantity FROM registration_details WHERE registration_id = ?", 
+        [registrationId], (err, items) => {
+            if (err) {
+                console.error("Lỗi lấy chi tiết đơn hàng: ", err);
+                return res.redirect('/reports'); 
+            }
+
+            items.forEach(item => {
+                if (item.product_id) { 
+                    db.query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", 
+                    [item.quantity, item.product_id], (err) => {
+                        if(err) console.error(`Lỗi trừ kho sản phẩm ${item.product_id}: `, err);
+                    });
+                }
+            });
+
+            res.redirect('/reports'); 
+        });
     });
 });
+
+
 
 module.exports = router;

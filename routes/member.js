@@ -183,8 +183,6 @@ router.post("/edit/:id", (req, res) => {
 
 router.post('/deduct-session', (req, res) => {
     const { registration_id, member_id, trainer_id, note } = req.body;
-
-    // 1. Kiểm tra xem gói tập này còn buổi nào không
     db.query("SELECT total_sessions, used_sessions FROM registrations WHERE id = ?", [registration_id], (err, results) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
         
@@ -193,7 +191,6 @@ router.post('/deduct-session', (req, res) => {
             return res.status(400).send("Gói tập này đã hết số buổi!");
         }
 
-        // 2. Tăng số buổi đã tập lên 1
         db.query("UPDATE registrations SET used_sessions = used_sessions + 1 WHERE id = ?", [registration_id], (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật số buổi");
             db.query("INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)", 

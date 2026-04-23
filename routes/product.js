@@ -25,7 +25,7 @@ router.post('/add', (req, res) => {
     });
 });
 
-// 4. Giao diện Sửa (Dùng để Nhập thêm hàng / Đổi giá)
+// 4. Giao diện Sửa 
 router.get('/edit/:id', (req, res) => {
     db.query("SELECT * FROM products WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/products');
@@ -38,7 +38,8 @@ router.post('/edit/:id', (req, res) => {
     const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     db.query("UPDATE products SET product_name=?, category=?, price=?, stock_quantity=?, image_url=?, status=? WHERE id=?", 
     [product_name, category, price, stock_quantity, image_url, status, req.params.id], (err) => {
-        if (err) return res.status(500).send("Lỗi cập nhật dữ liệu");
+        if (err) {
+            return res.status(500).send("Lỗi cập nhật dữ liệu");}
         res.redirect('/products');
     });
 });

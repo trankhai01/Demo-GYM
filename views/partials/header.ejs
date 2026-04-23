@@ -100,6 +100,16 @@
             
         <% } %>
 
+        <% if (user && user.role === 'staff') { %>
+            <a href="/members" class="nav-item fw-bold"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
+            <a href="/checkin" class="nav-item fw-bold"><i class="bi bi-upc-scan me-2"></i> Máy Check-in</a>
+            <a href="/packages" class="nav-item fw-bold"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
+            <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>
+            <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
+            <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
+            
+        <% } %>
+
         <% if (user && user.role === 'member') { %>
             <a href="/my-profile" class="nav-item fw-bold"><i class="bi bi-person-vcard me-2"></i> Trang cá nhân</a>
             <a href="/profile/schedule" class="nav-item fw-bold"><i class="bi bi-calendar2-week me-2"></i> Lịch tập</a>

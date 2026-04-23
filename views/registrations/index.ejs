@@ -29,7 +29,7 @@
     .product-title { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .product-price { color: #47cf73; font-weight: bold; }
     .stock-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; color: #fff; }
-    .out-of-stock { opacity: 0.5; pointer-events: none; }
+    .Inactive { opacity: 0.5; pointer-events: none; }
     
     /* Tab Styles */
     .nav-tabs .nav-link { color: #888; border: none; border-bottom: 3px solid transparent; font-weight: bold; padding: 10px 20px; font-size: 1.1rem; }
@@ -111,7 +111,7 @@
                             <% if (typeof products !== 'undefined' && products.length > 0) { %>
                                 <% products.forEach(prod => { %>
                                     <div class="col-md-4 col-sm-6">
-                                       <div class="product-card <%= prod.stock_quantity === 0 ? 'out-of-stock' : '' %>" 
+                                       <div class="product-card <%= prod.stock_quantity === 0 ? 'Inactive' : '' %>" 
                                             data-id="<%= prod.id %>"
                                             data-name="<%= prod.product_name %>"
                                             data-price="<%= prod.price %>"
@@ -142,7 +142,7 @@
         <div class="col-lg-5">
             <div class="invoice-preview shadow-lg">
                 <div class="text-center mb-3 pb-2 border-bottom border-secondary">
-                    <h4 class="text-danger fw-bold font-oswald letter-spacing-1 m-0">POWER GYM</h4>
+                    <h4 class="text-danger fw-bold font-oswald letter-spacing-1 m-0">GYM BRO</h4>
                     <span class="text-white-50 small">Hóa Đơn Thanh Toán</span>
                 </div>
 
@@ -173,7 +173,7 @@
                         <div class="total-price" id="inv-total-price">0<span class="fs-4 text-white-50 ms-1">vnđ</span></div>
                     </div>
                     
-                    <button class="btn btn-danger w-100 py-3 fw-bold text-uppercase fs-5 shadow mt-3" onclick="submitInvoice()">
+                    <button type="button" class="btn btn-danger w-100 py-3 fw-bold text-uppercase fs-5 shadow mt-3" onclick="submitInvoice(event)">
                         <i class="bi bi-check2-circle me-2"></i> XUẤT HÓA ĐƠN
                     </button>
                 </div>
@@ -251,61 +251,71 @@
         document.getElementById('inv-trainer').innerText = opt.value ? opt.dataset.name : 'Tự do';
     });
 
-    function addToCart(id, name, price) {
-    let existingItem = cart.find(item => String(item.id) === String(id));
-    
-    if (existingItem) {
-        existingItem.qty += 1;
-    } else {
-        cart.push({ id: String(id), name: name, price: parseInt(price), qty: 1 });
-    }
-    renderCart();
-}
 
-function removeOne(id) {
-    let existingItem = cart.find(item => String(item.id) === String(id));
-    
-    if (existingItem) {
-        existingItem.qty -= 1;
-        if (existingItem.qty === 0) {
-            cart = cart.filter(item => String(item.id) !== String(id));
+    function addToCart(id, name, price, maxStock) {
+        let existingItem = cart.find(item => String(item.id) === String(id));
+        let stockLimit = Number(maxStock); 
+
+        if (existingItem) {
+            if (Number(existingItem.qty) >= stockLimit) { 
+                alert(`Cảnh báo: Kho chỉ còn ${stockLimit} sản phẩm này!`);
+                return; 
+            }
+            existingItem.qty += 1;
+        } else {
+            if (stockLimit <= 0) {
+                alert(`Sản phẩm này đã hết hàng!`);
+                return;
+            }
+            cart.push({ id: String(id), name: name, price: Number(price), qty: 1, maxStock: stockLimit });
         }
+        renderCart(); 
     }
-    renderCart();
-}
 
-function renderCart() {
-    cartContainer.innerHTML = '';
-    
-    if (cart.length === 0) {
-        cartContainer.appendChild(emptyCartMsg);
-        emptyCartMsg.style.display = 'block';
-    } else {
-        emptyCartMsg.style.display = 'none';
-        cart.forEach(item => {
-            let itemTotal = item.price * item.qty;
-            let html = `
-                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-2">
-                    <div class="w-50">
-                        <div class="text-white small text-truncate" title="${item.name}">${item.name}</div>
-                        <div class="text-white-50" style="font-size: 0.7rem;">${item.price.toLocaleString('vi-VN')}đ / món</div>
-                    </div>
-                    <div class="d-flex align-items-center w-25 justify-content-center">
-                        <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="removeOne('${item.id}')">-</button>
-                        <span class="text-white mx-2">${item.qty}</span>
-                        <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="addToCart('${item.id}', '${item.name}', ${item.price})">+</button>
-                    </div>
-                    <div class="text-info fw-bold small text-end w-25">${itemTotal.toLocaleString('vi-VN')}đ</div>
-                </div>
-            `;
-            cartContainer.insertAdjacentHTML('beforeend', html);
-        });
+    function removeOne(id) {
+        let existingItem = cart.find(item => String(item.id) === String(id));
+        
+        if (existingItem) {
+            existingItem.qty -= 1;
+            if (existingItem.qty === 0) {
+                cart = cart.filter(item => String(item.id) !== String(id));
+            }
+        }
+        renderCart();
     }
-    calculateTotal();
-}
+
+    function renderCart() {
+        cartContainer.innerHTML = '';
+        
+        if (cart.length === 0) {
+            cartContainer.appendChild(emptyCartMsg);
+            emptyCartMsg.style.display = 'block';
+        } else {
+            emptyCartMsg.style.display = 'none';
+            cart.forEach(item => {
+                let itemTotal = item.price * item.qty;
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-2">
+                        <div class="w-50">
+                            <div class="text-white small text-truncate" title="${item.name}">${item.name}</div>
+                            <div class="text-white-50" style="font-size: 0.7rem;">${item.price.toLocaleString('vi-VN')}đ / món</div>
+                        </div>
+                        <div class="d-flex align-items-center w-25 justify-content-center">
+                            <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="removeOne('${item.id}')">-</button>
+                            <span class="text-white mx-2">${item.qty}</span>
+                            <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, ${item.maxStock})">+</button>
+                        </div>
+                        <div class="text-info fw-bold small text-end w-25">${itemTotal.toLocaleString('vi-VN')}đ</div>
+                    </div>
+                `;
+                cartContainer.insertAdjacentHTML('beforeend', html);
+            });
+        }
+        calculateTotal();
+    }
 
     function calculateTotal() {
-        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0); 
         let finalTotal = currentPackagePrice + retailTotal;
         document.getElementById('inv-total-price').innerHTML = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
     }
@@ -335,18 +345,24 @@ function renderCart() {
     });
 
     function submitInvoice() {
+        if (event) {
+            event.preventDefault(); 
+        }
         const memberId = document.getElementById('globalMemberSelect').value;
-        if (!memberId) return alert('Vui lòng chọn Hội viên!');
-
         const packageId = document.getElementById('packageSelect').value;
-        if (!packageId && cart.length === 0) return alert('Hóa đơn đang trống!');
+        if (!packageId && cart.length === 0) {
+            return alert('Hóa đơn đang trống! Vui lòng chọn sản phẩm.');
+        }
+        if (packageId && !memberId) {
+            return alert('Vui lòng chọn Hội viên khi đăng ký Gói tập!');
+        }
 
-        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let retailTotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
         let finalTotal = currentPackagePrice + retailTotal;
 
         const payload = {
-            member_id: memberId,
-            package_id: packageId || null,
+            member_id: memberId || null, 
+            package_id: packageId || null, 
             trainer_id: document.getElementById('trainerSelect').value || null,
             schedule: document.getElementById('scheduleInput').value,
             cart_items: cart,
@@ -358,13 +374,27 @@ function renderCart() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const errorText = isJson ? (data.error || 'Lỗi không xác định') : await res.text();
+                throw new Error(errorText);
+            }
+            return data;
+        })
         .then(data => {
-            if(data.invoiceId) {
-                window.location.href = '/registrations/checkout/' + data.invoiceId;
+            if(data && data.invoiceId) {
+                setTimeout(function() {
+                window.location.replace('/registrations/checkout/' + data.invoiceId);
+            }, 100);
             } else {
                 alert('Có lỗi: ' + (data.error || 'Lưu thất bại'));
             }
+        })
+        .catch(err => {
+            console.error("Chi tiết lỗi:", err);
+            alert('Có lỗi xảy ra: ' + err.message);
         });
     }
 </script>

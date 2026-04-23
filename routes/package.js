@@ -12,8 +12,6 @@ router.get('/', (req, res) => {
 router.get('/add', (req, res) => {
     res.render('packages/add');
 });
-
-
 router.get('/edit/:id', (req, res) => {
     db.query("SELECT * FROM packages WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/packages');

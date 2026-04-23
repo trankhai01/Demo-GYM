@@ -81,6 +81,9 @@
                         
                         <% if (user.role === 'admin') { %>
                             <a href="/reports" class="btn btn-outline-light btn-sm me-2">Trang Quản trị</a>
+                        <% }
+                        if (user.role === 'staff') { %>
+                            <a href="/members" class="btn btn-outline-light btn-sm me-2">Trang Quản lý</a>
                         <% } else { %>
                             <a href="/my-profile" class="btn btn-outline-light btn-sm me-2">Hồ sơ của tôi</a>
                         <% } %>
@@ -94,7 +97,6 @@
             </div>
         </div>
     </nav>
-
     <section class="hero-section">
         <div class="container">
             <h1 class="hero-title">ĐÁNH THỨC <span>SỨC MẠNH</span><br>BÊN TRONG BẠN</h1>
