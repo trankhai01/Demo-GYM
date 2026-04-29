@@ -90,6 +90,19 @@
                 <label class="form-label">Số điện thoại</label>
                 <input type="tel" name="phone" class="form-control" required />
               </div>
+              <% if (typeof error !== 'undefined' && error) { %>
+  <div style="
+    background: #FCEBEB; 
+    color: #A32D2D; 
+    border: 1px solid #E24B4A; 
+    border-radius: 6px; 
+    padding: 10px 16px; 
+    margin-bottom: 16px;
+    font-size: 14px;
+  ">
+    ⚠️ <%= error %>
+  </div>
+<% } %>
               <div class="mb-3">
                 <label class="form-label">Mật khẩu</label>
                 <input

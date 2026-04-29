@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { requireAdmin } = require('../middleware/auth');
 
-router.get('/', (req, res) => {
+router.get('/', requireAdmin, (req, res) => {
     const revenueSql = `
         SELECT SUM(price) as total_revenue 
         FROM registrations 

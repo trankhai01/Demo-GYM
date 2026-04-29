@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { requireStaff } = require('../middleware/auth');
 
-router.get('/', (req, res) => {
+router.get('/', requireStaff, (req, res) => {
     res.render('checkin/index');
 });
 
-router.post('/process', (req, res) => {
+router.post('/process', requireStaff, (req, res) => {
     const searchVal = req.body.search_val || req.body.member_id;
     
     db.query("SELECT * FROM members WHERE phone = ? OR id = ?", [searchVal, searchVal], (err, members) => {
@@ -42,7 +43,7 @@ router.post('/process', (req, res) => {
     });
 });
 
-router.post('/confirm', (req, res) => {
+router.post('/confirm', requireStaff, (req, res) => {
     const { member_id } = req.body;
     
     db.query("INSERT INTO checkin_history (member_id, status, note) VALUES (?, 'Success', 'Hợp lệ')", [member_id], (err) => {

@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const session = require("express-session"); 
+const db = require("./config/db");
 
 const app = express();
 
@@ -14,9 +16,13 @@ app.use(express.json());
 
 app.use(
   session({
-    secret: "1234567890",
+    secret: process.env.SESSION_SECRET || 'fallback_secret_dev_only',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false, 
+    cookie: {
+      httpOnly: true,   
+      maxAge: 1000 * 60 * 60 * 8 
+    }
   }),
 );
 
@@ -44,8 +50,13 @@ app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', require('./routes/profile'));
 
-app.get("/", (req, res) => {
-  res.render("home");
+app.get('/', (req, res) => {
+    db.query("SELECT * FROM packages", (err, results) => {
+        res.render('home', { 
+            packages: err ? [] : results,
+            user: req.session ? req.session.user : null 
+        });
+    });
 });
 
 const PORT = 3000;

@@ -1,25 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { requireStaff} = require('../middleware/auth');
 
-router.get('/', (req, res) => {
+router.get('/',requireStaff, requireStaff, (req, res) => {
     db.query("SELECT * FROM packages ORDER BY price ASC", (err, results) => {
         if (err) return res.status(500).send("Lỗi server");
         res.render('packages/index', { packages: results || [] });
     });
 });
 
-router.get('/add', (req, res) => {
+router.get('/add',requireStaff, (req, res) => {
     res.render('packages/add');
 });
-router.get('/edit/:id', (req, res) => {
+router.get('/edit/:id',requireStaff, (req, res) => {
     db.query("SELECT * FROM packages WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/packages');
         res.render('packages/edit', { pkg: result[0] });
     });
 });
 
-router.post('/add', (req, res) => {
+router.post('/add',requireStaff, (req, res) => {
     const { package_name, duration_months, price, description, pt_sessions } = req.body;
     
     db.query("INSERT INTO packages (package_name, duration_months, price, description, pt_sessions) VALUES (?, ?, ?, ?, ?)", 
@@ -29,7 +30,7 @@ router.post('/add', (req, res) => {
     });
 });
 
-router.post('/edit/:id', (req, res) => {
+router.post('/edit/:id',requireStaff, (req, res) => {
     const { package_name, duration_months, price, description, pt_sessions } = req.body;
     
     db.query("UPDATE packages SET package_name = ?, duration_months = ?, price = ?, description = ?, pt_sessions = ? WHERE id = ?", 
@@ -39,7 +40,7 @@ router.post('/edit/:id', (req, res) => {
     });
 });
 
-router.get('/delete/:id', (req, res) => {
+router.get('/delete/:id',requireStaff, (req, res) => {
     db.query("DELETE FROM packages WHERE id = ?", [req.params.id], (err, result) => {
         if (err) {
             if (err.code === 'ER_ROW_IS_REFERENCED_2') {

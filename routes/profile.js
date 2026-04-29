@@ -2,14 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
-
-function requireMember(req, res, next) {
-    if (req.session.user && req.session.user.role && req.session.user.role.trim().toLowerCase() === 'member') {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
+const { requireLogin, requireMember } = require('../middleware/auth');
 
 router.get('/my-profile', requireMember, (req, res) => {
     const memberId = req.session.user.id;
@@ -76,14 +69,14 @@ router.post('/my-profile/edit', requireMember, (req, res) => {
     });
 });
 
-router.get('/change-password', (req, res) => {
+router.get('/change-password', requireLogin, (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
     }
     res.render('profile/change-password');
 });
 
-router.post('/change-password', (req, res) => {
+router.post('/change-password', requireLogin, (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
     }

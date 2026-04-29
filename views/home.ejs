@@ -78,16 +78,13 @@
                 <div class="d-flex align-items-center">
                     <% if (user) { %>
                         <span class="text-white me-3">Xin chào, <strong><%= user.username %></strong>!</span>
-                        
                         <% if (user.role === 'admin') { %>
                             <a href="/reports" class="btn btn-outline-light btn-sm me-2">Trang Quản trị</a>
-                        <% }
-                        if (user.role === 'staff') { %>
-                            <a href="/members" class="btn btn-outline-light btn-sm me-2">Trang Quản lý</a>
+                        <% } else if (user.role === 'staff') { %>
+                            <a href="/members" class="btn btn-outline-light btn-sm me-2">Trang Lễ tân</a>
                         <% } else { %>
                             <a href="/my-profile" class="btn btn-outline-light btn-sm me-2">Hồ sơ của tôi</a>
                         <% } %>
-                        
                         <a href="/logout" class="btn btn-danger btn-sm">Đăng xuất</a>
                     <% } else { %>
                         <a href="/login" class="btn btn-outline-light me-2">Đăng nhập</a>
@@ -111,7 +108,7 @@
 
     <section id="about" class="py-5 bg-dark">
         <div class="container text-center mt-5">
-            <h2 class="text-danger mb-4">TẠI SAO CHỌN POWER GYM?</h2>
+            <h2 class="text-danger mb-4">TẠI SAO CHỌN GYM BRO?</h2>
             <p class="text-muted">Chúng tôi cam kết mang lại trải nghiệm luyện tập tuyệt vời nhất...</p>
             </div>
     </section>

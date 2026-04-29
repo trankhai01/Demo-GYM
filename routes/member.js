@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const bcrypt = require("bcrypt"); 
+const { requireStaff } = require('../middleware/auth');
 
-router.get('/', (req, res) => {
+router.get('/',requireStaff, (req, res) => {
     const page = parseInt(req.query.page) || 1; 
     const searchQuery = req.query.q || '';      
     const error = req.query.error || null; 
@@ -33,11 +34,11 @@ router.get('/', (req, res) => {
 });
 
 
-router.get("/add", (req, res) => {
+router.get("/add",requireStaff, (req, res) => {
   res.render("members/add");
 });
 
-router.post("/add", (req, res) => {
+router.post("/add",requireStaff, (req, res) => {
     const { fullname, phone, gender } = req.body;
     const join_date = new Date().toISOString().split('T')[0];
     const checkSql = "SELECT id FROM members WHERE phone = ?";
@@ -58,7 +59,7 @@ router.post("/add", (req, res) => {
     });
 });
 
-router.get('/view/:id', (req, res) => {
+router.get('/view/:id', requireStaff, (req, res) => {
     const id = req.params.id;
     db.query("SELECT * FROM members WHERE id = ?", [id], (err, memberResult) => {
         if (err || memberResult.length === 0) return res.redirect('/members');
@@ -85,7 +86,7 @@ router.get('/view/:id', (req, res) => {
     });
 });
 
-router.post('/view/:id/register', (req, res) => {
+router.post('/view/:id/register',requireStaff, (req, res) => {
     const memberId = req.params.id;
     const { package_id, trainer_id, schedule } = req.body;
 
@@ -116,7 +117,7 @@ router.post('/view/:id/register', (req, res) => {
     });
 });
 
-router.get("/delete/:id", (req, res) => {
+router.get("/delete/:id",requireStaff, (req, res) => {
   const id = req.params.id;
   const sqlDeleteRegistrations = "DELETE FROM registrations WHERE member_id = ?";
   db.query(sqlDeleteRegistrations, [id], (err, result) => {
@@ -129,7 +130,7 @@ router.get("/delete/:id", (req, res) => {
   });
 });
 
-router.get("/edit/:id", (req, res) => {
+router.get("/edit/:id",requireStaff, (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM members WHERE id = ?";
   db.query(sql, [id], (err, result) => {
@@ -138,7 +139,7 @@ router.get("/edit/:id", (req, res) => {
   });
 });
 
-router.post("/edit/:id", (req, res) => {
+router.post("/edit/:id",requireStaff, (req, res) => {
     const id = req.params.id;
     const { 
         fullname, phone, gender, 
@@ -181,7 +182,7 @@ router.post("/edit/:id", (req, res) => {
     });
 });
 
-router.post('/deduct-session', (req, res) => {
+router.post('/deduct-session',requireStaff, (req, res) => {
     const { registration_id, member_id, trainer_id, note } = req.body;
     db.query("SELECT total_sessions, used_sessions FROM registrations WHERE id = ?", [registration_id], (err, results) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
