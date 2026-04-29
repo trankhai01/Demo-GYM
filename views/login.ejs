@@ -103,6 +103,7 @@
       <% } %>
 
       <form action="/login" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="mb-3">
           <label class="form-label">Số điện thoại</label>
           <input

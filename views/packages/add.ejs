@@ -21,6 +21,7 @@
       </h3>
 
       <form action="/packages/add" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="mb-4">
           <label class="form-label text-white-50 small text-uppercase"
             >Tên gói tập *</label

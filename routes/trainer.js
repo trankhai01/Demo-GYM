@@ -44,10 +44,10 @@ router.post('/edit/:id',requireAdmin, (req, res) => {
     });
 });
 
-// 6. Xóa PT 
-router.get('/delete/:id',requireAdmin, (req, res) => {
+// 6. Xóa PT
+router.post('/delete/:id', requireAdmin, (req, res) => {
     db.query("DELETE FROM trainers WHERE id = ?", [req.params.id], (err) => {
-        if (err) return res.send("<script>alert('Không thể xóa PT đang có lịch dạy!'); window.location='/trainers';</script>");
+        if (err) return res.send("<script>alert('Không thể xóa PT đang có lịch dạy!'); window.location.href='/trainers';</script>");
         res.redirect('/trainers');
     });
 });

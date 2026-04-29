@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireStaff} = require('../middleware/auth');
 
-router.get('/',requireStaff, requireStaff, (req, res) => {
+router.get('/', requireStaff, (req, res) => {
     db.query("SELECT * FROM packages ORDER BY price ASC", (err, results) => {
         if (err) return res.status(500).send("Lỗi server");
         res.render('packages/index', { packages: results || [] });
@@ -40,11 +40,11 @@ router.post('/edit/:id',requireStaff, (req, res) => {
     });
 });
 
-router.get('/delete/:id',requireStaff, (req, res) => {
+router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("DELETE FROM packages WHERE id = ?", [req.params.id], (err, result) => {
         if (err) {
             if (err.code === 'ER_ROW_IS_REFERENCED_2') {
-                return res.send("<script>alert('KHÔNG THỂ XÓA! Đang có hội viên sử dụng gói tập này.'); window.location='/packages';</script>");
+                return res.send("<script>alert('KHÔNG THỂ XÓA! Đang có hội viên sử dụng gói tập này.'); window.location.href='/packages';</script>");
             }
             return res.status(500).send("Lỗi hệ thống");
         }

@@ -35,7 +35,11 @@
                             
                             <div class="d-flex gap-2 mt-auto pt-3 border-top border-secondary">
                                 <a href="/trainers/edit/<%= pt.id %>" class="btn btn-outline-warning btn-sm w-50">Sửa</a>
-                                <a href="/trainers/delete/<%= pt.id %>" class="btn btn-outline-danger btn-sm w-50" onclick="return confirm('Xóa PT này?')">Xóa</a>
+                                <form action="/trainers/delete/<%= pt.id %>" method="POST" class="w-50"
+                                      onsubmit="return confirm('Xóa PT này?')">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Xóa</button>
+                                </form>
                             </div>
                         </div>
                     </div>

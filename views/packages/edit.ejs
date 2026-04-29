@@ -12,6 +12,7 @@
             </h3>
             
             <form action="/packages/edit/<%= pkg.id %>" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-4">
                     <label class="form-label text-white-50 small text-uppercase">Tên gói tập *</label>
                     <input type="text" name="package_name" class="form-control bg-dark text-white border-secondary py-2" value="<%= pkg.package_name %>" required>

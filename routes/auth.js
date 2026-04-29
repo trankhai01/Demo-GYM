@@ -1,7 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
+
+// Brute-force protection on login: 10 attempts per 15 minutes per IP.
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.'
+});
 
 // 1. Giao diện Login — nếu đã đăng nhập thì về trang chủ
 router.get('/login', (req, res) => {
@@ -10,7 +20,7 @@ router.get('/login', (req, res) => {
 });
 
 // 2. Xử lý đăng nhập
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
     const { phone, password } = req.body;
 
     if (!phone || !password) {

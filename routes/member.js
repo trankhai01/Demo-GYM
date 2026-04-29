@@ -117,7 +117,7 @@ router.post('/view/:id/register',requireStaff, (req, res) => {
     });
 });
 
-router.get("/delete/:id",requireStaff, (req, res) => {
+router.post("/delete/:id",requireStaff, (req, res) => {
   const id = req.params.id;
   const sqlDeleteRegistrations = "DELETE FROM registrations WHERE member_id = ?";
   db.query(sqlDeleteRegistrations, [id], (err, result) => {
