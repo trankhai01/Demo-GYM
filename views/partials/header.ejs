@@ -99,7 +99,12 @@
             <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>
             <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
             <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
-            
+            <a href="/admin/password-resets" class="nav-item fw-bold">
+                <i class="bi bi-key me-2"></i> Yêu cầu đổi mật khẩu
+                <% if (typeof pendingResetCount !== 'undefined' && pendingResetCount > 0) { %>
+                    <span class="badge bg-danger ms-2"><%= pendingResetCount %></span>
+                <% } %>
+            </a>
         <% } %>
 
         <% if (user && user.role === 'staff') { %>
@@ -114,6 +119,7 @@
         <% } %>
 
         <% if (user && user.role === 'member') { %>
+            <a href="/dashboard" class="nav-item fw-bold"><i class="bi bi-speedometer2 me-2"></i> Tổng quan</a>
             <a href="/my-profile" class="nav-item fw-bold"><i class="bi bi-person-vcard me-2"></i> Trang cá nhân</a>
             <a href="/schedule" class="nav-item fw-bold"><i class="bi bi-calendar3 me-2"></i> Lịch tập</a>
             <a href="/profile/schedule" class="nav-item fw-bold"><i class="bi bi-clock-history me-2"></i> Lịch sử tập</a>

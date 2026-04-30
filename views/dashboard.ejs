@@ -1,0 +1,189 @@
+<%- include('partials/header', { user: user }) %>
+
+<div class="container-fluid">
+  <!-- Hero greeting -->
+  <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #1a1a1a 0%, #2a0a0a 100%);">
+    <div class="card-body p-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h2 class="text-white mb-1">
+            <i class="bi bi-fire text-danger"></i>
+            Chào mừng trở lại, <span style="color:#e50914;"><%= member.fullname %></span>!
+          </h2>
+          <p class="text-muted mb-0">
+            <i class="bi bi-telephone"></i> <%= member.phone %>
+            &nbsp;•&nbsp;
+            <i class="bi bi-calendar-check"></i>
+            Tham gia từ <%= member.join_date ? new Date(member.join_date).toLocaleDateString('vi-VN') : '—' %>
+          </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <a href="/schedule" class="btn btn-danger fw-bold">
+            <i class="bi bi-calendar-plus"></i> Đặt lịch tập
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat cards row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start">
+            <div class="me-3" style="font-size: 2rem; color:#0d6efd;">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="text-muted text-uppercase small mb-1">Gói tập hiện tại</h6>
+              <% if (activePackage) { %>
+                <h5 class="text-white mb-1"><%= activePackage.package_name || '—' %></h5>
+                <% if (activePackage.days_left !== null) { %>
+                  <% if (activePackage.days_left > 7) { %>
+                    <span class="badge bg-success">Còn <%= activePackage.days_left %> ngày</span>
+                  <% } else if (activePackage.days_left > 0) { %>
+                    <span class="badge bg-warning text-dark">Sắp hết hạn: <%= activePackage.days_left %> ngày</span>
+                  <% } else { %>
+                    <span class="badge bg-danger">Hết hạn hôm nay</span>
+                  <% } %>
+                <% } %>
+                <% if (activePackage.total_sessions > 0) { %>
+                  <p class="text-muted small mb-0 mt-2">
+                    Buổi PT: <strong class="text-warning"><%= activePackage.total_sessions - (activePackage.used_sessions || 0) %></strong>
+                    / <%= activePackage.total_sessions %> còn lại
+                  </p>
+                <% } %>
+              <% } else { %>
+                <h6 class="text-muted">Chưa có gói tập đang hoạt động</h6>
+                <p class="small text-secondary mb-0">Liên hệ quầy lễ tân để đăng ký.</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start">
+            <div class="me-3" style="font-size: 2rem; color:#dc3545;">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="text-muted text-uppercase small mb-1">Buổi tập sắp tới</h6>
+              <h2 class="text-white mb-0"><%= stats.upcoming_count %></h2>
+              <a href="/schedule" class="small text-danger" style="text-decoration:none;">
+                Xem lịch <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start">
+            <div class="me-3" style="font-size: 2rem; color:#198754;">
+              <i class="bi bi-upc-scan"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="text-muted text-uppercase small mb-1">Tổng số lần check-in</h6>
+              <h2 class="text-white mb-0"><%= stats.total_checkins %></h2>
+              <a href="/profile/schedule" class="small text-success" style="text-decoration:none;">
+                Lịch sử <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two column lists -->
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-dark text-white border-0">
+          <i class="bi bi-calendar-event text-danger"></i> 5 buổi tập sắp tới
+        </div>
+        <div class="card-body p-0">
+          <% if (upcomingBookings.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+              <p class="mb-2 mt-2">Bạn chưa đặt buổi tập nào.</p>
+              <a href="/schedule" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-plus-lg"></i> Đặt lịch ngay
+              </a>
+            </div>
+          <% } else { %>
+            <ul class="list-group list-group-flush">
+              <% upcomingBookings.forEach(b => { %>
+                <li class="list-group-item bg-transparent text-white border-secondary">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <strong><%= b.title %></strong>
+                      <% if (b.trainer_name) { %>
+                        <span class="badge bg-danger ms-1">HLV: <%= b.trainer_name %></span>
+                      <% } %>
+                      <div class="small text-muted mt-1">
+                        <i class="bi bi-clock"></i>
+                        <%= new Date(b.start_time).toLocaleString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) %>
+                        →
+                        <%= new Date(b.end_time).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) %>
+                      </div>
+                      <% if (b.note) { %>
+                        <div class="small text-secondary mt-1"><i class="bi bi-sticky"></i> <%= b.note %></div>
+                      <% } %>
+                    </div>
+                  </div>
+                </li>
+              <% }); %>
+            </ul>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-dark text-white border-0">
+          <i class="bi bi-clock-history text-success"></i> 5 lần check-in gần nhất
+        </div>
+        <div class="card-body p-0">
+          <% if (recentCheckins.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+              <p class="mb-0 mt-2">Chưa có check-in nào.</p>
+            </div>
+          <% } else { %>
+            <ul class="list-group list-group-flush">
+              <% recentCheckins.forEach(c => { %>
+                <li class="list-group-item bg-transparent text-white border-secondary">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <i class="bi bi-check-circle-fill text-success"></i>
+                      <strong><%= new Date(c.checkin_time).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) %></strong>
+                      <% if (c.checkout_time) { %>
+                        <div class="small text-muted mt-1">
+                          Đã check-out — thời lượng <strong class="text-info"><%= c.duration_min %> phút</strong>
+                        </div>
+                      <% } else { %>
+                        <span class="badge bg-warning text-dark ms-2">Đang trong phòng</span>
+                      <% } %>
+                    </div>
+                  </div>
+                </li>
+              <% }); %>
+            </ul>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
