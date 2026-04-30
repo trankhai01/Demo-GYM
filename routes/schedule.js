@@ -9,8 +9,14 @@ function isValidIsoDateTime(s) {
     return !isNaN(t);
 }
 
+// Convert ISO string -> 'YYYY-MM-DD HH:MM:SS' theo giờ LOCAL của server.
+// Tránh dùng .toISOString() vì sẽ ép về UTC, trong khi mysql2 (default
+// timezone='local') đọc DATETIME ngược lại theo giờ local -> lệch múi giờ.
 function toMysqlDateTime(iso) {
-    return new Date(iso).toISOString().slice(0, 19).replace('T', ' ');
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 // Trang lịch tập của hội viên (member): xem & đặt buổi của chính mình.
@@ -117,64 +123,95 @@ router.post('/book', requireLogin, (req, res) => {
     const startSql = toMysqlDateTime(start_time);
     const endSql = toMysqlDateTime(end_time);
 
-    // 1. Kiểm tra chồng giờ với booking đang active của chính member.
-    const sqlOverlapMember = `
-        SELECT id FROM bookings
-        WHERE member_id = ? AND status = 'booked'
-          AND start_time < ? AND end_time > ?
-        LIMIT 1
-    `;
-    db.query(sqlOverlapMember, [targetMemberId, endSql, startSql], (err, rows) => {
-        if (err) return res.status(500).json({ status: 'Error', message: 'Lỗi truy vấn' });
-        if (rows.length > 0) {
-            return res.status(409).json({
-                status: 'Conflict',
-                message: 'Hội viên đã có buổi tập trùng khoảng thời gian này.'
-            });
-        }
+    // Bọc overlap-check + insert trong 1 transaction + SELECT ... FOR UPDATE
+    // để chống TOCTOU race condition: 2 request đồng thời cho cùng member /
+    // cùng HLV ở cùng khoảng giờ không thể cùng pass overlap check rồi cùng
+    // insert (next-key lock của InnoDB trên index (member_id, start_time) /
+    // (trainer_id, start_time) sẽ block request thứ hai cho tới khi tx 1 xong).
+    db.getConnection((err, conn) => {
+        if (err) return res.status(500).json({ status: 'Error', message: 'Không lấy được kết nối DB' });
 
-        // 2. Nếu có HLV, kiểm tra HLV có trùng giờ không.
-        const checkTrainerOverlap = (cb) => {
-            if (!trainerId) return cb(null);
-            db.query(
-                `SELECT id FROM bookings
-                 WHERE trainer_id = ? AND status = 'booked'
-                   AND start_time < ? AND end_time > ? LIMIT 1`,
-                [trainerId, endSql, startSql],
-                (err2, trainerRows) => {
-                    if (err2) return cb({ http: 500, message: 'Lỗi truy vấn HLV' });
-                    if (trainerRows.length > 0) {
-                        return cb({
-                            http: 409,
-                            message: 'Huấn luyện viên đã có buổi khác trong khoảng thời gian này.'
-                        });
-                    }
-                    cb(null);
-                }
-            );
+        const fail = (httpCode, payload, sqlErr) => {
+            if (sqlErr) console.error('[POST /schedule/book]', sqlErr.message);
+            conn.rollback(() => {
+                conn.release();
+                res.status(httpCode).json(payload);
+            });
         };
 
-        checkTrainerOverlap((conflictErr) => {
-            if (conflictErr) {
-                return res.status(conflictErr.http).json({
-                    status: 'Conflict',
-                    message: conflictErr.message
-                });
+        conn.beginTransaction((err) => {
+            if (err) {
+                conn.release();
+                return res.status(500).json({ status: 'Error', message: 'Lỗi mở transaction' });
             }
 
-            db.query(
-                `INSERT INTO bookings (member_id, trainer_id, start_time, end_time, title, note, status)
-                 VALUES (?, ?, ?, ?, ?, ?, 'booked')`,
-                [targetMemberId, trainerId, startSql, endSql, finalTitle, finalNote],
-                (err3, result) => {
-                    if (err3) return res.status(500).json({ status: 'Error', message: 'Lỗi lưu lịch' });
-                    res.status(201).json({
-                        status: 'Success',
-                        booking_id: result.insertId,
-                        message: 'Đã đặt lịch thành công!'
+            // 1. Kiểm tra chồng giờ với booking đang active của chính member.
+            const sqlOverlapMember = `
+                SELECT id FROM bookings
+                WHERE member_id = ? AND status = 'booked'
+                  AND start_time < ? AND end_time > ?
+                LIMIT 1
+                FOR UPDATE
+            `;
+            conn.query(sqlOverlapMember, [targetMemberId, endSql, startSql], (err, rows) => {
+                if (err) return fail(500, { status: 'Error', message: 'Lỗi truy vấn' }, err);
+                if (rows.length > 0) {
+                    return fail(409, {
+                        status: 'Conflict',
+                        message: 'Hội viên đã có buổi tập trùng khoảng thời gian này.'
                     });
                 }
-            );
+
+                // 2. Nếu có HLV, kiểm tra HLV có trùng giờ không.
+                const checkTrainerOverlap = (cb) => {
+                    if (!trainerId) return cb(null);
+                    conn.query(
+                        `SELECT id FROM bookings
+                         WHERE trainer_id = ? AND status = 'booked'
+                           AND start_time < ? AND end_time > ?
+                         LIMIT 1
+                         FOR UPDATE`,
+                        [trainerId, endSql, startSql],
+                        (err2, trainerRows) => {
+                            if (err2) return cb({ http: 500, message: 'Lỗi truy vấn HLV', sqlErr: err2 });
+                            if (trainerRows.length > 0) {
+                                return cb({
+                                    http: 409,
+                                    message: 'Huấn luyện viên đã có buổi khác trong khoảng thời gian này.'
+                                });
+                            }
+                            cb(null);
+                        }
+                    );
+                };
+
+                checkTrainerOverlap((conflictErr) => {
+                    if (conflictErr) {
+                        return fail(conflictErr.http, {
+                            status: 'Conflict',
+                            message: conflictErr.message
+                        }, conflictErr.sqlErr);
+                    }
+
+                    conn.query(
+                        `INSERT INTO bookings (member_id, trainer_id, start_time, end_time, title, note, status)
+                         VALUES (?, ?, ?, ?, ?, ?, 'booked')`,
+                        [targetMemberId, trainerId, startSql, endSql, finalTitle, finalNote],
+                        (err3, result) => {
+                            if (err3) return fail(500, { status: 'Error', message: 'Lỗi lưu lịch' }, err3);
+                            conn.commit((errCommit) => {
+                                if (errCommit) return fail(500, { status: 'Error', message: 'Lỗi commit' }, errCommit);
+                                conn.release();
+                                res.status(201).json({
+                                    status: 'Success',
+                                    booking_id: result.insertId,
+                                    message: 'Đã đặt lịch thành công!'
+                                });
+                            });
+                        }
+                    );
+                });
+            });
         });
     });
 });
