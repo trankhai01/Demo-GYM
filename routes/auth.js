@@ -13,6 +13,15 @@ const loginLimiter = rateLimit({
     message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.'
 });
 
+// Hạn chế yêu cầu quên mật khẩu: 5 / 1h / IP để chống spam admin queue.
+const forgotLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ.'
+});
+
 // 1. Giao diện Login — nếu đã đăng nhập thì về trang chủ
 router.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/');
@@ -73,7 +82,10 @@ router.post('/login', loginLimiter, (req, res) => {
 
         req.session.save((err) => {
             if (err) console.error('Lỗi lưu session:', err);
-            res.redirect('/');
+            // Member đặt chân vào trang chủ của mình (dashboard) thay vì
+            // landing page chung (giữ nguyên cho admin/staff).
+            const dest = user.role === 'member' ? '/dashboard' : '/';
+            res.redirect(dest);
         });
     });
 });
@@ -120,7 +132,83 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// 5. Đăng xuất
+// 5. Quên mật khẩu: form public, không cần login. Để chống phone enumeration,
+// luuôn trả về cùng 1 message dù SDT tồn tại hay không. Nếu có thật thì
+// tạo bản ghi pending; admin sẽ duyệt ở /admin/password-resets.
+router.get('/forgot-password', (req, res) => {
+    if (req.session.user) return res.redirect('/');
+    res.render('forgot-password', { message: null, error: null, phone: '' });
+});
+
+router.post('/forgot-password', forgotLimiter, (req, res) => {
+    const phone = (req.body.phone || '').trim();
+    const note = (req.body.note || '').trim().slice(0, 255);
+
+    if (!phone) {
+        return res.render('forgot-password', {
+            message: null,
+            error: 'Vui lòng nhập số điện thoại đã đăng ký.',
+            phone
+        });
+    }
+
+    const SUCCESS_MSG = 'Nếu số điện thoại này có tài khoản trong hệ thống, ' +
+        'yêu cầu đổi mật khẩu đã được gửi cho quản trị viên. ' +
+        'Vui lòng đến quầy lễ tân để nhận mật khẩu tạm thời.';
+
+    db.query("SELECT id FROM members WHERE phone = ? LIMIT 1", [phone], (err, rows) => {
+        if (err) {
+            console.error('[forgot-password] Lỗi query members:', err.message);
+            return res.render('forgot-password', {
+                message: null,
+                error: 'Lỗi hệ thống, vui lòng thử lại sau.',
+                phone
+            });
+        }
+        if (rows.length === 0) {
+            // Không báo lỗi để tránh phone enumeration.
+            return res.render('forgot-password', { message: SUCCESS_MSG, error: null, phone: '' });
+        }
+
+        const memberId = rows[0].id;
+        // Chỉ tạo request mới nếu chưa có request pending nào cho member này
+        // (idempotent — 2 lần submit liên tiếp không nhân đôi request).
+        db.query(
+            "SELECT id FROM password_reset_requests WHERE member_id = ? AND status = 'pending' LIMIT 1",
+            [memberId],
+            (err2, existing) => {
+                if (err2) {
+                    console.error('[forgot-password] Lỗi check pending:', err2.message);
+                    return res.render('forgot-password', {
+                        message: null,
+                        error: 'Lỗi hệ thống, vui lòng thử lại sau.',
+                        phone
+                    });
+                }
+                if (existing.length > 0) {
+                    return res.render('forgot-password', { message: SUCCESS_MSG, error: null, phone: '' });
+                }
+                db.query(
+                    "INSERT INTO password_reset_requests (member_id, note) VALUES (?, ?)",
+                    [memberId, note || null],
+                    (err3) => {
+                        if (err3) {
+                            console.error('[forgot-password] Lỗi insert:', err3.message);
+                            return res.render('forgot-password', {
+                                message: null,
+                                error: 'Lỗi hệ thống, vui lòng thử lại sau.',
+                                phone
+                            });
+                        }
+                        res.render('forgot-password', { message: SUCCESS_MSG, error: null, phone: '' });
+                    }
+                );
+            }
+        );
+    });
+});
+
+// 6. Đăng xuất
 router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) console.error('Lỗi xóa session:', err);

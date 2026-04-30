@@ -50,7 +50,26 @@ app.use(csrfSynchronisedProtection);
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.csrfToken = generateToken(req);
-  next();
+  res.locals.pendingResetCount = 0;
+
+  // Sidebar admin hiển thị badge số yêu cầu quên mật khẩu đang chờ.
+  // Chỉ query cho admin + bỏ qua request asset/JSON để tiết kiệm DB.
+  const u = req.session.user;
+  if (u && u.role === 'admin' && req.method === 'GET' && req.accepts('html')) {
+    db.query(
+      "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status = 'pending'",
+      (err, rows) => {
+        if (err) {
+          console.error('[middleware] pendingResetCount:', err.message);
+        } else if (rows && rows[0]) {
+          res.locals.pendingResetCount = rows[0].c;
+        }
+        next();
+      }
+    );
+  } else {
+    next();
+  }
 });
 
 const authRoutes = require("./routes/auth");
@@ -65,6 +84,8 @@ app.use("/members", memberRoutes);
 app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
 app.use('/schedule', require('./routes/schedule'));
+app.use('/dashboard', require('./routes/dashboard'));
+app.use('/admin/password-resets', require('./routes/passwordReset'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
 app.use('/trainers', require('./routes/trainer'));
