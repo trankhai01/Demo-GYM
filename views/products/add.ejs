@@ -5,11 +5,15 @@
         <div class="bg-dark p-4 rounded-4 shadow border border-secondary">
             <h4 class="text-white text-uppercase mb-4 border-bottom border-secondary pb-2"><i class="bi bi-box-fill text-danger me-2"></i>Thêm Sản Phẩm Mới</h4>
             
-            <form action="/products/add" method="POST">
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+            <% } %>
+
+            <form action="/products/add" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Tên sản phẩm *</label>
-                    <input type="text" name="product_name" class="form-control bg-transparent text-white border-secondary" required>
+                    <input type="text" name="product_name" class="form-control bg-transparent text-white border-secondary" value="<%= (typeof form !== 'undefined' && form.product_name) || '' %>" required>
                 </div>
                 
                 <div class="row mb-3">
@@ -43,9 +47,15 @@
                     </div>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small">Upload ảnh sản phẩm</label>
+                    <input type="file" name="image_file" class="form-control bg-transparent text-white border-secondary" accept="image/jpeg,image/png,image/webp">
+                    <div class="form-text text-white-50">Tối đa 2 MB. Chấp nhận JPG/PNG/WEBP.</div>
+                </div>
+
                 <div class="mb-4">
-                    <label class="form-label text-white-50 small">Link Hình Ảnh (URL)</label>
-                    <input type="text" name="image_url" class="form-control bg-transparent text-white border-secondary" placeholder="https://...">
+                    <label class="form-label text-white-50 small">Hoặc dán URL ảnh (nếu không upload file)</label>
+                    <input type="text" name="image_url" class="form-control bg-transparent text-white border-secondary" placeholder="https://..." value="<%= (typeof form !== 'undefined' && form.image_url) || '' %>">
                 </div>
 
                 <div class="d-flex gap-2">

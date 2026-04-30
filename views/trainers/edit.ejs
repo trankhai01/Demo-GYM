@@ -10,7 +10,11 @@
         HLV
       </h4>
 
-      <form action="/trainers/edit/<%= trainer.id %>" method="POST">
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+      <% } %>
+
+      <form action="/trainers/edit/<%= trainer.id %>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="mb-3">
           <label class="form-label text-white-50">Họ và tên *</label>
@@ -56,12 +60,29 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label text-white-50">Link Ảnh (URL)</label>
+          <label class="form-label text-white-50">Ảnh hiện tại</label><br>
+          <% if (trainer.image_url) { %>
+            <img src="<%= trainer.image_url %>" alt="<%= trainer.fullname %>"
+                 class="rounded" style="max-width:120px; max-height:160px; object-fit:cover; background:#222;">
+          <% } else { %>
+            <span class="text-white-50"><i class="bi bi-person"></i> Chưa có ảnh</span>
+          <% } %>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-white-50">Upload ảnh mới (thay thế ảnh cũ)</label>
+          <input type="file" name="image_file" class="form-control bg-dark text-white border-secondary" accept="image/jpeg,image/png,image/webp">
+          <div class="form-text text-white-50">Tối đa 2 MB. Để trống để giữ ảnh cũ.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-white-50">Hoặc dán URL ảnh</label>
           <input
             type="text"
             name="image_url"
             class="form-control bg-dark text-white border-secondary"
-            value="<%= trainer.image_url %>"
+            value="<%= trainer.image_url || '' %>"
+            placeholder="https://..."
           />
         </div>
 

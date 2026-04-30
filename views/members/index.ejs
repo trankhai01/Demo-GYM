@@ -41,7 +41,20 @@
                     <% members.forEach(member => { %>
                     <tr>
                         <td class="ps-4 text-white-50">#<%= member.id %></td>
-                        <td><span class="fw-bold text-white"><%= member.fullname %></span></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <% if (member.avatar_url) { %>
+                                    <img src="<%= member.avatar_url %>" alt=""
+                                         class="rounded-circle" style="width:36px; height:36px; object-fit:cover; background:#222;">
+                                <% } else { %>
+                                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                          style="width:36px; height:36px; background:#2a2a2a; color:#888;">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                <% } %>
+                                <span class="fw-bold text-white"><%= member.fullname %></span>
+                            </div>
+                        </td>
                         <td><i class="bi bi-telephone text-white-50 me-2"></i><%= member.phone %></td>
                         <td>
                             <% if (member.gender === 'Nam') { %>

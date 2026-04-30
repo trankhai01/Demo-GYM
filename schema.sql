@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS members (
     weight       DECIMAL(5,2),
     hometown     VARCHAR(100),
     address      VARCHAR(255),
+    avatar_url   VARCHAR(500),
     INDEX idx_members_phone (phone)
 ) ENGINE=InnoDB;
 

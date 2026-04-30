@@ -9,3 +9,7 @@ node_modules/
 .DS_Store
 *.swp
 .idea/
+
+# User-uploaded ảnh — không commit, nhưng giữ thư mục bằng .gitkeep
+public/uploads/*/*
+!public/uploads/*/.gitkeep

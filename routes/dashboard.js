@@ -8,7 +8,7 @@ const { requireMember } = require('../middleware/auth');
 router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
 
-    const sqlMember = "SELECT id, fullname, phone, gender, join_date FROM members WHERE id = ?";
+    const sqlMember = "SELECT id, fullname, phone, gender, join_date, avatar_url FROM members WHERE id = ?";
     const sqlActivePackage = `
         SELECT r.id, r.expiration_date, r.total_sessions, r.used_sessions,
                r.registration_date, p.package_name,
