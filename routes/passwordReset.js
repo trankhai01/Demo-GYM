@@ -20,9 +20,15 @@ function generateTempPassword(length = 8) {
 router.use(requireAdmin);
 
 // Trang quản trị: liệt kê yêu cầu pending + lịch sử resolved/dismissed.
+// Mật khẩu tạm thời được lưu trong session (flash) sau khi reset thành công và
+// xoá ngay sau lần đọc đầu tiên. Không bao giờ truyền qua query string vì
+// credential sẽ rò rỉ qua browser history, log và Referer header — và kẻ tấn
+// công có thể giả mật khẩu giả bằng URL (nhân viên có thể đọc nhầm cho khách).
 router.get('/', (req, res) => {
-    const tempPassword = req.query.temp_password || null;
-    const tempMember = req.query.temp_member || null;
+    const tempPassword = req.session.tempPassword || null;
+    const tempMember = req.session.tempMember || null;
+    delete req.session.tempPassword;
+    delete req.session.tempMember;
 
     const sqlPending = `
         SELECT prr.id, prr.requested_at, prr.note,
@@ -132,12 +138,12 @@ router.post('/:id/reset', async (req, res) => {
                                     conn.commit((errCommit) => {
                                         if (errCommit) return fail('COMMIT', errCommit);
                                         conn.release();
-                                        // Truyền mật khẩu tạm qua query string một lần
-                                        // (chỉ admin xem được vì requireAdmin).
-                                        const url = `/admin/password-resets` +
-                                            `?temp_password=${encodeURIComponent(tempPassword)}` +
-                                            `&temp_member=${memberId}`;
-                                        res.redirect(url);
+                                        // Lưu vào session flash thay vì query string —
+                                        // credential không lộ qua URL/log/lịch sử/Referer
+                                        // và không thể giả mạo bằng URL crafted.
+                                        req.session.tempPassword = tempPassword;
+                                        req.session.tempMember = memberId;
+                                        res.redirect('/admin/password-resets');
                                     });
                                 }
                             );

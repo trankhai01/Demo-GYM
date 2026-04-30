@@ -59,7 +59,11 @@ app.use((req, res, next) => {
     db.query(
       "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status = 'pending'",
       (err, rows) => {
-        if (!err && rows && rows[0]) res.locals.pendingResetCount = rows[0].c;
+        if (err) {
+          console.error('[middleware] pendingResetCount:', err.message);
+        } else if (rows && rows[0]) {
+          res.locals.pendingResetCount = rows[0].c;
+        }
         next();
       }
     );
