@@ -1,0 +1,280 @@
+<%- include('../partials/header') %>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+<style>
+    /* FullCalendar override để hợp với dark theme */
+    #calendar {
+        background: #1a1a1a;
+        color: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #444;
+    }
+    .fc { color: #fff; }
+    .fc .fc-toolbar-title { color: #fff; }
+    .fc .fc-button {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button:hover { background-color: #b02a37; border-color: #b02a37; }
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+        border-color: #333;
+    }
+    .fc-day-today { background: rgba(220,53,69,0.15) !important; }
+    .fc-event { cursor: pointer; }
+    .booking-cancelled { opacity: 0.4; text-decoration: line-through; }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="text-white text-uppercase fw-bold m-0" style="letter-spacing: 1px;">
+            <i class="bi bi-calendar3 text-danger me-2"></i>LỊCH TẬP CỦA TÔI
+        </h2>
+        <div class="text-white-50 small">
+            <span class="badge me-2" style="background:#0d6efd;">Tự tập</span>
+            <span class="badge me-2" style="background:#dc3545;">Có HLV</span>
+            <span class="badge" style="background:#198754;">Đã hoàn thành</span>
+        </div>
+    </div>
+
+    <div id="calendar"></div>
+</div>
+
+<!-- Modal đặt buổi -->
+<div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle text-warning me-2"></i>Đặt buổi tập mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Tiêu đề</label>
+                    <input type="text" id="book-title" class="form-control bg-dark text-white border-secondary" value="Buổi tập" maxlength="120">
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label small text-white-50">Bắt đầu</label>
+                        <input type="datetime-local" id="book-start" class="form-control bg-dark text-white border-secondary">
+                    </div>
+                    <div class="col">
+                        <label class="form-label small text-white-50">Kết thúc</label>
+                        <input type="datetime-local" id="book-end" class="form-control bg-dark text-white border-secondary">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Huấn luyện viên (tùy chọn)</label>
+                    <select id="book-trainer" class="form-select bg-dark text-white border-secondary">
+                        <option value="">-- Tự tập, không cần HLV --</option>
+                        <% (trainers || []).forEach(t => { %>
+                            <option value="<%= t.id %>"><%= t.fullname %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Ghi chú</label>
+                    <textarea id="book-note" class="form-control bg-dark text-white border-secondary" rows="2" maxlength="255" placeholder="VD: Tập ngực + tay sau"></textarea>
+                </div>
+                <div id="book-error" class="text-danger small fw-bold" style="display:none;"></div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger fw-bold" id="book-submit">
+                    <i class="bi bi-check-circle-fill me-2"></i>Đặt lịch
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem chi tiết booking -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle text-info me-2"></i>Chi tiết buổi tập</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detail-body"></div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-warning fw-bold" id="detail-cancel-btn" style="display:none;">
+                    <i class="bi bi-x-circle-fill me-2"></i>Hủy buổi tập
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]').content;
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function toLocalInputValue(d) {
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    let calendar;
+    let bookModal;
+    let detailModal;
+    let currentBookingId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
+        detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        const calEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calEl, {
+            initialView: 'timeGridWeek',
+            locale: 'vi',
+            firstDay: 1,
+            slotMinTime: '06:00:00',
+            slotMaxTime: '23:00:00',
+            allDaySlot: false,
+            nowIndicator: true,
+            height: 720,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: { today: 'Hôm nay', month: 'Tháng', week: 'Tuần', day: 'Ngày' },
+            selectable: true,
+            selectMirror: true,
+            events: '/schedule/events',
+            select: function(info) {
+                const now = new Date();
+                if (info.start < now) {
+                    calendar.unselect();
+                    alert('Không thể đặt lịch trong quá khứ.');
+                    return;
+                }
+                document.getElementById('book-title').value = 'Buổi tập';
+                document.getElementById('book-start').value = toLocalInputValue(info.start);
+                document.getElementById('book-end').value = toLocalInputValue(info.end);
+                document.getElementById('book-trainer').value = '';
+                document.getElementById('book-note').value = '';
+                document.getElementById('book-error').style.display = 'none';
+                bookModal.show();
+            },
+            eventClick: function(info) {
+                showDetail(info.event);
+            }
+        });
+        calendar.render();
+
+        document.getElementById('book-submit').addEventListener('click', submitBooking);
+        document.getElementById('detail-cancel-btn').addEventListener('click', cancelBooking);
+    });
+
+    function submitBooking() {
+        const startVal = document.getElementById('book-start').value;
+        const endVal = document.getElementById('book-end').value;
+        const errBox = document.getElementById('book-error');
+        errBox.style.display = 'none';
+
+        if (!startVal || !endVal) {
+            errBox.innerText = 'Vui lòng chọn giờ bắt đầu và kết thúc.';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        const payload = {
+            start_time: new Date(startVal).toISOString(),
+            end_time: new Date(endVal).toISOString(),
+            title: document.getElementById('book-title').value.trim() || 'Buổi tập',
+            trainer_id: document.getElementById('book-trainer').value || null,
+            note: document.getElementById('book-note').value.trim() || null
+        };
+
+        fetch('/schedule/book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken()
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => Promise.all([res.ok, res.json()]))
+        .then(([ok, data]) => {
+            if (ok && data.status === 'Success') {
+                bookModal.hide();
+                calendar.refetchEvents();
+            } else {
+                errBox.innerText = data.message || 'Không đặt được lịch.';
+                errBox.style.display = 'block';
+            }
+        })
+        .catch(() => {
+            errBox.innerText = 'Lỗi kết nối, vui lòng thử lại.';
+            errBox.style.display = 'block';
+        });
+    }
+
+    function showDetail(event) {
+        const p = event.extendedProps;
+        const start = event.start ? event.start.toLocaleString('vi-VN') : '';
+        const end = event.end ? event.end.toLocaleString('vi-VN') : '';
+        const isPast = event.start < new Date();
+        const isCancelled = p.status === 'cancelled';
+        const isCompleted = p.status === 'completed';
+
+        currentBookingId = event.id;
+
+        document.getElementById('detail-body').innerHTML = `
+            <div class="mb-2"><span class="text-white-50">Tiêu đề:</span> <strong>${escapeHtml(p.title_raw || event.title)}</strong></div>
+            <div class="mb-2"><span class="text-white-50">Hội viên:</span> ${escapeHtml(p.member_name)}</div>
+            ${p.trainer_name ? `<div class="mb-2"><span class="text-white-50">HLV:</span> ${escapeHtml(p.trainer_name)}</div>` : ''}
+            <div class="mb-2"><span class="text-white-50">Bắt đầu:</span> ${escapeHtml(start)}</div>
+            <div class="mb-2"><span class="text-white-50">Kết thúc:</span> ${escapeHtml(end)}</div>
+            ${p.note ? `<div class="mb-2"><span class="text-white-50">Ghi chú:</span> ${escapeHtml(p.note)}</div>` : ''}
+            <div class="mb-2"><span class="text-white-50">Trạng thái:</span>
+                <span class="badge ${isCompleted ? 'bg-success' : (isCancelled ? 'bg-secondary' : 'bg-info text-dark')}">
+                    ${isCompleted ? 'Đã hoàn thành' : (isCancelled ? 'Đã hủy' : 'Đã đặt')}
+                </span>
+            </div>
+        `;
+
+        const cancelBtn = document.getElementById('detail-cancel-btn');
+        cancelBtn.style.display = (!isPast && !isCancelled && !isCompleted) ? 'inline-block' : 'none';
+
+        detailModal.show();
+    }
+
+    function cancelBooking() {
+        if (!currentBookingId) return;
+        if (!confirm('Bạn chắc chắn muốn hủy buổi tập này?')) return;
+
+        fetch('/schedule/cancel/' + currentBookingId, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken() }
+        })
+        .then(res => Promise.all([res.ok, res.json()]))
+        .then(([ok, data]) => {
+            if (ok && data.status === 'Success') {
+                detailModal.hide();
+                calendar.refetchEvents();
+            } else {
+                alert(data.message || 'Không hủy được.');
+            }
+        })
+        .catch(() => alert('Lỗi kết nối, vui lòng thử lại.'));
+    }
+</script>
+
+<%- include('../partials/footer') %>

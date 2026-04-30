@@ -70,6 +70,10 @@ app.use("/", authRoutes);
 app.use("/members", memberRoutes);
 app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
+// `/schedule` (calendar) must be mounted BEFORE profileRoutes is mounted at
+// `/` — otherwise profileRoutes' `GET /schedule` handler (member's history view)
+// would shadow our calendar page.
+app.use('/schedule', require('./routes/schedule'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
 app.use('/trainers', require('./routes/trainer'));
