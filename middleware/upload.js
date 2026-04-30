@@ -93,9 +93,12 @@ function withFriendlyErrors(uploader, fieldName) {
 function deleteUploadedFile(webPath) {
     if (!webPath || !webPath.startsWith('/uploads/')) return;
     const rel = webPath.replace(/^\/uploads\//, '');
-    // Bảo vệ path traversal — sau khi resolve phải nằm trong UPLOADS_ROOT.
+    // Bảo vệ path traversal — sau khi resolve phải nằm thực sự BÊN TRONG
+    // UPLOADS_ROOT. Phải có path.sep ở cuối để tránh prefix match nhầm với
+    // thư mục cùng tên đầu (vd /uploads-backup/ vs /uploads/).
     const resolved = path.resolve(UPLOADS_ROOT, rel);
-    if (!resolved.startsWith(UPLOADS_ROOT)) return;
+    const rootWithSep = UPLOADS_ROOT.endsWith(path.sep) ? UPLOADS_ROOT : UPLOADS_ROOT + path.sep;
+    if (!resolved.startsWith(rootWithSep)) return;
     fs.unlink(resolved, () => { /* ignore ENOENT */ });
 }
 
