@@ -108,11 +108,56 @@ app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
 
+// Trang chủ — fetch song song packages, trainers, stats. Lỗi từng query
+// không làm hỏng toàn trang: section nào fetch fail sẽ render mảng rỗng /
+// stat = 0. Lỗi được log ra console để tiện debug khi production.
+const homeUrlForRole = (role) => {
+    if (role === 'admin') return '/reports';
+    if (role === 'staff') return '/members';
+    if (role === 'member') return '/dashboard';
+    return '/';
+};
+
 app.get('/', (req, res) => {
-    db.query("SELECT * FROM packages", (err, results) => {
-        res.render('home', {
-            packages: err ? [] : results,
-            user: req.session ? req.session.user : null
+    const queries = {
+        packages: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6",
+        trainers: "SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = 'Active' OR status IS NULL ORDER BY id ASC LIMIT 6",
+        statsMembers: "SELECT COUNT(*) AS c FROM members",
+        statsTrainers: "SELECT COUNT(*) AS c FROM trainers WHERE status = 'Active' OR status IS NULL",
+        statsPackages: "SELECT COUNT(*) AS c FROM packages",
+        statsCheckins: "SELECT COUNT(*) AS c FROM checkin_history"
+    };
+
+    const out = { packages: [], trainers: [], stats: { members: 0, trainers: 0, packages: 0, checkins: 0 } };
+    const keys = Object.keys(queries);
+    let done = 0;
+
+    keys.forEach((key) => {
+        db.query(queries[key], (err, rows) => {
+            if (err) {
+                console.error('Home query failed:', key, err.message);
+            } else if (rows) {
+                // Guard rows[0] cho stat queries: nếu COUNT trả về mảng rỗng
+                // (rất hiếm nhưng có thể), tránh TypeError khiến done không
+                // tăng -> response treo vô tận.
+                if (key === 'packages') out.packages = rows;
+                else if (key === 'trainers') out.trainers = rows;
+                else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;
+                else if (key === 'statsTrainers' && rows[0]) out.stats.trainers = rows[0].c;
+                else if (key === 'statsPackages' && rows[0]) out.stats.packages = rows[0].c;
+                else if (key === 'statsCheckins' && rows[0]) out.stats.checkins = rows[0].c;
+            }
+            done += 1;
+            if (done === keys.length) {
+                const user = req.session ? req.session.user : null;
+                res.render('home', {
+                    packages: out.packages,
+                    trainers: out.trainers,
+                    stats: out.stats,
+                    user,
+                    homePath: user ? homeUrlForRole(user.role) : '/'
+                });
+            }
         });
     });
 });

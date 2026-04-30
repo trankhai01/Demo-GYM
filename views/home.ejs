@@ -3,70 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Gym Đẳng cấp</title>
+    <title>GYM BRO — Hệ thống Gym Đẳng cấp</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS Custom */
+        :root {
+            --gym-red: #e50914;
+            --gym-red-dark: #b20710;
+            --gym-bg: #0a0a0a;
+            --gym-card: #1a1a1a;
+            --gym-card-2: #222;
+            --gym-text-mute: #b0b0b0;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212; 
-            color: #ffffff;
+            background-color: var(--gym-bg);
+            color: #fff;
+            scroll-behavior: smooth;
         }
-        h1, h2, h3, .nav-link, .btn {
+        h1, h2, h3, .nav-link, .btn, .section-title {
             font-family: 'Oswald', sans-serif;
             text-transform: uppercase;
         }
+        .section-title {
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 2.4rem;
+        }
+        .section-title span { color: var(--gym-red); }
+        .section-sub {
+            color: var(--gym-text-mute);
+            max-width: 720px;
+            margin: 0 auto 3rem;
+            text-transform: none;
+        }
+
         /* Navbar */
         .navbar {
-            background-color: rgba(0, 0, 0, 0.8) !important;
+            background-color: rgba(0, 0, 0, 0.85) !important;
             backdrop-filter: blur(10px);
+            transition: background-color .3s;
         }
         .navbar-brand {
             font-weight: 700;
             font-size: 1.8rem;
-            color: #e50914 !important; 
+            color: var(--gym-red) !important;
             letter-spacing: 2px;
+            font-family: 'Oswald', sans-serif;
         }
-        /* Khu vực Hero*/
+        .nav-link {
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            transition: color .2s;
+        }
+        .nav-link:hover { color: var(--gym-red) !important; }
+
+        /* Hero */
         .hero-section {
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
+                        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             text-align: center;
+            position: relative;
         }
         .hero-title {
-            font-size: 5rem;
+            font-size: clamp(2.5rem, 6vw, 5rem);
             font-weight: 700;
-            color: #ffffff;
+            line-height: 1.1;
             margin-bottom: 20px;
         }
-        .hero-title span {
-            color: #e50914; 
+        .hero-title span { color: var(--gym-red); }
+        .hero-tag {
+            display: inline-block;
+            border: 1px solid var(--gym-red);
+            color: var(--gym-red);
+            padding: 6px 18px;
+            border-radius: 30px;
+            letter-spacing: 3px;
+            font-size: 0.85rem;
+            font-family: 'Oswald', sans-serif;
+            margin-bottom: 18px;
         }
         .btn-gym {
-            background-color: #e50914;
-            color: white;
+            background-color: var(--gym-red);
+            color: #fff;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            transition: 0.3s;
+            padding: 14px 36px;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: 0.25s;
         }
         .btn-gym:hover {
-            background-color: #b20710;
-            color: white;
-            transform: scale(1.05);
+            background-color: var(--gym-red-dark);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
         }
+        .btn-ghost {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 12px 34px;
+            transition: 0.25s;
+        }
+        .btn-ghost:hover {
+            background: #fff;
+            color: var(--gym-bg);
+        }
+        .scroll-down {
+            position: absolute;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Stats */
+        .stats-section {
+            background: linear-gradient(135deg, var(--gym-red) 0%, var(--gym-red-dark) 100%);
+            padding: 50px 0;
+        }
+        .stat-number {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+        .stat-label {
+            color: rgba(255,255,255,0.85);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+
+        /* USP */
+        .usp-card {
+            background: var(--gym-card);
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            height: 100%;
+            transition: 0.3s;
+        }
+        .usp-card:hover {
+            border-color: var(--gym-red);
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(229, 9, 20, 0.15);
+        }
+        .usp-icon {
+            width: 70px; height: 70px;
+            margin: 0 auto 18px;
+            background: rgba(229, 9, 20, 0.12);
+            color: var(--gym-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .usp-title {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .usp-desc { color: var(--gym-text-mute); font-size: 0.95rem; }
+
+        /* Packages */
+        .pkg-card {
+            background: var(--gym-card);
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            overflow: hidden;
+            height: 100%;
+            display: flex; flex-direction: column;
+            transition: 0.3s;
+        }
+        .pkg-card:hover { transform: translateY(-6px); border-color: var(--gym-red); }
+        .pkg-card.featured { border: 2px solid var(--gym-red); position: relative; }
+        .pkg-card.featured::before {
+            content: 'PHỔ BIẾN';
+            position: absolute; top: 14px; right: -32px;
+            background: var(--gym-red); color: #fff;
+            padding: 4px 36px; font-size: 0.75rem; letter-spacing: 2px;
+            transform: rotate(45deg);
+            font-family: 'Oswald', sans-serif;
+        }
+        .pkg-head { background: #111; padding: 30px 24px; text-align: center; border-bottom: 1px solid #2a2a2a; }
+        .pkg-name { font-family: 'Oswald', sans-serif; font-size: 1.3rem; letter-spacing: 1.5px; margin-bottom: 12px; }
+        .pkg-price {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.3rem; font-weight: 700;
+            color: var(--gym-red); line-height: 1;
+        }
+        .pkg-price small { color: var(--gym-text-mute); font-size: 0.85rem; font-weight: normal; letter-spacing: 1px; }
+        .pkg-body { padding: 24px; flex-grow: 1; display: flex; flex-direction: column; }
+        .pkg-feat-list { list-style: none; padding: 0; margin: 0 0 20px 0; flex-grow: 1; }
+        .pkg-feat-list li {
+            padding: 8px 0;
+            color: #d0d0d0;
+            border-bottom: 1px dashed #2a2a2a;
+            font-size: 0.95rem;
+        }
+        .pkg-feat-list li i { color: #28a745; margin-right: 8px; }
+
+        /* Trainers */
+        .trainer-card {
+            background: var(--gym-card);
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            overflow: hidden;
+            transition: 0.3s;
+            height: 100%;
+        }
+        .trainer-card:hover { border-color: var(--gym-red); transform: translateY(-6px); }
+        .trainer-img-wrap {
+            height: 280px;
+            background: #111;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .trainer-img-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .trainer-img-wrap .ph-icon {
+            font-size: 5rem; color: #333;
+        }
+        .trainer-body { padding: 22px; }
+        .trainer-name {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.25rem; letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .trainer-spec { color: var(--gym-red); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; }
+        .trainer-exp { color: var(--gym-text-mute); font-size: 0.9rem; margin-top: 10px; }
+
+        /* CTA */
+        .cta-section {
+            background:
+                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)),
+                url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        /* Footer */
+        footer {
+            background: #050505;
+            border-top: 1px solid #1a1a1a;
+            padding: 50px 0 20px;
+        }
+        footer h5 {
+            color: var(--gym-red);
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        footer a { color: var(--gym-text-mute); text-decoration: none; transition: color .2s; }
+        footer a:hover { color: var(--gym-red); }
+        footer .social a {
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            width: 38px; height: 38px;
+            border: 1px solid #2a2a2a;
+            border-radius: 50%;
+            margin-right: 8px;
+            color: #fff;
+        }
+        footer .social a:hover { background: var(--gym-red); border-color: var(--gym-red); }
+        .copyright {
+            border-top: 1px solid #1a1a1a;
+            padding-top: 18px;
+            margin-top: 40px;
+            color: #555;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        section { padding: 80px 0; }
     </style>
 </head>
 <body>
 
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/">GYM BRO</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-toggle="target="#navbarNav">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-fire"></i> GYM BRO
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -74,45 +317,291 @@
                     <li class="nav-item"><a class="nav-link text-white" href="#about">Về chúng tôi</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="#packages">Gói tập</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="#trainers">Huấn luyện viên</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="#contact">Liên hệ</a></li>
                 </ul>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center gap-2">
                     <% if (user) { %>
-                        <span class="text-white me-3">Xin chào, <strong><%= user.username %></strong>!</span>
-                        <% if (user.role === 'admin') { %>
-                            <a href="/reports" class="btn btn-outline-light btn-sm me-2">Trang Quản trị</a>
-                        <% } else if (user.role === 'staff') { %>
-                            <a href="/members" class="btn btn-outline-light btn-sm me-2">Trang Lễ tân</a>
-                        <% } else { %>
-                            <a href="/my-profile" class="btn btn-outline-light btn-sm me-2">Hồ sơ của tôi</a>
-                        <% } %>
+                        <span class="text-white-50 me-2 small">Xin chào, <strong class="text-white"><%= user.username %></strong></span>
+                        <a href="<%= homePath %>" class="btn btn-outline-light btn-sm">
+                            <% if (user.role === 'admin') { %>Trang Quản trị<% } else if (user.role === 'staff') { %>Trang Lễ tân<% } else { %>Bảng điều khiển<% } %>
+                        </a>
                         <a href="/logout" class="btn btn-danger btn-sm">Đăng xuất</a>
                     <% } else { %>
-                        <a href="/login" class="btn btn-outline-light me-2">Đăng nhập</a>
-                        <a href="/register" class="btn btn-gym btn-sm">Trở thành Hội viên</a>
+                        <a href="/login" class="btn btn-outline-light btn-sm">Đăng nhập</a>
+                        <a href="/register" class="btn btn-gym btn-sm">Đăng ký</a>
                     <% } %>
                 </div>
             </div>
         </div>
     </nav>
+
+    <!-- Hero -->
     <section class="hero-section">
         <div class="container">
+            <span class="hero-tag">SỨC MẠNH — KỶ LUẬT — VƯỢT GIỚI HẠN</span>
             <h1 class="hero-title">ĐÁNH THỨC <span>SỨC MẠNH</span><br>BÊN TRONG BẠN</h1>
-            <p class="lead text-light mb-5 fs-4">Cơ sở vật chất chuẩn 5 sao. Huấn luyện viên chuyên nghiệp. Đạt mục tiêu ngay hôm nay.</p>
-            <% if (!user) { %>
-                <a href="/register" class="btn btn-gym rounded-pill shadow-lg">ĐĂNG KÝ TRẢI NGHIỆM MIỄN PHÍ</a>
+            <p class="lead text-light mb-4 fs-5 mx-auto" style="max-width: 720px;">
+                Cơ sở vật chất chuẩn 5 sao. Đội ngũ huấn luyện viên chứng chỉ quốc tế.
+                Lộ trình cá nhân hóa — đạt mục tiêu nhanh hơn 2 lần.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <% if (!user) { %>
+                    <a href="/register" class="btn btn-gym rounded-pill shadow-lg">
+                        <i class="bi bi-lightning-charge-fill"></i> Đăng ký ngay
+                    </a>
+                    <a href="#packages" class="btn btn-ghost rounded-pill">
+                        Xem gói tập <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                <% } else { %>
+                    <a href="<%= homePath %>" class="btn btn-gym rounded-pill shadow-lg">
+                        <i class="bi bi-speedometer2"></i> Vào trang chính
+                    </a>
+                    <a href="#packages" class="btn btn-ghost rounded-pill">
+                        Xem gói tập <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                <% } %>
+            </div>
+        </div>
+        <a href="#stats" class="scroll-down"><i class="bi bi-chevron-double-down"></i></a>
+    </section>
+
+    <!-- Stats -->
+    <section id="stats" class="stats-section" style="padding: 50px 0;">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-number"><%= stats.members %>+</div>
+                    <div class="stat-label">Hội viên</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number"><%= stats.trainers %></div>
+                    <div class="stat-label">Huấn luyện viên</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number"><%= stats.packages %></div>
+                    <div class="stat-label">Gói tập</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number"><%= stats.checkins %>+</div>
+                    <div class="stat-label">Lượt check-in</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About / USP -->
+    <section id="about">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title">Tại sao chọn <span>GYM BRO?</span></h2>
+                <p class="section-sub">
+                    Hơn cả một phòng tập — chúng tôi là cộng đồng những người tin rằng cơ thể khỏe mạnh là khởi đầu cho mọi thành công.
+                </p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="usp-card">
+                        <div class="usp-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <h5 class="usp-title">Thiết bị hiện đại</h5>
+                        <p class="usp-desc">Máy móc nhập khẩu Hammer Strength, Life Fitness — bảo trì hàng tuần.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="usp-card">
+                        <div class="usp-icon"><i class="bi bi-person-badge-fill"></i></div>
+                        <h5 class="usp-title">HLV chứng chỉ quốc tế</h5>
+                        <p class="usp-desc">Đội ngũ PT có chứng chỉ ACE, NASM — kèm cặp 1-1 cá nhân hoá.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="usp-card">
+                        <div class="usp-icon"><i class="bi bi-clock-history"></i></div>
+                        <h5 class="usp-title">Mở cửa 5h – 23h</h5>
+                        <p class="usp-desc">Phục vụ tất cả các ngày trong tuần — kể cả lễ Tết.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="usp-card">
+                        <div class="usp-icon"><i class="bi bi-shield-check"></i></div>
+                        <h5 class="usp-title">Hỗ trợ tận tâm</h5>
+                        <p class="usp-desc">Lễ tân hỗ trợ check-in/out nhanh, phòng tắm sạch sẽ, gửi đồ miễn phí.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Packages -->
+    <section id="packages" style="background: #0d0d0d;">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title">Gói tập <span>linh hoạt</span></h2>
+                <p class="section-sub">Chọn gói phù hợp với mục tiêu và lịch trình của bạn — tất cả đều có thể nâng cấp.</p>
+            </div>
+            <% if (packages && packages.length > 0) { %>
+                <div class="row g-4 justify-content-center">
+                    <% packages.forEach((pkg, idx) => { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="pkg-card <%= idx === 1 ? 'featured' : '' %>">
+                                <div class="pkg-head">
+                                    <div class="pkg-name"><%= pkg.package_name %></div>
+                                    <div class="pkg-price">
+                                        <%= Number(pkg.price).toLocaleString('vi-VN') %><small>đ</small>
+                                    </div>
+                                    <div class="text-white-50 small mt-1"><%= pkg.duration_months %> tháng</div>
+                                </div>
+                                <div class="pkg-body">
+                                    <ul class="pkg-feat-list">
+                                        <li><i class="bi bi-check-circle-fill"></i> Tập không giới hạn trong giờ mở cửa</li>
+                                        <% if (pkg.pt_sessions > 0) { %>
+                                            <li><i class="bi bi-check-circle-fill"></i> <%= pkg.pt_sessions %> buổi tập với HLV cá nhân</li>
+                                        <% } else { %>
+                                            <li><i class="bi bi-check-circle-fill"></i> Tự tập có hỗ trợ lễ tân</li>
+                                        <% } %>
+                                        <li><i class="bi bi-check-circle-fill"></i> Sử dụng tất cả thiết bị</li>
+                                        <li><i class="bi bi-check-circle-fill"></i> Phòng tắm + tủ gửi đồ</li>
+                                        <% if (pkg.description) { %>
+                                            <li class="text-white-50 small fst-italic" style="border:0;"><%= pkg.description %></li>
+                                        <% } %>
+                                    </ul>
+                                    <a href="<%= user ? '#contact' : '/register' %>" class="btn btn-gym w-100 rounded-pill">
+                                        <%= user ? 'Liên hệ đăng ký' : 'Đăng ký ngay' %>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
             <% } else { %>
-                <a href="#packages" class="btn btn-gym rounded-pill shadow-lg">XEM GÓI TẬP CỦA BẠN</a>
+                <div class="text-center text-white-50 py-5">
+                    <i class="bi bi-box-seam fs-1 d-block mb-3"></i>
+                    Đang cập nhật gói tập mới — vui lòng quay lại sau.
+                </div>
             <% } %>
         </div>
     </section>
 
-    <section id="about" class="py-5 bg-dark">
-        <div class="container text-center mt-5">
-            <h2 class="text-danger mb-4">TẠI SAO CHỌN GYM BRO?</h2>
-            <p class="text-muted">Chúng tôi cam kết mang lại trải nghiệm luyện tập tuyệt vời nhất...</p>
+    <!-- Trainers -->
+    <section id="trainers">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title">Đội ngũ <span>huấn luyện viên</span></h2>
+                <p class="section-sub">Những chuyên gia tận tâm sẽ đồng hành cùng bạn trên hành trình chinh phục mục tiêu.</p>
             </div>
+            <% if (trainers && trainers.length > 0) { %>
+                <div class="row g-4">
+                    <% trainers.forEach(t => { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="trainer-card">
+                                <div class="trainer-img-wrap">
+                                    <% if (t.image_url) { %>
+                                        <img src="<%= t.image_url %>" alt="<%= t.fullname %>">
+                                    <% } else { %>
+                                        <i class="bi bi-person-fill ph-icon"></i>
+                                    <% } %>
+                                </div>
+                                <div class="trainer-body">
+                                    <div class="trainer-name"><%= t.fullname %></div>
+                                    <div class="trainer-spec"><%= t.specialty || 'Đa năng' %></div>
+                                    <% if (t.experience_years) { %>
+                                        <div class="trainer-exp">
+                                            <i class="bi bi-award text-danger me-1"></i>
+                                            <%= t.experience_years %> năm kinh nghiệm
+                                        </div>
+                                    <% } %>
+                                    <% if (t.description) { %>
+                                        <p class="text-white-50 small mt-2 mb-0" style="display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                                            <%= t.description %>
+                                        </p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="text-center text-white-50 py-5">
+                    <i class="bi bi-people fs-1 d-block mb-3"></i>
+                    Đội ngũ đang được tuyển chọn — sớm có mặt.
+                </div>
+            <% } %>
+        </div>
     </section>
 
+    <!-- CTA -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2 class="section-title text-white">Sẵn sàng <span>thay đổi?</span></h2>
+            <p class="text-white-50 mb-4 mx-auto" style="max-width: 600px;">
+                Bước đầu tiên luôn là khó nhất — nhưng bạn không phải bước một mình. Đăng ký buổi trải nghiệm miễn phí ngay hôm nay.
+            </p>
+            <% if (!user) { %>
+                <a href="/register" class="btn btn-gym rounded-pill shadow-lg btn-lg">
+                    <i class="bi bi-rocket-takeoff"></i> Trải nghiệm miễn phí
+                </a>
+            <% } else { %>
+                <a href="tel:0900000000" class="btn btn-gym rounded-pill shadow-lg btn-lg">
+                    <i class="bi bi-telephone"></i> Gọi ngay 0900 000 000
+                </a>
+            <% } %>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5><i class="bi bi-fire"></i> GYM BRO</h5>
+                    <p class="text-white-50 small">
+                        Phòng tập đẳng cấp với phương châm "Sức mạnh — Kỷ luật — Vượt giới hạn". Đồng hành cùng bạn trên hành trình thay đổi bản thân.
+                    </p>
+                    <div class="social mt-3">
+                        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <h5>Liên hệ</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i><span class="text-white-50">123 Đường Số 1, Q.1, TP.HCM</span></li>
+                        <li class="mb-2"><i class="bi bi-telephone-fill text-danger me-2"></i><a href="tel:0900000000">0900 000 000</a></li>
+                        <li class="mb-2"><i class="bi bi-envelope-fill text-danger me-2"></i><a href="mailto:hello@gymbro.vn">hello@gymbro.vn</a></li>
+                        <li class="mb-2"><i class="bi bi-clock-fill text-danger me-2"></i><span class="text-white-50">5:00 — 23:00 mỗi ngày</span></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-6">
+                    <h5>Liên kết nhanh</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#about">Về chúng tôi</a></li>
+                        <li class="mb-2"><a href="#packages">Gói tập</a></li>
+                        <li class="mb-2"><a href="#trainers">Huấn luyện viên</a></li>
+                        <% if (!user) { %>
+                            <li class="mb-2"><a href="/login">Đăng nhập</a></li>
+                            <li class="mb-2"><a href="/register">Đăng ký hội viên</a></li>
+                        <% } else { %>
+                            <li class="mb-2"><a href="<%= homePath %>">Trang chính của tôi</a></li>
+                            <li class="mb-2"><a href="/logout">Đăng xuất</a></li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; <%= new Date().getFullYear() %> GYM BRO. Demo phục vụ thực tập tốt nghiệp — không phải sản phẩm thương mại.
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Navbar đổi nền khi cuộn xuống.
+        const nav = document.querySelector('.navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) nav.style.backgroundColor = 'rgba(0,0,0,0.95)';
+            else nav.style.backgroundColor = 'rgba(0,0,0,0.85)';
+        });
+    </script>
 </body>
 </html>
