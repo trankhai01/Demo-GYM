@@ -126,13 +126,16 @@ app.get('/', (req, res) => {
 
     keys.forEach((key) => {
         db.query(queries[key], (err, rows) => {
+            // Guard rows[0] cho stat queries: nếu COUNT trả về mảng rỗng
+            // (rất hiếm nhưng có thể), tránh TypeError khiến done không
+            // tăng -> response treo vô tận.
             if (!err && rows) {
                 if (key === 'packages') out.packages = rows;
                 else if (key === 'trainers') out.trainers = rows;
-                else if (key === 'statsMembers') out.stats.members = rows[0].c;
-                else if (key === 'statsTrainers') out.stats.trainers = rows[0].c;
-                else if (key === 'statsPackages') out.stats.packages = rows[0].c;
-                else if (key === 'statsCheckins') out.stats.checkins = rows[0].c;
+                else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;
+                else if (key === 'statsTrainers' && rows[0]) out.stats.trainers = rows[0].c;
+                else if (key === 'statsPackages' && rows[0]) out.stats.packages = rows[0].c;
+                else if (key === 'statsCheckins' && rows[0]) out.stats.checkins = rows[0].c;
             }
             done += 1;
             if (done === keys.length) {
