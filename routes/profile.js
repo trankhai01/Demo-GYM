@@ -3,6 +3,16 @@ const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const { requireLogin, requireMember } = require('../middleware/auth');
+const {
+    uploadAvatar,
+    withFriendlyErrors,
+    persistedFilePath,
+    deleteUploadedFile
+} = require('../middleware/upload');
+const { csrfSynchronisedProtection } = require('../middleware/csrf');
+
+const avatarUpload = withFriendlyErrors(uploadAvatar, 'avatar_file');
+const avatarUploadChain = [avatarUpload, csrfSynchronisedProtection];
 
 router.get('/my-profile', requireMember, (req, res) => {
     const memberId = req.session.user.id;
@@ -30,41 +40,65 @@ router.get('/my-profile', requireMember, (req, res) => {
     });
 });
 
-router.post('/my-profile/edit', requireMember, (req, res) => {
+router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) => {
     const memberId = req.session.user.id;
-    const { 
-        fullname, phone, gender, 
-        address, cccd, hometown, 
-        height, weight, birth_year 
+    const {
+        fullname, phone, gender,
+        address, cccd, hometown,
+        height, weight, birth_year
     } = req.body;
+
+    if (req.uploadError) {
+        return res.redirect('/my-profile?error=' + encodeURIComponent(req.uploadError));
+    }
 
     const checkSql = "SELECT id FROM members WHERE phone = ? AND id != ?";
     db.query(checkSql, [phone, memberId], (err, results) => {
-        if (err) return res.status(500).send("Lỗi hệ thống");
+        if (err) {
+            deleteUploadedFile(persistedFilePath(req, 'avatars'));
+            return res.status(500).send("Lỗi hệ thống");
+        }
 
         if (results.length > 0) {
+            deleteUploadedFile(persistedFilePath(req, 'avatars'));
             return res.redirect('/my-profile?error=duplicate_phone');
         }
 
-        const updateSql = `
-            UPDATE members 
-            SET fullname = ?, phone = ?, gender = ?, 
-                address = ?, cccd = ?, hometown = ?, 
-                height = ?, weight = ?, birth_year = ? 
-            WHERE id = ?
-        `;
-        
-        const values = [
-            fullname, phone, gender, 
-            address || null, cccd || null, hometown || null, 
-            height || null, weight || null, birth_year || null, 
-            memberId
-        ];
+        // Avatar cũ để xóa sau khi update thành công (nếu có file mới).
+        db.query("SELECT avatar_url FROM members WHERE id = ?", [memberId], (eAv, rowsAv) => {
+            const oldAvatar = rowsAv && rowsAv[0] ? rowsAv[0].avatar_url : null;
+            const uploaded = persistedFilePath(req, 'avatars');
+            const finalAvatar = uploaded || oldAvatar || null;
 
-        db.query(updateSql, values, (err, result) => {
-            if (err) return res.status(500).send("Lỗi cập nhật hồ sơ");
-            req.session.user.username = fullname;
-            res.redirect('/my-profile?success=true');
+            const updateSql = `
+                UPDATE members
+                SET fullname = ?, phone = ?, gender = ?,
+                    address = ?, cccd = ?, hometown = ?,
+                    height = ?, weight = ?, birth_year = ?,
+                    avatar_url = ?
+                WHERE id = ?
+            `;
+
+            const values = [
+                fullname, phone, gender,
+                address || null, cccd || null, hometown || null,
+                height || null, weight || null, birth_year || null,
+                finalAvatar,
+                memberId
+            ];
+
+            db.query(updateSql, values, (err) => {
+                if (err) {
+                    deleteUploadedFile(uploaded);
+                    return res.status(500).send("Lỗi cập nhật hồ sơ");
+                }
+                if (uploaded && oldAvatar && oldAvatar !== uploaded) {
+                    deleteUploadedFile(oldAvatar);
+                }
+                req.session.user.username = fullname;
+                if (uploaded) req.session.user.avatar_url = uploaded;
+                res.redirect('/my-profile?success=true');
+            });
         });
     });
 });

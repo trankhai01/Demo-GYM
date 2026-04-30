@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const session = require("express-session");
 const helmet = require("helmet");
-const { csrfSync } = require("csrf-sync");
 const db = require("./config/db");
 
 const app = express();
@@ -38,14 +37,30 @@ app.use(
   })
 );
 
-const { generateToken, csrfSynchronisedProtection } = csrfSync({
-  getTokenFromRequest: (req) => {
-    if (req.body && req.body._csrf) return req.body._csrf;
-    return req.headers["x-csrf-token"];
-  }
-});
+const { generateToken, csrfSynchronisedProtection } = require('./middleware/csrf');
 
-app.use(csrfSynchronisedProtection);
+// CSRF skip — CHỈ áp dụng cho các route upload đã biết, KHÔNG áp dụng cho
+// mọi request multipart. Lý do: nếu skip toàn bộ multipart thì attacker có thể
+// gửi multipart đến /members/delete/:id, /checkin/checkout/:id, v.v. để bypass
+// CSRF cho các action không liên quan upload. Whitelist này chỉ chứa các path
+// thực sự cần multer parse trước CSRF; route handler sẽ tự gắn
+// csrfSynchronisedProtection SAU multer.
+const CSRF_UPLOAD_SKIP_PATHS = [
+  /^\/products\/add$/,
+  /^\/products\/edit\/\d+$/,
+  /^\/trainers\/add$/,
+  /^\/trainers\/edit\/\d+$/,
+  /^\/my-profile\/edit$/,
+  /^\/profile\/my-profile\/edit$/, // route /profile mount cùng router
+];
+
+app.use((req, res, next) => {
+  const ctype = req.headers["content-type"] || "";
+  const isMultipart = ctype.toLowerCase().startsWith("multipart/form-data");
+  const isUploadPath = CSRF_UPLOAD_SKIP_PATHS.some((rx) => rx.test(req.path));
+  if (isMultipart && isUploadPath) return next();
+  return csrfSynchronisedProtection(req, res, next);
+});
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;

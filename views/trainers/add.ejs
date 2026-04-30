@@ -5,7 +5,11 @@
         <div class="bg-dark p-4 rounded-4 shadow border border-secondary">
             <h4 class="text-white text-uppercase mb-4 border-bottom border-secondary pb-2"><i class="bi bi-person-plus text-danger me-2"></i>Thêm Huấn Luyện Viên</h4>
             
-            <form action="/trainers/add" method="POST">
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+            <% } %>
+
+            <form action="/trainers/add" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Họ và tên *</label>
@@ -29,7 +33,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-white-50 small">Link Ảnh (URL)</label>
+                    <label class="form-label text-white-50 small">Upload ảnh HLV</label>
+                    <input type="file" name="image_file" class="form-control bg-transparent text-white border-secondary" accept="image/jpeg,image/png,image/webp">
+                    <div class="form-text text-white-50">Tối đa 2 MB. Chấp nhận JPG/PNG/WEBP.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small">Hoặc dán URL ảnh</label>
                     <input type="text" name="image_url" class="form-control bg-transparent text-white border-secondary" placeholder="https://...">
                 </div>
 

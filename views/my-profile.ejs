@@ -79,6 +79,14 @@
                 </div>
             <% } %>
             
+            <% if (member.avatar_url) { %>
+                <div class="text-center mb-3">
+                    <img src="<%= member.avatar_url %>" alt="<%= member.fullname %>"
+                         class="rounded-circle border border-3 border-danger shadow"
+                         style="width:120px; height:120px; object-fit:cover; background:#222;">
+                </div>
+            <% } %>
+
             <div class="qr-box shadow-lg">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= member.phone %>" alt="QR Code">
             </div>
@@ -150,8 +158,27 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="/my-profile/edit" method="POST">
+                <form action="/my-profile/edit" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <h6 class="text-danger border-bottom border-secondary pb-2 mb-3">Ảnh đại diện</h6>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-auto">
+                            <% if (member.avatar_url) { %>
+                                <img src="<%= member.avatar_url %>" alt="avatar"
+                                     class="rounded-circle" style="width:64px; height:64px; object-fit:cover; background:#222;">
+                            <% } else { %>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:64px; height:64px; background:#2a2a2a; color:#999;">
+                                    <i class="bi bi-person fs-3"></i>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="col">
+                            <input type="file" name="avatar_file" class="form-control bg-dark text-white border-secondary" accept="image/jpeg,image/png,image/webp">
+                            <div class="form-text text-white-50">JPG/PNG/WEBP, tối đa 2 MB. Để trống để giữ ảnh cũ.</div>
+                        </div>
+                    </div>
                     
                     <h6 class="text-danger border-bottom border-secondary pb-2 mb-3">Thông tin cơ bản</h6>
                     <div class="row">

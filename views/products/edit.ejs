@@ -5,7 +5,11 @@
         <div class="bg-dark p-4 rounded-4 shadow border border-secondary">
             <h4 class="text-white text-uppercase mb-4 border-bottom border-secondary pb-2"><i class="bi bi-box-fill text-danger me-2"></i>Sửa sản phẩm</h4>
             
-            <form action="/products/edit/<%= product.id %>" method="POST">
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+            <% } %>
+
+            <form action="/products/edit/<%= product.id %>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     
     <div class="mb-3">
@@ -45,10 +49,26 @@
         </div>
     </div>
 
+    <div class="mb-3">
+        <label class="form-label text-white-50">Ảnh hiện tại</label><br>
+        <% if (product.image_url) { %>
+            <img src="<%= product.image_url %>" alt="<%= product.product_name %>"
+                 class="rounded" style="max-width:120px; max-height:120px; object-fit:cover; background:#222;">
+        <% } else { %>
+            <span class="text-white-50"><i class="bi bi-image"></i> Chưa có ảnh</span>
+        <% } %>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-white-50">Upload ảnh mới (thay thế ảnh cũ)</label>
+        <input type="file" name="image_file" class="form-control bg-dark text-white border-secondary" accept="image/jpeg,image/png,image/webp">
+        <div class="form-text text-white-50">Tối đa 2 MB. Để trống để giữ ảnh cũ.</div>
+    </div>
+
     <div class="mb-4">
-        <label class="form-label text-white-50">Link Hình Ảnh (URL)</label>
-        <input type="text" name="image_url" class="form-control bg-dark text-white border-secondary" 
-               value="<%= product.image_url %>">
+        <label class="form-label text-white-50">Hoặc dán URL ảnh</label>
+        <input type="text" name="image_url" class="form-control bg-dark text-white border-secondary"
+               value="<%= product.image_url || '' %>" placeholder="https://...">
     </div>
 
     <div class="d-flex gap-3">
