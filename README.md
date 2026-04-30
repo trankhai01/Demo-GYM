@@ -25,6 +25,10 @@ cp .env.example .env
 # 3. Tạo database & schema
 mysql -u root -p < schema.sql
 
+# 3b. (Nâng cấp DB cũ) Nếu DB đã tồn tại từ trước khi tính năng check-out được
+#    thêm, chạy thêm migration sau:
+mysql -u root -p < migrations/001-add-checkout-time.sql
+
 # 4. Chạy server
 node app.js
 # Server: http://localhost:3000

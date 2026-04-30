@@ -107,13 +107,15 @@ CREATE TABLE IF NOT EXISTS registration_details (
 -- checkin_history: lịch sử check-in của hội viên
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS checkin_history (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    member_id    INT NOT NULL,
-    checkin_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status       VARCHAR(20) NOT NULL DEFAULT 'Success',
-    note         VARCHAR(255),
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    member_id     INT NOT NULL,
+    checkin_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    checkout_time DATETIME NULL,
+    status        VARCHAR(20) NOT NULL DEFAULT 'Success',
+    note          VARCHAR(255),
     CONSTRAINT fk_ck_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-    INDEX idx_ck_member_time (member_id, checkin_time)
+    INDEX idx_ck_member_time (member_id, checkin_time),
+    INDEX idx_ck_open_session (member_id, checkout_time)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
