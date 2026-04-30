@@ -58,11 +58,13 @@
                             <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning me-2 shadow-sm">
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>
-                            <a href="/members/delete/<%= member.id %>" 
-                               class="btn btn-sm btn-outline-danger shadow-sm" 
-                               onclick="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
-                                <i class="bi bi-trash"></i> Xóa
-                            </a>
+                            <form action="/members/delete/<%= member.id %>" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     <% }) %>
@@ -115,6 +117,7 @@
             
             <div class="modal-body">
                 <form action="/members/add" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <div class="mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Họ và Tên</label>
                         <input type="text" name="fullname" class="form-control bg-dark text-white border-secondary" placeholder="Nhập họ và tên..." required>

@@ -40,6 +40,7 @@
                     </ul>
 
                     <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="tab-content" id="pills-tabContent">
                             <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
                                 <div class="bg-white p-3 rounded d-inline-block mb-3 shadow">

@@ -6,6 +6,7 @@
             <h4 class="text-white text-uppercase mb-4 border-bottom border-secondary pb-2"><i class="bi bi-box-fill text-danger me-2"></i>Thêm Sản Phẩm Mới</h4>
             
             <form action="/products/add" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Tên sản phẩm *</label>
                     <input type="text" name="product_name" class="form-control bg-transparent text-white border-secondary" required>

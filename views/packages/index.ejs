@@ -94,7 +94,11 @@
                 
                 <div class="action-box d-flex gap-2 justify-content-center">
                     <a href="/packages/edit/<%= pkg.id %>" class="btn btn-outline-light w-50 rounded-pill fw-bold">Sửa</a>
-                    <a href="/packages/delete/<%= pkg.id %>" class="btn btn-outline-danger w-50 rounded-pill fw-bold" onclick="return confirm('Bạn chắc chắn muốn xóa gói này?')">Xóa</a>
+                    <form action="/packages/delete/<%= pkg.id %>" method="POST" class="w-50"
+                          onsubmit="return confirm('Bạn chắc chắn muốn xóa gói này?')">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">Xóa</button>
+                    </form>
                 </div>
             </div>
         </div>

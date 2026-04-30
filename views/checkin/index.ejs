@@ -52,7 +52,10 @@
 
         fetch('/checkin/process', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
             body: JSON.stringify({ search_val: searchVal })
         })
         .then(res => res.json())
@@ -112,7 +115,10 @@
 
         fetch('/checkin/confirm', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
             body: JSON.stringify({ member_id: currentMemberId })
         })
         .then(res => res.json())

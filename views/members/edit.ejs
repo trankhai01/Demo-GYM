@@ -8,6 +8,7 @@
         </div>
         <div class="card-body p-4">
             <form action="/members/edit/<%= member.id %>" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 
                 <h6 class="text-danger border-bottom border-secondary pb-2 mb-3">1. Thông tin định danh</h6>
                 <div class="row mb-3">

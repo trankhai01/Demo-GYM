@@ -151,6 +151,7 @@
             </div>
             <div class="modal-body">
                 <form action="/my-profile/edit" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     
                     <h6 class="text-danger border-bottom border-secondary pb-2 mb-3">Thông tin cơ bản</h6>
                     <div class="row">

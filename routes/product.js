@@ -46,9 +46,9 @@ router.post('/edit/:id',requireStaff, (req, res) => {
 });
 
 // 6. Xóa sản phẩm
-router.get('/delete/:id',requireStaff, (req, res) => {
+router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("DELETE FROM products WHERE id = ?", [req.params.id], (err) => {
-        if (err) return res.send("<script>alert('Không thể xóa! Sản phẩm này đã nằm trong hóa đơn cũ.'); window.location='/products';</script>");
+        if (err) return res.send("<script>alert('Không thể xóa! Sản phẩm này đã nằm trong hóa đơn cũ.'); window.location.href='/products';</script>");
         res.redirect('/products');
     });
 });
