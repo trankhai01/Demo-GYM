@@ -109,7 +109,15 @@ app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
 
 // Trang chủ — fetch song song packages, trainers, stats. Lỗi từng query
-// không làm hỏng toàn trang: section nào fetch fail sẽ render mảng rỗng.
+// không làm hỏng toàn trang: section nào fetch fail sẽ render mảng rỗng /
+// stat = 0. Lỗi được log ra console để tiện debug khi production.
+const homeUrlForRole = (role) => {
+    if (role === 'admin') return '/reports';
+    if (role === 'staff') return '/members';
+    if (role === 'member') return '/dashboard';
+    return '/';
+};
+
 app.get('/', (req, res) => {
     const queries = {
         packages: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6",
@@ -126,10 +134,12 @@ app.get('/', (req, res) => {
 
     keys.forEach((key) => {
         db.query(queries[key], (err, rows) => {
-            // Guard rows[0] cho stat queries: nếu COUNT trả về mảng rỗng
-            // (rất hiếm nhưng có thể), tránh TypeError khiến done không
-            // tăng -> response treo vô tận.
-            if (!err && rows) {
+            if (err) {
+                console.error('Home query failed:', key, err.message);
+            } else if (rows) {
+                // Guard rows[0] cho stat queries: nếu COUNT trả về mảng rỗng
+                // (rất hiếm nhưng có thể), tránh TypeError khiến done không
+                // tăng -> response treo vô tận.
                 if (key === 'packages') out.packages = rows;
                 else if (key === 'trainers') out.trainers = rows;
                 else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;
@@ -139,11 +149,13 @@ app.get('/', (req, res) => {
             }
             done += 1;
             if (done === keys.length) {
+                const user = req.session ? req.session.user : null;
                 res.render('home', {
                     packages: out.packages,
                     trainers: out.trainers,
                     stats: out.stats,
-                    user: req.session ? req.session.user : null
+                    user,
+                    homePath: user ? homeUrlForRole(user.role) : '/'
                 });
             }
         });
