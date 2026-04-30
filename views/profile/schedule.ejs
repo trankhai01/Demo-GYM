@@ -56,9 +56,10 @@
                     <table class="table table-dark table-hover border-secondary">
                         <thead>
                             <tr class="text-white-50 small">
-                                <th>Ngày giờ</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Thời lượng</th>
                                 <th>Trạng thái</th>
-                                <th>Ghi chú</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,13 +67,33 @@
                                 <% history.forEach(h => { %>
                                     <tr>
                                         <td><%= new Date(h.checkin_time).toLocaleString('vi-VN') %></td>
-                                        <td><span class="badge bg-success">Thành công</span></td>
-                                        <td class="text-white-50"><%= h.note %></td>
+                                        <td>
+                                            <% if (h.checkout_time) { %>
+                                                <%= new Date(h.checkout_time).toLocaleString('vi-VN') %>
+                                            <% } else { %>
+                                                <span class="badge bg-warning text-dark">Đang trong phòng</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-warning fw-bold">
+                                            <% const min = h.duration_min || 0; %>
+                                            <% if (min >= 60) { %>
+                                                <%= Math.floor(min / 60) %>h <%= min % 60 %>p
+                                            <% } else { %>
+                                                <%= min %> phút
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (h.checkout_time) { %>
+                                                <span class="badge bg-success">Đã xong</span>
+                                            <% } else { %>
+                                                <span class="badge bg-info text-dark">Đang tập</span>
+                                            <% } %>
+                                        </td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="3" class="text-center text-white-50 py-3">Chưa có dữ liệu tập luyện</td>
+                                    <td colspan="4" class="text-center text-white-50 py-3">Chưa có dữ liệu tập luyện</td>
                                 </tr>
                             <% } %>
                         </tbody>

@@ -127,8 +127,9 @@ router.get('/schedule', (req, res) => {
     `;
 
     const sqlHistory = `
-        SELECT checkin_time, status, note 
-        FROM checkin_history 
+        SELECT checkin_time, checkout_time, status, note,
+               TIMESTAMPDIFF(MINUTE, checkin_time, COALESCE(checkout_time, NOW())) AS duration_min
+        FROM checkin_history
         WHERE member_id = ? AND status = 'Success'
         ORDER BY checkin_time DESC LIMIT 10
     `;
