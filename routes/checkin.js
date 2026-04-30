@@ -8,34 +8,48 @@ router.get('/', requireStaff, (req, res) => {
 });
 
 router.post('/process', requireStaff, (req, res) => {
-    const searchVal = req.body.search_val || req.body.member_id;
+    const searchVal = (req.body.search_val || req.body.member_id || '').toString().trim();
+    const searchId = parseInt(searchVal) || 0;
 
-    db.query("SELECT * FROM members WHERE phone = ? OR id = ?", [searchVal, searchVal], (err, members) => {
-        if (err || members.length === 0) {
+    if (!searchVal) {
+        return res.json({ status: 'Error', message: 'Vui lòng nhập thông tin!' });
+    }
+
+    db.query("SELECT * FROM members WHERE phone = ? OR id = ?", [searchVal, searchId], (err, members) => {
+        if (err) {
+            console.error('Lỗi query members:', err.message);
+            return res.json({ status: 'Error', message: 'Lỗi truy vấn: ' + err.message });
+        }
+        if (members.length === 0) {
             return res.json({ status: 'Not Found', message: 'Không tìm thấy hội viên trong hệ thống!' });
         }
 
         const member = members[0];
 
         const sqlOpenSession = `
-            SELECT id, checkin_time
-            FROM checkin_history
+            SELECT id, checkin_time FROM checkin_history
             WHERE member_id = ? AND status = 'Success' AND checkout_time IS NULL
             ORDER BY checkin_time DESC LIMIT 1
         `;
         const sqlCheckPackage = `
-            SELECT expiration_date, package_id
-            FROM registrations
+            SELECT expiration_date, package_id FROM registrations
             WHERE member_id = ? AND status = 'active' AND expiration_date >= CURRENT_DATE()
             ORDER BY expiration_date DESC LIMIT 1
         `;
 
         db.query(sqlOpenSession, [member.id], (err, openRows) => {
-            if (err) return res.json({ status: 'Error', message: 'Lỗi truy vấn' });
+            if (err) {
+                console.error('Lỗi sqlOpenSession:', err.message);
+                return res.json({ status: 'Error', message: 'Lỗi truy vấn: ' + err.message });
+            }
 
-            // Luôn kèm expiration_date để nhân viên thấy ngay cả khi member đã trong phòng.
             db.query(sqlCheckPackage, [member.id], (err2, regs) => {
-                const expiration = (regs && regs.length > 0) ? regs[0].expiration_date : null;
+                if (err2) {
+                    console.error('Lỗi sqlCheckPackage:', err2.message);
+                    return res.json({ status: 'Error', message: 'Lỗi truy vấn: ' + err2.message });
+                }
+
+                const expiration = regs && regs.length > 0 ? regs[0].expiration_date : null;
 
                 if (openRows.length > 0) {
                     return res.json({
@@ -70,9 +84,6 @@ router.post('/process', requireStaff, (req, res) => {
 
 router.post('/confirm', requireStaff, (req, res) => {
     const { member_id } = req.body;
-
-    // Phòng thủ: kiểm tra một lần nữa rằng không có phiên đang mở để tránh double check-in
-    // khi UI bị bypass.
     db.query(
         "SELECT id FROM checkin_history WHERE member_id = ? AND status = 'Success' AND checkout_time IS NULL LIMIT 1",
         [member_id],
@@ -97,7 +108,6 @@ router.post('/confirm', requireStaff, (req, res) => {
     );
 });
 
-// Danh sách phiên đang mở (đã check-in, chưa check-out).
 router.get('/active', requireStaff, (req, res) => {
     const sql = `
         SELECT ch.id, ch.checkin_time, m.id AS member_id, m.fullname, m.phone
@@ -112,7 +122,6 @@ router.get('/active', requireStaff, (req, res) => {
     });
 });
 
-// Đóng 1 phiên: chỉ cập nhật khi phiên còn mở (idempotent + chống double click).
 router.post('/checkout/:id', requireStaff, (req, res) => {
     const id = req.params.id;
     db.query(
