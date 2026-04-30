@@ -166,18 +166,36 @@
             },
             body: JSON.stringify({ member_id: currentMemberId })
         })
-        .then(res => res.json())
-        .then(data => {
+        .then(res => Promise.all([res.ok, res.json()]))
+        .then(([ok, data]) => {
+            const resBox = document.getElementById('result-box');
             const resMsg = document.getElementById('result-msg');
             const actionBtns = document.getElementById('action-buttons');
 
-            resMsg.innerText = data.message;
-            actionBtns.style.display = 'none';
+            resMsg.innerText = data.message || (ok ? 'Đã check-in' : 'Lỗi');
 
-            setTimeout(() => {
-                document.getElementById('result-box').style.display = 'none';
-                isScanning = false;
-            }, 2000);
+            if (ok && data.status === 'Success') {
+                actionBtns.style.display = 'none';
+                audioSuccess.play().catch(() => {});
+                setTimeout(() => {
+                    resBox.style.display = 'none';
+                    isScanning = false;
+                    currentMemberId = null;
+                    currentSessionId = null;
+                    currentMode = 'checkin';
+                }, 2000);
+            } else {
+                resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-danger text-white';
+                actionBtns.style.display = 'none';
+                audioError.play().catch(() => {});
+                setTimeout(() => {
+                    resBox.style.display = 'none';
+                    isScanning = false;
+                    currentMemberId = null;
+                    currentSessionId = null;
+                    currentMode = 'checkin';
+                }, 3000);
+            }
 
             loadActiveSessions();
         })
@@ -203,14 +221,18 @@
                 'X-CSRF-Token': csrfToken()
             }
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'Success') {
+        .then(res => Promise.all([res.ok, res.json()]))
+        .then(([ok, data]) => {
+            if (ok && data.status === 'Success') {
                 audioSuccess.play().catch(() => {});
                 if (hideResultBox) {
                     document.getElementById('result-box').style.display = 'none';
                     document.getElementById('action-buttons').style.display = 'none';
                 }
+                // Reset trạng thái local để lần kế tiếp không bị kẹt ở 'checkout'.
+                currentMemberId = null;
+                currentSessionId = null;
+                currentMode = 'checkin';
                 isScanning = false;
             } else {
                 audioError.play().catch(() => {});

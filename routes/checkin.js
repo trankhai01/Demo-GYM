@@ -17,35 +17,38 @@ router.post('/process', requireStaff, (req, res) => {
 
         const member = members[0];
 
-        // Nếu hội viên đang trong phòng (chưa check-out) → báo trạng thái Already.
         const sqlOpenSession = `
             SELECT id, checkin_time
             FROM checkin_history
             WHERE member_id = ? AND status = 'Success' AND checkout_time IS NULL
             ORDER BY checkin_time DESC LIMIT 1
         `;
+        const sqlCheckPackage = `
+            SELECT expiration_date, package_id
+            FROM registrations
+            WHERE member_id = ? AND status = 'active' AND expiration_date >= CURRENT_DATE()
+            ORDER BY expiration_date DESC LIMIT 1
+        `;
+
         db.query(sqlOpenSession, [member.id], (err, openRows) => {
             if (err) return res.json({ status: 'Error', message: 'Lỗi truy vấn' });
 
-            if (openRows.length > 0) {
-                return res.json({
-                    status: 'Already',
-                    member: member,
-                    session_id: openRows[0].id,
-                    checkin_time: openRows[0].checkin_time,
-                    message: 'Hội viên đang trong phòng. Bấm Check-out để kết thúc phiên.'
-                });
-            }
+            // Luôn kèm expiration_date để nhân viên thấy ngay cả khi member đã trong phòng.
+            db.query(sqlCheckPackage, [member.id], (err2, regs) => {
+                const expiration = (regs && regs.length > 0) ? regs[0].expiration_date : null;
 
-            const sqlCheckPackage = `
-                SELECT expiration_date, package_id
-                FROM registrations
-                WHERE member_id = ? AND status = 'active' AND expiration_date >= CURRENT_DATE()
-                ORDER BY expiration_date DESC LIMIT 1
-            `;
+                if (openRows.length > 0) {
+                    return res.json({
+                        status: 'Already',
+                        member: member,
+                        session_id: openRows[0].id,
+                        checkin_time: openRows[0].checkin_time,
+                        expiration_date: expiration,
+                        message: 'Hội viên đang trong phòng. Bấm Check-out để kết thúc phiên.'
+                    });
+                }
 
-            db.query(sqlCheckPackage, [member.id], (err, regs) => {
-                if (!regs || regs.length === 0) {
+                if (!expiration) {
                     return res.json({
                         status: 'Expired',
                         member: member,
@@ -57,7 +60,7 @@ router.post('/process', requireStaff, (req, res) => {
                 res.json({
                     status: 'Success',
                     member: member,
-                    expiration_date: regs[0].expiration_date,
+                    expiration_date: expiration,
                     message: 'Hợp lệ. Vui lòng bấm Xác nhận!'
                 });
             });
