@@ -3,10 +3,6 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireLogin, requireStaff } = require('../middleware/auth');
 
-// =====================================================================
-// Helper utilities
-// =====================================================================
-
 function isValidIsoDateTime(s) {
     if (typeof s !== 'string') return false;
     const t = Date.parse(s);
@@ -14,13 +10,8 @@ function isValidIsoDateTime(s) {
 }
 
 function toMysqlDateTime(iso) {
-    // FullCalendar gửi ISO string. Convert sang định dạng MySQL DATETIME.
     return new Date(iso).toISOString().slice(0, 19).replace('T', ' ');
 }
-
-// =====================================================================
-// Pages
-// =====================================================================
 
 // Trang lịch tập của hội viên (member): xem & đặt buổi của chính mình.
 router.get('/', requireLogin, (req, res) => {
@@ -40,11 +31,6 @@ router.get('/admin', requireStaff, (req, res) => {
     });
 });
 
-// =====================================================================
-// API endpoints (JSON)
-// =====================================================================
-
-// FullCalendar gọi endpoint này để lấy events trong khoảng [start, end).
 // Member chỉ thấy booking của chính mình; staff/admin thấy tất cả.
 router.get('/events', requireLogin, (req, res) => {
     const role = req.session.user.role;
@@ -99,8 +85,7 @@ router.get('/events', requireLogin, (req, res) => {
     });
 });
 
-// Đặt 1 buổi mới. Chỉ member tự đặt cho chính mình; staff đặt giùm member nếu
-// truyền member_id (admin/staff).
+// Đặt 1 buổi mới. Chỉ member tự đặt cho chính mình; staff đặt giùm member nếu cần.
 router.post('/book', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;
@@ -194,7 +179,7 @@ router.post('/book', requireLogin, (req, res) => {
     });
 });
 
-// Hủy 1 buổi. Member chỉ hủy được booking của chính mình; staff hủy bất kỳ.
+//Member chỉ hủy được booking của chính mình; staff hủy bất kỳ.
 router.post('/cancel/:id', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;
@@ -204,8 +189,6 @@ router.post('/cancel/:id', requireLogin, (req, res) => {
     if (!Number.isFinite(id) || id <= 0) {
         return res.status(400).json({ status: 'Error', message: 'ID không hợp lệ' });
     }
-
-    // UPDATE … WHERE status='booked' để idempotent + chống double-cancel.
     const sql = isStaff
         ? "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'booked'"
         : "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'booked' AND member_id = ?";

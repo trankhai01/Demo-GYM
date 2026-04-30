@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireStaff } = require('../middleware/auth');
 
-// All POS / invoice endpoints require an authenticated staff or admin user.
 router.use(requireStaff);
 
 router.get('/', (req, res) => {
@@ -62,7 +61,6 @@ router.post('/edit-schedule/:id', (req, res) => {
 });
 
 // Tạo hóa đơn POS có cả gói tập + sản phẩm. Bọc trong transaction để
-// dữ liệu giữa registrations và registration_details luôn nhất quán.
 router.post('/add-complex', (req, res) => {
     const { member_id, package_id, trainer_id, schedule, cart_items, total_price } = req.body;
     const reg_date = new Date().toISOString().split('T')[0];
@@ -187,7 +185,6 @@ router.get('/checkout/:id', (req, res) => {
 });
 
 // Xác nhận thanh toán: cập nhật trạng thái + trừ kho atomically trong transaction.
-// Trừ kho dùng `WHERE stock_quantity >= ?` để tránh âm kho khi bán đồng thời.
 router.post('/checkout/confirm/:id', (req, res) => {
     const registrationId = req.params.id;
     const { payment_method } = req.body;

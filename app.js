@@ -17,10 +17,6 @@ if (isProduction && !process.env.SESSION_SECRET) {
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// Security headers. CSP is disabled because the templates load Bootstrap,
-// Bootstrap Icons, Google Fonts and audio assets from third-party CDNs;
-// configuring a strict CSP for those is out of scope here.
 app.use(helmet({ contentSecurityPolicy: false }));
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -43,8 +39,6 @@ app.use(
 );
 
 const { generateToken, csrfSynchronisedProtection } = csrfSync({
-  // Accept the token either from a hidden form field or an X-CSRF-Token header
-  // (used by the AJAX fetch() calls in the registration POS and check-in pages).
   getTokenFromRequest: (req) => {
     if (req.body && req.body._csrf) return req.body._csrf;
     return req.headers["x-csrf-token"];
@@ -70,18 +64,12 @@ app.use("/", authRoutes);
 app.use("/members", memberRoutes);
 app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
-// `/schedule` (calendar) must be mounted BEFORE profileRoutes is mounted at
-// `/` — otherwise profileRoutes' `GET /schedule` handler (member's history view)
-// would shadow our calendar page.
 app.use('/schedule', require('./routes/schedule'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
 app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
-// Profile routes are intentionally mounted under both `/` and `/profile`
-// because the views link to `/my-profile`, `/profile/change-password` and
-// `/profile/schedule` simultaneously.
 app.use('/profile', profileRoutes);
 
 app.get('/', (req, res) => {
