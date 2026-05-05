@@ -98,6 +98,12 @@ router.post('/view/:id/register', requireStaff, (req, res) => {
     // back về rồi submit lại → tạo registration thứ hai cho cùng member.
     // Cả hai sau đó có thể checkout độc lập → member có 2 gói trùng.
     db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status IN ('Success', 'Pending')", [memberId], (err, activePkgs) => {
+        // Fail-closed: nếu query lỗi không thể fallback "không có gói",
+        // sẽ vô tình bypass guard và tạo registration trùng.
+        if (err) {
+            console.error('[member /view/:id/register] guard query', err.message);
+            return res.status(500).send('Lỗi kiểm tra gói tập hiện tại');
+        }
         if (activePkgs && activePkgs.length > 0) {
             return res.send("<script>alert('TỪ CHỐI: Hội viên này đang có gói tập chưa hết hạn!'); window.history.back();</script>");
         }
