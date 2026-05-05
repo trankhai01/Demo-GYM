@@ -70,15 +70,16 @@ CREATE TABLE IF NOT EXISTS products (
 -- ---------------------------------------------------------------------------
 -- registrations: hóa đơn / đăng ký gói (kiêm cả POS)
 -- ---------------------------------------------------------------------------
+-- Lưu ý: registrations chỉ chứa thông tin gói + thanh toán. HLV của
+-- từng buổi tập được ghi tại bookings (đặt lịch) hoặc pt_sessions_log
+-- (lúc điểm danh trừ buổi). Lịch tập thật cũng nằm tại bookings.
 CREATE TABLE IF NOT EXISTS registrations (
     id                 INT AUTO_INCREMENT PRIMARY KEY,
     member_id          INT,
     package_id         INT,
-    trainer_id         INT,
     price              DECIMAL(12,2) NOT NULL DEFAULT 0,
     registration_date  DATE NOT NULL,
     expiration_date    DATE,
-    schedule           VARCHAR(255),
     total_sessions     INT DEFAULT 0,
     used_sessions      INT DEFAULT 0,
     payment_status     ENUM('Pending', 'Success') DEFAULT 'Pending',
@@ -86,7 +87,6 @@ CREATE TABLE IF NOT EXISTS registrations (
     status             VARCHAR(20)  DEFAULT 'active',
     CONSTRAINT fk_reg_member  FOREIGN KEY (member_id)  REFERENCES members(id)  ON DELETE SET NULL,
     CONSTRAINT fk_reg_package FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_reg_trainer FOREIGN KEY (trainer_id) REFERENCES trainers(id) ON DELETE SET NULL,
     INDEX idx_reg_member_status (member_id, status, expiration_date),
     INDEX idx_reg_payment_date  (payment_status, registration_date)
 ) ENGINE=InnoDB;

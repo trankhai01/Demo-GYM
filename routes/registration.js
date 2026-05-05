@@ -22,47 +22,15 @@ router.get('/', (req, res) => {
     });
 });
 
-// Lưu hóa đơn đơn giản (chỉ có gói tập, không có sản phẩm).
-router.post('/add', (req, res) => {
-    const { member_id, package_id, trainer_id, schedule } = req.body;
-    const reg_date = new Date().toISOString().split('T')[0];
-
-    db.query("SELECT price, duration_months FROM packages WHERE id = ?", [package_id], (err, pkg) => {
-        if (err || pkg.length === 0) return res.status(500).send("Lỗi gói tập");
-
-        let expDate = new Date();
-        expDate.setMonth(expDate.getMonth() + pkg[0].duration_months);
-        const exp_date = expDate.toISOString().split('T')[0];
-
-        const t_id = trainer_id ? trainer_id : null;
-        const price = pkg[0].price;
-
-        const sql = `
-            INSERT INTO registrations (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        `;
-
-        db.query(sql, [member_id, package_id, t_id, price, reg_date, exp_date, schedule], (err) => {
-            if (err) return res.status(500).send("Lỗi lưu hóa đơn");
-            res.redirect('/members/view/' + member_id);
-        });
-    });
-});
-
-router.post('/edit-schedule/:id', (req, res) => {
-    const regId = req.params.id;
-    const { schedule, member_id } = req.body;
-
-    const sql = "UPDATE registrations SET schedule = ? WHERE id = ?";
-    db.query(sql, [schedule, regId], (err) => {
-        if (err) return res.status(500).send("Lỗi cập nhật lịch tập");
-        res.redirect('/members/view/' + member_id);
-    });
-});
+// Route /add cũ (đăng ký gói đơn giản không qua POS) đã được loại bỏ:
+// không có UI gọi tới, và sau khi đồng bộ payment_status='Pending' (PR #8)
+// route này sẽ tạo hóa đơn 'Pending' không có đường vào checkout. Mọi
+// đăng ký gói giờ đi qua /add-complex (POS) hoặc /members/view/:id/register
+// (đều redirect sang /registrations/checkout/:id).
 
 // Tạo hóa đơn POS có cả gói tập + sản phẩm. Bọc trong transaction để
 router.post('/add-complex', (req, res) => {
-    const { member_id, package_id, trainer_id, schedule, cart_items, total_price } = req.body;
+    const { member_id, package_id, cart_items, total_price } = req.body;
     const reg_date = new Date().toISOString().split('T')[0];
 
     db.getConnection((err, conn) => {
@@ -92,17 +60,15 @@ router.post('/add-complex', (req, res) => {
 
                 const sql = `
                     INSERT INTO registrations
-                    (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, total_sessions, payment_status, payment_method, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
+                    (member_id, package_id, price, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
+                    VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
                 `;
                 const params = [
                     member_id || null,
                     package_id || null,
-                    trainer_id || null,
                     total_price,
                     reg_date,
                     exp_date,
-                    schedule,
                     totalPt
                 ];
 

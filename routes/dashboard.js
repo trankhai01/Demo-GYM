@@ -8,13 +8,15 @@ router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
 
     const sqlMember = "SELECT id, fullname, phone, gender, join_date, avatar_url FROM members WHERE id = ?";
+    // Chỉ tính gói đã thanh toán (Success). Sau PR #8 hóa đơn được tạo
+    // ở trạng thái Pending → Pending không được hiển thị như active.
     const sqlActivePackage = `
         SELECT r.id, r.expiration_date, r.total_sessions, r.used_sessions,
                r.registration_date, p.package_name,
                DATEDIFF(r.expiration_date, CURRENT_DATE()) AS days_left
         FROM registrations r
         LEFT JOIN packages p ON r.package_id = p.id
-        WHERE r.member_id = ? AND r.status = 'active'
+        WHERE r.member_id = ? AND r.status = 'active' AND r.payment_status = 'Success'
           AND (r.expiration_date IS NULL OR r.expiration_date >= CURRENT_DATE())
         ORDER BY r.expiration_date DESC LIMIT 1
     `;
