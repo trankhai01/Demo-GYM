@@ -12,19 +12,40 @@
 -- Chạy:
 --   mysql -u <user> -p <db_name> < migrations/005-cleanup-registrations.sql
 
--- 1) Drop foreign key fk_reg_trainer (nếu còn) — phải drop FK trước khi drop column.
-SET @fk_exists := (
-    SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+-- 1) Tìm + drop MỌI foreign key đang reference cột trainer_id (tên FK
+--    trên các DB khác nhau có thể khác nhau: fk_reg_trainer, registrations_ibfk_X,
+--    hoặc tên auto-gen khác). Phải drop FK trước khi drop column.
+SET @fk_name := (
+    SELECT CONSTRAINT_NAME
+    FROM information_schema.KEY_COLUMN_USAGE
     WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = 'registrations'
-      AND CONSTRAINT_NAME = 'fk_reg_trainer'
+      AND COLUMN_NAME = 'trainer_id'
+      AND REFERENCED_TABLE_NAME IS NOT NULL
+    LIMIT 1
 );
-SET @sql := IF(@fk_exists > 0,
-    'ALTER TABLE registrations DROP FOREIGN KEY fk_reg_trainer',
+SET @sql := IF(@fk_name IS NOT NULL,
+    CONCAT('ALTER TABLE registrations DROP FOREIGN KEY `', @fk_name, '`'),
     'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 2) Drop column trainer_id (nếu còn).
+-- 2) Drop index trên trainer_id (nếu còn). Một số phiên bản MySQL/MariaDB
+--    tự tạo index khi định nghĩa FK và KHÔNG tự gỡ khi drop FK → cần drop
+--    rõ ràng để DROP COLUMN không lỗi #1553.
+SET @idx_name := (
+    SELECT INDEX_NAME
+    FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'registrations'
+      AND COLUMN_NAME = 'trainer_id'
+    LIMIT 1
+);
+SET @sql := IF(@idx_name IS NOT NULL,
+    CONCAT('ALTER TABLE registrations DROP INDEX `', @idx_name, '`'),
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 3) Drop column trainer_id (nếu còn).
 SET @col_exists := (
     SELECT COUNT(*) FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
@@ -36,7 +57,7 @@ SET @sql := IF(@col_exists > 0,
     'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 3) Drop column schedule (nếu còn).
+-- 4) Drop column schedule (nếu còn).
 SET @col_exists := (
     SELECT COUNT(*) FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
