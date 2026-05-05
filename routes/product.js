@@ -9,10 +9,6 @@ const {
     deleteUploadedFile
 } = require('../middleware/upload');
 const { csrfSynchronisedProtection } = require('../middleware/csrf');
-
-// Multer middleware bọc lỗi friendly cho field tên 'image_file' (input type=file).
-// Chuỗi middleware cho route upload: multer -> csrf (vì global CSRF skip
-// multipart, body cần được multer parse trước khi csrf đọc _csrf).
 const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
 
@@ -29,8 +25,7 @@ router.get('/add', requireStaff, (req, res) => {
     res.render('products/add', { error: null, form: {} });
 });
 
-// 3. Xử lý Thêm mới — chấp nhận file upload (image_file) và/hoặc URL (image_url).
-//    File upload ưu tiên hơn URL nếu cả hai đều có.
+// 3. Xử lý Thêm mới
 router.post('/add', requireStaff, ...productUploadChain, (req, res) => {
     const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
@@ -59,8 +54,7 @@ router.get('/edit/:id', requireStaff, (req, res) => {
     });
 });
 
-// 5. Xử lý Sửa — nếu có file mới thì thay thế và xoá file cũ trên đĩa
-//    (chỉ xoá khi ảnh cũ thuộc /uploads/, không xoá URL ngoài).
+// 5. Xử lý Sửa 
 router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
@@ -73,7 +67,6 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;
         const uploaded = persistedFilePath(req, 'products');
-        // Ưu tiên: file mới > URL nhập tay > giữ ảnh cũ.
         const finalImage = uploaded || image_url || oldImage || null;
 
         db.query(
@@ -84,7 +77,6 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
                     deleteUploadedFile(uploaded);
                     return res.status(500).send("Lỗi cập nhật dữ liệu");
                 }
-                // Nếu thay ảnh thành công và ảnh cũ là file uploaded → xoá để tránh rác.
                 if (uploaded && oldImage && oldImage !== uploaded) {
                     deleteUploadedFile(oldImage);
                 }
@@ -94,7 +86,7 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     });
 });
 
-// 6. Xóa sản phẩm — xoá luôn file ảnh nếu là ảnh đã upload nội bộ.
+// 6. Xóa sản phẩm
 router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;

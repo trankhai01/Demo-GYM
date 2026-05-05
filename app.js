@@ -38,20 +38,13 @@ app.use(
 );
 
 const { generateToken, csrfSynchronisedProtection } = require('./middleware/csrf');
-
-// CSRF skip — CHỈ áp dụng cho các route upload đã biết, KHÔNG áp dụng cho
-// mọi request multipart. Lý do: nếu skip toàn bộ multipart thì attacker có thể
-// gửi multipart đến /members/delete/:id, /checkin/checkout/:id, v.v. để bypass
-// CSRF cho các action không liên quan upload. Whitelist này chỉ chứa các path
-// thực sự cần multer parse trước CSRF; route handler sẽ tự gắn
-// csrfSynchronisedProtection SAU multer.
 const CSRF_UPLOAD_SKIP_PATHS = [
   /^\/products\/add$/,
   /^\/products\/edit\/\d+$/,
   /^\/trainers\/add$/,
   /^\/trainers\/edit\/\d+$/,
   /^\/my-profile\/edit$/,
-  /^\/profile\/my-profile\/edit$/, // route /profile mount cùng router
+  /^\/profile\/my-profile\/edit$/, 
 ];
 
 app.use((req, res, next) => {
@@ -67,8 +60,6 @@ app.use((req, res, next) => {
   res.locals.csrfToken = generateToken(req);
   res.locals.pendingResetCount = 0;
 
-  // Sidebar admin hiển thị badge số yêu cầu quên mật khẩu đang chờ.
-  // Chỉ query cho admin + bỏ qua request asset/JSON để tiết kiệm DB.
   const u = req.session.user;
   if (u && u.role === 'admin' && req.method === 'GET' && req.accepts('html')) {
     db.query(
@@ -108,9 +99,6 @@ app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
 
-// Trang chủ — fetch song song packages, trainers, stats. Lỗi từng query
-// không làm hỏng toàn trang: section nào fetch fail sẽ render mảng rỗng /
-// stat = 0. Lỗi được log ra console để tiện debug khi production.
 const homeUrlForRole = (role) => {
     if (role === 'admin') return '/reports';
     if (role === 'staff') return '/members';
@@ -137,9 +125,6 @@ app.get('/', (req, res) => {
             if (err) {
                 console.error('Home query failed:', key, err.message);
             } else if (rows) {
-                // Guard rows[0] cho stat queries: nếu COUNT trả về mảng rỗng
-                // (rất hiếm nhưng có thể), tránh TypeError khiến done không
-                // tăng -> response treo vô tận.
                 if (key === 'packages') out.packages = rows;
                 else if (key === 'trainers') out.trainers = rows;
                 else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;

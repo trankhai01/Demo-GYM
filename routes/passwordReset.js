@@ -5,7 +5,7 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireAdmin } = require('../middleware/auth');
 
-// Sinh mật khẩu tạm thời 8 ký tự gồm chữ + số (bỏ chữ dễ nhầm: 0/O, 1/l/I).
+// Sinh mật khẩu tạm thời 8 ký tự gồm chữ + số.
 const TEMP_PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
 function generateTempPassword(length = 8) {
     const bytes = crypto.randomBytes(length);
@@ -15,15 +15,7 @@ function generateTempPassword(length = 8) {
     }
     return out;
 }
-
-// Toàn bộ endpoint chỉ admin mới truy cập được.
 router.use(requireAdmin);
-
-// Trang quản trị: liệt kê yêu cầu pending + lịch sử resolved/dismissed.
-// Mật khẩu tạm thời được lưu trong session (flash) sau khi reset thành công và
-// xoá ngay sau lần đọc đầu tiên. Không bao giờ truyền qua query string vì
-// credential sẽ rò rỉ qua browser history, log và Referer header — và kẻ tấn
-// công có thể giả mật khẩu giả bằng URL (nhân viên có thể đọc nhầm cho khách).
 router.get('/', (req, res) => {
     const tempPassword = req.session.tempPassword || null;
     const tempMember = req.session.tempMember || null;
@@ -68,11 +60,6 @@ router.get('/', (req, res) => {
         });
     });
 });
-
-// Reset mật khẩu cho 1 yêu cầu pending. Sinh mật khẩu mới ngẫu nhiên,
-// hash bằng bcrypt, cập nhật bảng members + đánh dấu request resolved.
-// Bọc trong transaction để 2 thao tác (update password + update request)
-// luôn nhất quán: nếu một bên fail thì cả hai rollback.
 router.post('/:id/reset', async (req, res) => {
     const requestId = Number(req.params.id);
     if (!Number.isFinite(requestId) || requestId <= 0) {
@@ -106,8 +93,6 @@ router.post('/:id/reset', async (req, res) => {
                 conn.release();
                 return res.status(500).render('error', { message: 'Lỗi mở transaction.' });
             }
-
-            // Khóa row của yêu cầu pending để tránh 2 admin reset cùng lúc.
             conn.query(
                 `SELECT id, member_id FROM password_reset_requests
                  WHERE id = ? AND status = 'pending' FOR UPDATE`,
@@ -138,9 +123,6 @@ router.post('/:id/reset', async (req, res) => {
                                     conn.commit((errCommit) => {
                                         if (errCommit) return fail('COMMIT', errCommit);
                                         conn.release();
-                                        // Lưu vào session flash thay vì query string —
-                                        // credential không lộ qua URL/log/lịch sử/Referer
-                                        // và không thể giả mạo bằng URL crafted.
                                         req.session.tempPassword = tempPassword;
                                         req.session.tempMember = memberId;
                                         res.redirect('/admin/password-resets');
@@ -155,7 +137,6 @@ router.post('/:id/reset', async (req, res) => {
     });
 });
 
-// Bỏ qua 1 yêu cầu (vd: yêu cầu spam, không phải member thật).
 router.post('/:id/dismiss', (req, res) => {
     const requestId = Number(req.params.id);
     if (!Number.isFinite(requestId) || requestId <= 0) {

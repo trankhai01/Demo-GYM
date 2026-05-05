@@ -3,8 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireMember } = require('../middleware/auth');
 
-// Trang chính của hội viên sau khi đăng nhập: tổng quan gói tập, lịch
-// sắp tới và lịch sử check-in gần đây.
+// Trang chính của hội viên sau khi đăng nhập
 router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
 

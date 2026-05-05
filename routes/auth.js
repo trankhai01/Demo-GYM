@@ -4,7 +4,6 @@ const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
-// Brute-force protection on login: 10 attempts per 15 minutes per IP.
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
@@ -13,7 +12,6 @@ const loginLimiter = rateLimit({
     message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.'
 });
 
-// Hạn chế yêu cầu quên mật khẩu: 5 / 1h / IP để chống spam admin queue.
 const forgotLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 5,
@@ -22,7 +20,7 @@ const forgotLimiter = rateLimit({
     message: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ.'
 });
 
-// 1. Giao diện Login — nếu đã đăng nhập thì về trang chủ
+// 1. Giao diện Login 
 router.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('login');
@@ -82,8 +80,6 @@ router.post('/login', loginLimiter, (req, res) => {
 
         req.session.save((err) => {
             if (err) console.error('Lỗi lưu session:', err);
-            // Member đặt chân vào trang chủ của mình (dashboard) thay vì
-            // landing page chung (giữ nguyên cho admin/staff).
             const dest = user.role === 'member' ? '/dashboard' : '/';
             res.redirect(dest);
         });
@@ -132,9 +128,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// 5. Quên mật khẩu: form public, không cần login. Để chống phone enumeration,
-// luuôn trả về cùng 1 message dù SDT tồn tại hay không. Nếu có thật thì
-// tạo bản ghi pending; admin sẽ duyệt ở /admin/password-resets.
+// 5. Quên mật khẩu
 router.get('/forgot-password', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('forgot-password', { message: null, error: null, phone: '' });
@@ -166,13 +160,10 @@ router.post('/forgot-password', forgotLimiter, (req, res) => {
             });
         }
         if (rows.length === 0) {
-            // Không báo lỗi để tránh phone enumeration.
             return res.render('forgot-password', { message: SUCCESS_MSG, error: null, phone: '' });
         }
 
         const memberId = rows[0].id;
-        // Chỉ tạo request mới nếu chưa có request pending nào cho member này
-        // (idempotent — 2 lần submit liên tiếp không nhân đôi request).
         db.query(
             "SELECT id FROM password_reset_requests WHERE member_id = ? AND status = 'pending' LIMIT 1",
             [memberId],
