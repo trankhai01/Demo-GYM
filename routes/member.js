@@ -242,10 +242,16 @@ router.post("/edit/:id",requireStaff, (req, res) => {
 router.post('/deduct-session', requireStaff, (req, res) => {
     const { registration_id, member_id, trainer_id, note } = req.body;
     const tid = trainer_id && String(trainer_id).trim() !== '' ? Number(trainer_id) : null;
-    db.query("SELECT total_sessions, used_sessions FROM registrations WHERE id = ?", [registration_id], (err, results) => {
+    db.query("SELECT total_sessions, used_sessions, payment_status FROM registrations WHERE id = ?", [registration_id], (err, results) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
 
         const reg = results[0];
+        // Sau PR #8 hóa đơn được tạo ở trạng thái Pending rồi mới qua
+        // checkout xác nhận thanh toán → cấm trừ buổi cho đến khi thanh
+        // toán xong, tránh staff trừ buổi cho gói chưa trả tiền.
+        if (reg.payment_status !== 'Success') {
+            return res.status(400).send("Gói tập chưa thanh toán — không thể điểm danh!");
+        }
         if (reg.used_sessions >= reg.total_sessions) {
             return res.status(400).send("Gói tập này đã hết số buổi!");
         }

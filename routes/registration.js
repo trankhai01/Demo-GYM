@@ -22,30 +22,11 @@ router.get('/', (req, res) => {
     });
 });
 
-// Lưu hóa đơn đơn giản (chỉ có gói tập, không có sản phẩm).
-router.post('/add', (req, res) => {
-    const { member_id, package_id } = req.body;
-    const reg_date = new Date().toISOString().split('T')[0];
-
-    db.query("SELECT price, duration_months, pt_sessions FROM packages WHERE id = ?", [package_id], (err, pkg) => {
-        if (err || pkg.length === 0) return res.status(500).send("Lỗi gói tập");
-
-        let expDate = new Date();
-        expDate.setMonth(expDate.getMonth() + pkg[0].duration_months);
-        const exp_date = expDate.toISOString().split('T')[0];
-
-        const sql = `
-            INSERT INTO registrations
-            (member_id, package_id, price, registration_date, expiration_date, total_sessions, status)
-            VALUES (?, ?, ?, ?, ?, ?, 'active')
-        `;
-
-        db.query(sql, [member_id, package_id, pkg[0].price, reg_date, exp_date, pkg[0].pt_sessions || 0], (err) => {
-            if (err) return res.status(500).send("Lỗi lưu hóa đơn");
-            res.redirect('/members/view/' + member_id);
-        });
-    });
-});
+// Route /add cũ (đăng ký gói đơn giản không qua POS) đã được loại bỏ:
+// không có UI gọi tới, và sau khi đồng bộ payment_status='Pending' (PR #8)
+// route này sẽ tạo hóa đơn 'Pending' không có đường vào checkout. Mọi
+// đăng ký gói giờ đi qua /add-complex (POS) hoặc /members/view/:id/register
+// (đều redirect sang /registrations/checkout/:id).
 
 // Tạo hóa đơn POS có cả gói tập + sản phẩm. Bọc trong transaction để
 router.post('/add-complex', (req, res) => {

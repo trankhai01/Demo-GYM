@@ -134,7 +134,7 @@
 
     <% 
         if (history && history.length > 0) {
-            let activePtPackages = history.filter(h => new Date(h.expiration_date) >= new Date() && h.total_sessions > 0);
+            let activePtPackages = history.filter(h => new Date(h.expiration_date) >= new Date() && h.total_sessions > 0 && h.payment_status === 'Success');
             if (activePtPackages.length > 0) {
                 activePtPackages.forEach(pkg => {
                     let used = pkg.used_sessions || 0;
