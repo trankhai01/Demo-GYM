@@ -1,0 +1,263 @@
+<%# Trợ lý ảo Gemini - bubble nổi góc phải dưới. Include trên mọi trang trừ login/register/forgot-password. %>
+<style>
+    .gymbro-chat-bubble {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1080;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #e50914;
+        color: white;
+        border: none;
+        box-shadow: 0 8px 24px rgba(229, 9, 20, 0.45);
+        font-size: 1.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .gymbro-chat-bubble:hover {
+        transform: scale(1.08);
+        box-shadow: 0 12px 32px rgba(229, 9, 20, 0.6);
+    }
+    .gymbro-chat-panel {
+        position: fixed;
+        right: 24px;
+        bottom: 100px;
+        z-index: 1080;
+        width: 380px;
+        max-width: calc(100vw - 32px);
+        height: 540px;
+        max-height: calc(100vh - 140px);
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .gymbro-chat-panel.open { display: flex; }
+    .gymbro-chat-header {
+        background: linear-gradient(135deg, #e50914 0%, #b00610 100%);
+        color: white;
+        padding: 14px 16px;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .gymbro-chat-header .subtitle { font-size: 0.75rem; font-weight: 400; opacity: 0.9; }
+    .gymbro-chat-header button {
+        background: transparent; border: none; color: white; font-size: 1.3rem; cursor: pointer;
+    }
+    .gymbro-chat-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        background: #121212;
+        font-size: 0.92rem;
+    }
+    .gymbro-msg { margin-bottom: 10px; display: flex; }
+    .gymbro-msg.user { justify-content: flex-end; }
+    .gymbro-msg .bubble {
+        max-width: 80%;
+        padding: 9px 13px;
+        border-radius: 14px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .gymbro-msg.user .bubble { background: #e50914; color: white; border-bottom-right-radius: 4px; }
+    .gymbro-msg.bot .bubble { background: #2a2a2a; color: #e0e0e0; border-bottom-left-radius: 4px; }
+    .gymbro-msg.bot.typing .bubble { font-style: italic; opacity: 0.7; }
+    .gymbro-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 14px 8px;
+        background: #121212;
+    }
+    .gymbro-suggestion {
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #e0e0e0;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+    .gymbro-suggestion:hover { background: #333; border-color: #e50914; color: #fff; }
+    .gymbro-chat-input {
+        padding: 10px;
+        border-top: 1px solid #333;
+        background: #1a1a1a;
+        display: flex;
+        gap: 8px;
+    }
+    .gymbro-chat-input input {
+        flex: 1;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+    .gymbro-chat-input input:focus { outline: none; border-color: #e50914; }
+    .gymbro-chat-input button {
+        background: #e50914;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 0 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .gymbro-chat-input button:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (max-width: 480px) {
+        .gymbro-chat-panel { right: 8px; left: 8px; width: auto; bottom: 88px; }
+        .gymbro-chat-bubble { right: 16px; bottom: 16px; }
+    }
+</style>
+
+<button class="gymbro-chat-bubble" id="gymbroChatToggle" type="button" aria-label="Mở trợ lý ảo">
+    <i class="bi bi-chat-dots-fill"></i>
+</button>
+
+<div class="gymbro-chat-panel" id="gymbroChatPanel" role="dialog" aria-label="Trợ lý ảo GymBro">
+    <div class="gymbro-chat-header">
+        <div>
+            <div>GymBro Trợ lý <i class="bi bi-stars" style="font-size:0.9rem;"></i></div>
+            <div class="subtitle">Hỏi về gói tập, HLV, lịch tập...</div>
+        </div>
+        <button type="button" id="gymbroChatClose" aria-label="Đóng">&times;</button>
+    </div>
+    <div class="gymbro-chat-body" id="gymbroChatBody"></div>
+    <div class="gymbro-suggestions" id="gymbroSuggestions">
+        <button type="button" class="gymbro-suggestion">Có những gói tập nào?</button>
+        <button type="button" class="gymbro-suggestion">Cách đặt lịch tập?</button>
+        <% if (typeof user !== 'undefined' && user && user.role === 'member') { %>
+            <button type="button" class="gymbro-suggestion">Gói hiện tại của tôi còn bao nhiêu buổi?</button>
+            <button type="button" class="gymbro-suggestion">Buổi tập sắp tới của tôi?</button>
+        <% } else { %>
+            <button type="button" class="gymbro-suggestion">Giờ mở cửa?</button>
+            <button type="button" class="gymbro-suggestion">Có HLV nào?</button>
+        <% } %>
+    </div>
+    <form class="gymbro-chat-input" id="gymbroChatForm" autocomplete="off">
+        <input type="text" id="gymbroChatInput" placeholder="Nhập câu hỏi của bạn..." maxlength="1000" required>
+        <button type="submit" id="gymbroChatSend"><i class="bi bi-send-fill"></i></button>
+    </form>
+</div>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'gymbro_chat_history_v1';
+    const MAX_HISTORY = 30;
+
+    const $toggle = document.getElementById('gymbroChatToggle');
+    const $panel = document.getElementById('gymbroChatPanel');
+    const $close = document.getElementById('gymbroChatClose');
+    const $body = document.getElementById('gymbroChatBody');
+    const $form = document.getElementById('gymbroChatForm');
+    const $input = document.getElementById('gymbroChatInput');
+    const $send = document.getElementById('gymbroChatSend');
+    const $suggestions = document.getElementById('gymbroSuggestions');
+
+    let history = [];
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) history = JSON.parse(raw) || [];
+    } catch (e) { history = []; }
+
+    function saveHistory() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(-MAX_HISTORY)));
+        } catch (e) {}
+    }
+
+    function appendMessage(role, text, opts) {
+        const wrap = document.createElement('div');
+        wrap.className = 'gymbro-msg ' + (role === 'user' ? 'user' : 'bot') + (opts && opts.typing ? ' typing' : '');
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = text;
+        wrap.appendChild(bubble);
+        $body.appendChild(wrap);
+        $body.scrollTop = $body.scrollHeight;
+        return wrap;
+    }
+
+    function renderHistory() {
+        $body.innerHTML = '';
+        if (history.length === 0) {
+            appendMessage('bot', 'Chào bạn! Mình là trợ lý ảo của phòng tập GymBro. Bạn cần hỗ trợ gì hôm nay?');
+        } else {
+            history.forEach(h => appendMessage(h.role, h.text));
+        }
+    }
+
+    async function send(text) {
+        if (!text || !text.trim()) return;
+        text = text.trim();
+
+        appendMessage('user', text);
+        history.push({ role: 'user', text });
+        saveHistory();
+
+        $input.value = '';
+        $send.disabled = true;
+        const typing = appendMessage('bot', 'Đang soạn...', { typing: true });
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken && csrfToken.content) headers['x-csrf-token'] = csrfToken.content;
+
+            const r = await fetch('/api/chat', {
+                method: 'POST',
+                headers,
+                credentials: 'same-origin',
+                body: JSON.stringify({ message: text, history: history.slice(-12, -1) })
+            });
+            const data = await r.json().catch(() => ({ ok: false, reply: 'Lỗi không xác định.' }));
+            typing.remove();
+            const reply = (data && data.reply) || 'Mình chưa nhận được phản hồi. Thử lại nhé.';
+            appendMessage('bot', reply);
+            history.push({ role: 'model', text: reply });
+            saveHistory();
+        } catch (e) {
+            typing.remove();
+            appendMessage('bot', 'Mạng có vấn đề. Bạn kiểm tra kết nối rồi thử lại.');
+        } finally {
+            $send.disabled = false;
+            $input.focus();
+        }
+    }
+
+    $toggle.addEventListener('click', () => {
+        $panel.classList.add('open');
+        if ($body.children.length === 0) renderHistory();
+        setTimeout(() => $input.focus(), 100);
+    });
+    $close.addEventListener('click', () => $panel.classList.remove('open'));
+
+    $form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        send($input.value);
+    });
+
+    $suggestions.addEventListener('click', (e) => {
+        if (e.target.classList.contains('gymbro-suggestion')) {
+            send(e.target.textContent);
+        }
+    });
+
+    renderHistory();
+})();
+</script>

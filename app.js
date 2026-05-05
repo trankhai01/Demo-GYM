@@ -98,6 +98,7 @@ app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
+app.use('/', require('./routes/chat'));
 
 const homeUrlForRole = (role) => {
     if (role === 'admin') return '/reports';
