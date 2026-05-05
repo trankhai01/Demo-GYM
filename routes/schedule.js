@@ -8,10 +8,6 @@ function isValidIsoDateTime(s) {
     const t = Date.parse(s);
     return !isNaN(t);
 }
-
-// Convert ISO string -> 'YYYY-MM-DD HH:MM:SS' theo giờ LOCAL của server.
-// Tránh dùng .toISOString() vì sẽ ép về UTC, trong khi mysql2 (default
-// timezone='local') đọc DATETIME ngược lại theo giờ local -> lệch múi giờ.
 function toMysqlDateTime(iso) {
     const d = new Date(iso);
     const pad = n => String(n).padStart(2, '0');
@@ -19,7 +15,7 @@ function toMysqlDateTime(iso) {
         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-// Trang lịch tập của hội viên (member): xem & đặt buổi của chính mình.
+// Trang lịch tập của hội viên
 router.get('/', requireLogin, (req, res) => {
     const role = req.session.user.role;
     db.query("SELECT id, fullname FROM trainers ORDER BY fullname", (err, trainers) => {
@@ -123,11 +119,6 @@ router.post('/book', requireLogin, (req, res) => {
     const startSql = toMysqlDateTime(start_time);
     const endSql = toMysqlDateTime(end_time);
 
-    // Bọc overlap-check + insert trong 1 transaction + SELECT ... FOR UPDATE
-    // để chống TOCTOU race condition: 2 request đồng thời cho cùng member /
-    // cùng HLV ở cùng khoảng giờ không thể cùng pass overlap check rồi cùng
-    // insert (next-key lock của InnoDB trên index (member_id, start_time) /
-    // (trainer_id, start_time) sẽ block request thứ hai cho tới khi tx 1 xong).
     db.getConnection((err, conn) => {
         if (err) return res.status(500).json({ status: 'Error', message: 'Không lấy được kết nối DB' });
 
