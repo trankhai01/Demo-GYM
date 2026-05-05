@@ -60,8 +60,13 @@ function buildSystemPrompt(ctx, user) {
     }).join('\n') || '(chưa có HLV nào)';
 
     const faqList = FAQ.map(f => `- ${f.q}: ${f.a}`).join('\n');
+    // Tool function calling chỉ enable cho member (xem isMember trong handler).
+    // Admin/staff không có tool nên không hứa "có thể truy vấn dữ liệu cá nhân"
+    // để tránh bot bịa khả năng không có.
     const userInfo = user
-        ? `\nNgười đang chat: ${user.fullname} (vai trò: ${user.role}). Có thể gọi tool để truy vấn dữ liệu cá nhân của họ khi liên quan.`
+        ? (user.role === 'member'
+            ? `\nNgười đang chat: ${user.fullname} (vai trò: member). Có thể gọi tool để truy vấn dữ liệu cá nhân của họ khi liên quan.`
+            : `\nNgười đang chat: ${user.fullname} (vai trò: ${user.role}). Không có tool truy vấn dữ liệu cá nhân — chỉ tư vấn thông tin chung về phòng gym.`)
         : `\nNgười đang chat là khách (chưa đăng nhập). Không thể truy vấn dữ liệu cá nhân — gợi ý họ đăng nhập nếu cần xem gói hiện tại / lịch tập / check-in.`;
 
     return `Bạn là "GymBro Trợ lý" — trợ lý ảo của phòng tập GymBro, trả lời bằng tiếng Việt thân thiện và NGẮN GỌN (tối đa 4-5 câu, hoặc dạng bullet nếu phù hợp).
