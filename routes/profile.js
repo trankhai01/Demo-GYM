@@ -151,11 +151,14 @@ router.get('/schedule', (req, res) => {
     }
     const userId = req.session.user.id;
     
+    // Sau migration 005, registrations không còn cột schedule/trainer_id —
+    // lịch tập thật + HLV nằm ở bookings. View /profile/schedule chỉ
+    // hiển thị thông tin gói + ngày hết hạn, member xem lịch chi tiết
+    // qua /schedule (calendar).
     const sqlPackage = `
-        SELECT r.schedule, p.package_name, t.fullname as trainer_name, r.expiration_date
+        SELECT p.package_name, r.expiration_date
         FROM registrations r
         LEFT JOIN packages p ON r.package_id = p.id
-        LEFT JOIN trainers t ON r.trainer_id = t.id
         WHERE r.member_id = ? AND (r.status = 'Active' OR r.status = 'active')
         ORDER BY r.expiration_date DESC LIMIT 1
     `;

@@ -86,23 +86,9 @@
                             </select>
                         </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label text-white-50 small text-uppercase">2. Huấn luyện viên</label>
-                                <select id="trainerSelect" class="form-select bg-dark text-white border-secondary">
-                                    <option value="">Tập tự do</option>
-                                    <% trainers.forEach(pt => { %>
-                                        <option value="<%= pt.id %>" data-name="<%= pt.fullname %>"><%= pt.fullname %></option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white-50 small text-uppercase">3. Lịch tập dự kiến</label>
-                                <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                                    <i class="bi bi-calendar3 me-2"></i>Chọn lịch tập
-                                </button>
-                                <input type="hidden" id="scheduleInput">
-                            </div>
+                        <div class="alert alert-secondary bg-dark border-secondary text-white-50 small mb-4 d-flex align-items-center">
+                            <i class="bi bi-info-circle text-warning me-2 fs-5"></i>
+                            <span>Hội viên sẽ chọn HLV &amp; giờ tập trực tiếp khi đặt lịch trên trang <a href="/schedule" class="text-warning fw-bold">Lịch tập</a>. POS chỉ ghi nhận hóa đơn.</span>
                         </div>
                     </div>
 
@@ -156,7 +142,6 @@
                     <div class="invoice-row bg-dark p-2 rounded">
                         <div class="d-flex flex-column w-75">
                             <span class="text-white fw-bold text-truncate" id="inv-package">---</span>
-                            <span class="text-white-50 small">PT: <span id="inv-trainer">Tự do</span></span>
                         </div>
                         <div class="invoice-value text-warning w-25" id="inv-package-price">0đ</div>
                     </div>
@@ -182,46 +167,12 @@
     </div>
 </div>
 
-<div class="modal fade" id="scheduleModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title">Chọn lịch tập dự kiến</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-3 schedule-container">
-                <div class="table-responsive">
-                    <table class="table table-borderless text-center mb-0">
-                        <thead><tr><th></th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th><th>CN</th></tr></thead>
-                        <tbody>
-                            <% ['Sáng', 'Chiều', 'Tối'].forEach(session => { %>
-                                <tr>
-                                    <td class="align-middle text-black small pe-2"><%= session %></td>
-                                    <% [2, 3, 4, 5, 6, 7, 8].forEach(day => { %>
-                                        <td class="p-1">
-                                            <div class="schedule-cell" data-day="<%= day == 8 ? 'CN' : 'T' + day %>" data-session="<%= session %>">
-                                                <i class="bi bi-check-lg"></i>
-                                            </div>
-                                        </td>
-                                    <% }) %>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-                <button class="btn btn-warning w-100 mt-3" data-bs-dismiss="modal">Xác nhận lịch</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     let currentPackagePrice = 0;
-    let cart = []; 
+    let cart = [];
 
     const packageSelect = document.getElementById('packageSelect');
     const globalMemberSelect = document.getElementById('globalMemberSelect');
-    const trainerSelect = document.getElementById('trainerSelect');
     const cartContainer = document.getElementById('cart-items-container');
     const emptyCartMsg = document.getElementById('empty-cart-msg');
 
@@ -245,12 +196,6 @@
         }
         calculateTotal();
     });
-
-    trainerSelect.addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        document.getElementById('inv-trainer').innerText = opt.value ? opt.dataset.name : 'Tự do';
-    });
-
 
     function addToCart(id, name, price, maxStock) {
         let existingItem = cart.find(item => String(item.id) === String(id));
@@ -320,19 +265,6 @@
         document.getElementById('inv-total-price').innerHTML = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
     }
 
-    document.querySelectorAll('.schedule-cell').forEach(cell => {
-        cell.addEventListener('click', function() {
-            this.classList.toggle('active');
-            let container = this.closest('.schedule-container');
-            let input = document.getElementById('scheduleInput');
-            let selected = [];
-            container.querySelectorAll('.schedule-cell.active').forEach(item => {
-                selected.push(`${item.dataset.day}(${item.dataset.session})`);
-            });
-            input.value = selected.join(', ');
-        });
-    });
-
     $(document).ready(function() {
         $('#globalMemberSelect').select2({
             placeholder: "-- Nhập tên, SĐT hoặc ID để tìm --",
@@ -361,12 +293,10 @@
         let finalTotal = currentPackagePrice + retailTotal;
 
         const payload = {
-            member_id: memberId || null, 
-            package_id: packageId || null, 
-            trainer_id: document.getElementById('trainerSelect').value || null,
-            schedule: document.getElementById('scheduleInput').value,
+            member_id: memberId || null,
+            package_id: packageId || null,
             cart_items: cart,
-            total_price: finalTotal 
+            total_price: finalTotal
         };
 
         fetch('/registrations/add-complex', {

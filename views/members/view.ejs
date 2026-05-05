@@ -162,17 +162,29 @@
             </div>
         </div>
 
-        <form action="/members/deduct-session" method="POST" class="d-flex gap-2 align-items-center">
+        <form action="/members/deduct-session" method="POST" class="row g-2 align-items-end">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="registration_id" value="<%= pkg.id %>">
             <input type="hidden" name="member_id" value="<%= member.id %>">
-            <input type="hidden" name="trainer_id" value="<%= pkg.trainer_id %>">
-            
-            <input type="text" name="note" class="form-control bg-transparent text-white border-secondary w-50" placeholder="Ghi chú buổi tập (Tập ngực, chân...)" autocomplete="off">
-            
-            <button type="submit" class="btn btn-danger w-50 fw-bold" <%= isCompleted ? 'disabled' : '' %> onclick="return confirm('Xác nhận trừ 1 buổi tập PT?')">
-                <i class="bi bi-check2-square me-2"></i> ĐIỂM DANH (-1 BUỔI)
-            </button>
+
+            <div class="col-md-4">
+                <label class="form-label text-white-50 small text-uppercase mb-1">HLV dẫn buổi</label>
+                <select name="trainer_id" class="form-select bg-transparent text-white border-secondary">
+                    <option value="">Tự tập</option>
+                    <% trainers.forEach(pt => { %>
+                        <option value="<%= pt.id %>"><%= pt.fullname %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label text-white-50 small text-uppercase mb-1">Ghi chú buổi tập</label>
+                <input type="text" name="note" class="form-control bg-transparent text-white border-secondary" placeholder="Tập ngực, chân..." autocomplete="off">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-danger w-100 fw-bold" <%= isCompleted ? 'disabled' : '' %> onclick="return confirm('Xác nhận trừ 1 buổi tập PT?')">
+                    <i class="bi bi-check2-square me-2"></i> ĐIỂM DANH
+                </button>
+            </div>
         </form>
     </div>
     <% 
@@ -194,10 +206,9 @@
                 <thead>
                     <tr>
                         <th>Tên Gói</th>
-                        <th>Huấn luyện viên</th>
                         <th>Ngày bắt đầu</th>
                         <th>Ngày hết hạn</th>
-                        <th>Lịch tập</th>
+                        <th>Số buổi PT</th>
                         <th>Giá trị</th>
                         <th>Trạng thái</th>
                     </tr>
@@ -207,27 +218,20 @@
                         <% history.forEach(item => { %>
                             <tr>
                                 <td class="fw-bold text-white"><%= item.package_name %></td>
-                                <td><%- item.trainer_name || '<span class="text-white-50">Tự do</span>' %></td>
                                 <td><%= new Date(item.registration_date).toLocaleDateString('vi-VN') %></td>
                                 <td class="text-warning"><%= new Date(item.expiration_date).toLocaleDateString('vi-VN') %></td>
-                                <td style="max-width: 200px;">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <span class="small text-break"><%= item.schedule || '---' %></span>
-                                        <button class="btn btn-sm btn-link text-warning p-0 ms-2" title="Sửa lịch tập" 
-                                                data-regid="<%= item.id %>"
-                                                data-memberid="<%= member.id %>"
-                                                data-schedule="<%= item.schedule || '' %>"
-                                                onclick="openEditScheduleModal(this.dataset.regid, this.dataset.memberid, this.dataset.schedule)">
-                                            <i class="bi bi-pencil-square fs-6"></i>
-                                        </button>
-                                    </div>
+                                <td>
+                                    <% if (item.total_sessions > 0) { %>
+                                        <span class="text-info"><%= item.used_sessions || 0 %> / <%= item.total_sessions %></span>
+                                    <% } else { %>
+                                        <span class="text-white-50">—</span>
+                                    <% } %>
                                 </td>
-                                
                                 <td class="fw-bold"><%= item.price.toLocaleString('vi-VN') %> đ</td>
                                 <td>
-                                    <% 
+                                    <%
                                         let isExpired = new Date(item.expiration_date) < new Date();
-                                        if(isExpired) { 
+                                        if(isExpired) {
                                     %>
                                         <span class="badge bg-secondary">Đã hết hạn</span>
                                     <% } else { %>
@@ -237,7 +241,7 @@
                             </tr>
                         <% }) %>
                     <% } else { %>
-                        <tr><td colspan="7" class="text-center text-white-50 py-4">Chưa có dữ liệu đăng ký gói tập.</td></tr>
+                        <tr><td colspan="6" class="text-center text-white-50 py-4">Chưa có dữ liệu đăng ký gói tập.</td></tr>
                     <% } %>
                 </tbody>
             </table>
@@ -270,135 +274,16 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-white-50 small text-uppercase">Chọn Huấn Luyện Viên (Tùy chọn)</label>
-                        <select name="trainer_id" class="form-select bg-dark text-white border-secondary">
-                            <option value="">-- Tự do (Không kèm PT) --</option>
-                            <% trainers.forEach(pt => { %>
-                                <option value="<%= pt.id %>"><%= pt.fullname %> - <%= pt.specialty %></option>
-                            <% }) %>
-                        </select>
+                    <div class="alert alert-secondary bg-black border-secondary text-white-50 small mb-4 d-flex align-items-center">
+                        <i class="bi bi-info-circle text-warning me-2 fs-5"></i>
+                        <span>HLV &amp; giờ tập được chọn khi hội viên đặt lịch trên trang <a href="/schedule" class="text-warning fw-bold">Lịch tập</a> hoặc khi staff điểm danh trừ buổi PT.</span>
                     </div>
 
-                    <div class="mb-4 schedule-container">
-                        <label class="form-label text-white small text-uppercase">Lịch tập dự kiến</label>
-                        <div class="table-responsive">
-                            <table class="table table-borderless text-center mb-0">
-                                <thead>
-                                    <tr><th></th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th><th>CN</th></tr>
-                                </thead>
-                                <tbody>
-                                    <% ['Sáng', 'Chiều', 'Tối'].forEach(session => { %>
-                                        <tr>
-                                            <td class="align-middle text-black small text-uppercase pe-2"><%= session %></td>
-                                            <% [2, 3, 4, 5, 6, 7, 8].forEach(day => { %>
-                                                <td class="p-1">
-                                                    <div class="schedule-cell" data-day="<%= day == 8 ? 'CN' : 'T' + day %>" data-session="<%= session %>">
-                                                        <i class="bi bi-check-lg"></i>
-                                                    </div>
-                                                </td>
-                                            <% }) %>
-                                        </tr>
-                                    <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
-                        <input type="hidden" name="schedule" class="schedule-input">
-                    </div>
-                    
                     <button type="submit" class="btn btn-danger w-100 fw-bold py-2 text-uppercase">Tạo Hóa Đơn Mới</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="editScheduleModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold text-warning text-uppercase">Cập nhật Lịch tập</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="editScheduleForm" method="POST" action="">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <input type="hidden" name="member_id" id="editMemberId">
-                    
-                    <div class="mb-4 schedule-container">
-                        <label class="form-label text-white small text-uppercase">Chọn lịch mới</label>
-                        <div class="table-responsive">
-                            <table class="table table-borderless text-center mb-0">
-                                <thead>
-                                    <tr><th></th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th><th>CN</th></tr>
-                                </thead>
-                                <tbody>
-                                    <% ['Sáng', 'Chiều', 'Tối'].forEach(session => { %>
-                                        <tr>
-                                            <td class="align-left text-black small text-uppercase pe-2"><%= session %></td>
-                                            <% [2, 3, 4, 5, 6, 7, 8].forEach(day => { %>
-                                                <td class="p-1">
-                                                    <div class="schedule-cell" data-day="<%= day == 8 ? 'CN' : 'T' + day %>" data-session="<%= session %>">
-                                                        <i class="bi bi-check-lg"></i>
-                                                    </div>
-                                                </td>
-                                            <% }) %>
-                                        </tr>
-                                    <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
-                        <input type="hidden" name="schedule" class="schedule-input" id="editScheduleInput">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-warning w-100 fw-bold py-2 text-dark text-uppercase">LƯU THAY ĐỔI</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.querySelectorAll('.schedule-cell').forEach(cell => {
-        cell.addEventListener('click', function() {
-            this.classList.toggle('active');
-            let container = this.closest('.schedule-container');
-            let input = container.querySelector('.schedule-input');
-            let selected = [];
-            container.querySelectorAll('.schedule-cell.active').forEach(item => {
-                selected.push(`${item.dataset.day}(${item.dataset.session})`);
-            });
-            input.value = selected.join(', ');
-        });
-    });
-
-    function openEditScheduleModal(regId, memberId, currentSchedule) {
-        document.getElementById('editScheduleForm').action = '/registrations/edit-schedule/' + regId;
-        document.getElementById('editMemberId').value = memberId;
-
-        const container = document.querySelector('#editScheduleModal .schedule-container');
-        const input = document.getElementById('editScheduleInput');
-        input.value = currentSchedule;
-        container.querySelectorAll('.schedule-cell').forEach(cell => {
-            cell.classList.remove('active');
-        });
-        if (currentSchedule && currentSchedule !== '---') {
-            const sessions = currentSchedule.split(', ');
-            sessions.forEach(s => {
-                const match = s.match(/(.*?)\((.*?)\)/);
-                if (match) {
-                    const cell = container.querySelector(`.schedule-cell[data-day="${match[1]}"][data-session="${match[2]}"]`);
-                    if (cell) cell.classList.add('active');
-                }
-            });
-        }
-        const modalEl = document.getElementById('editScheduleModal');
-        let modalObj = bootstrap.Modal.getInstance(modalEl);
-        if (!modalObj) {
-            modalObj = new bootstrap.Modal(modalEl);
-        }
-        modalObj.show();
-    }
-</script>
 
 <%- include('../partials/footer') %>

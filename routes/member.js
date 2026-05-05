@@ -66,11 +66,10 @@ router.get('/view/:id', requireStaff, (req, res) => {
         db.query("SELECT * FROM packages", (err, packages) => {
             db.query("SELECT * FROM trainers", (err, trainers) => {
                 const historySql = `
-                    SELECT r.*, p.package_name, t.fullname as trainer_name 
-                    FROM registrations r 
-                    JOIN packages p ON r.package_id = p.id 
-                    LEFT JOIN trainers t ON r.trainer_id = t.id 
-                    WHERE r.member_id = ? 
+                    SELECT r.*, p.package_name
+                    FROM registrations r
+                    JOIN packages p ON r.package_id = p.id
+                    WHERE r.member_id = ?
                     ORDER BY r.id DESC
                 `;
                 db.query(historySql, [id], (err, history) => {
@@ -86,11 +85,16 @@ router.get('/view/:id', requireStaff, (req, res) => {
     });
 });
 
-router.post('/view/:id/register',requireStaff, (req, res) => {
+// Đăng ký gói từ trang chi tiết hội viên. Tạo hóa đơn ở trạng thái
+// Pending rồi điều hướng sang màn hình checkout để staff xác nhận thanh
+// toán (giống luồng POS /add-complex). Trước đây route này lưu thẳng
+// Success không qua checkout → thiếu nhất quán + bỏ qua bước xác nhận phương
+// thức thanh toán.
+router.post('/view/:id/register', requireStaff, (req, res) => {
     const memberId = req.params.id;
-    const { package_id, trainer_id, schedule } = req.body;
+    const { package_id } = req.body;
 
-    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active'", [memberId], (err, activePkgs) => {
+    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status = 'Success'", [memberId], (err, activePkgs) => {
         if (activePkgs && activePkgs.length > 0) {
             return res.send("<script>alert('TỪ CHỐI: Hội viên này đang có gói tập chưa hết hạn!'); window.history.back();</script>");
         }
@@ -99,35 +103,84 @@ router.post('/view/:id/register',requireStaff, (req, res) => {
 
             const pkg = pkgs[0];
             const regDate = new Date().toISOString().split('T')[0];
-            
+
             let expDate = new Date();
             expDate.setMonth(expDate.getMonth() + pkg.duration_months);
             const expDateStr = expDate.toISOString().split('T')[0];
 
             const sql = `
-                INSERT INTO registrations 
-                (member_id, package_id, trainer_id, price, registration_date, expiration_date, schedule, total_sessions, payment_status, payment_method, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Success', 'Tiền mặt', 'active')
+                INSERT INTO registrations
+                (member_id, package_id, price, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
             `;
-            db.query(sql, [memberId, package_id, trainer_id || null, pkg.price, regDate, expDateStr, schedule, pkg.pt_sessions || 0], (err) => {
-                if (err) console.log(err);
-                res.redirect('/members/view/' + memberId);
+            db.query(sql, [memberId, package_id, pkg.price, regDate, expDateStr, pkg.pt_sessions || 0], (err, result) => {
+                if (err) {
+                    console.error('[member /view/:id/register]', err.message);
+                    return res.status(500).send('Lỗi tạo hóa đơn');
+                }
+                res.redirect('/registrations/checkout/' + result.insertId);
             });
         });
     });
 });
 
-router.post("/delete/:id",requireStaff, (req, res) => {
-  const id = req.params.id;
-  const sqlDeleteRegistrations = "DELETE FROM registrations WHERE member_id = ?";
-  db.query(sqlDeleteRegistrations, [id], (err, result) => {
-      if (err) return res.status(500).send("Lỗi khi xóa gói tập liên quan: " + err.message);
-      const sqlDeleteMember = "DELETE FROM members WHERE id = ?";
-      db.query(sqlDeleteMember, [id], (err, result) => {
-        if (err) return res.status(500).send("Lỗi khi xóa hội viên: " + err.message);
-        res.redirect("/members");
-      });
-  });
+// Xóa hội viên: phải dọn sạch dữ liệu liên quan trước khi xóa record
+// trong members. Mặc dù schema có ON DELETE CASCADE cho bookings/checkin/
+// pt_sessions_log/password_reset_requests, môi trường cũ (XAMPP MySQL,
+// MariaDB) có thể tắt FK enforcement → để lại dữ liệu rác. Xóa tường minh
+// từng bảng trong transaction để đảm bảo atomic và không phụ thuộc FK.
+// registrations giữ lại với member_id = NULL (qua ON DELETE SET NULL)
+// nhưng ở đây xóa luôn cho sạch sẽ — dữ liệu doanh thu không bị
+// orphan vì người dùng đã chủ động xóa hội viên.
+router.post("/delete/:id", requireStaff, (req, res) => {
+    const id = req.params.id;
+
+    db.getConnection((err, conn) => {
+        if (err) return res.status(500).send("Không lấy được kết nối DB");
+
+        const fail = (msg) => {
+            conn.rollback(() => {
+                conn.release();
+                res.status(500).send(msg);
+            });
+        };
+
+        conn.beginTransaction((err) => {
+            if (err) {
+                conn.release();
+                return res.status(500).send("Lỗi mở transaction");
+            }
+
+            // Thứ tự quan trọng: những bảng tham chiếu registrations phải
+            // xóa trước registrations (pt_sessions_log, registration_details).
+            // Các bảng tham chiếu members — sau đó — rồi xóa members cuối cùng.
+            const steps = [
+                'DELETE pt FROM pt_sessions_log pt JOIN registrations r ON pt.registration_id = r.id WHERE r.member_id = ?',
+                'DELETE rd FROM registration_details rd JOIN registrations r ON rd.registration_id = r.id WHERE r.member_id = ?',
+                'DELETE FROM registrations WHERE member_id = ?',
+                'DELETE FROM bookings WHERE member_id = ?',
+                'DELETE FROM checkin_history WHERE member_id = ?',
+                'DELETE FROM password_reset_requests WHERE member_id = ?',
+                'DELETE FROM members WHERE id = ?'
+            ];
+
+            let i = 0;
+            const next = () => {
+                if (i >= steps.length) {
+                    return conn.commit((err) => {
+                        if (err) return fail("Lỗi commit: " + err.message);
+                        conn.release();
+                        res.redirect("/members");
+                    });
+                }
+                conn.query(steps[i++], [id], (err) => {
+                    if (err) return fail("Lỗi xóa dữ liệu hội viên: " + err.message);
+                    next();
+                });
+            };
+            next();
+        });
+    });
 });
 
 router.get("/edit/:id",requireStaff, (req, res) => {
@@ -182,11 +235,16 @@ router.post("/edit/:id",requireStaff, (req, res) => {
     });
 });
 
-router.post('/deduct-session',requireStaff, (req, res) => {
+// Trừ 1 buổi PT. trainer_id lấy từ select trên form (HLV thật của buổi
+// hôm đó) — nếu rỗng → "tự tập", lưu NULL vào pt_sessions_log.trainer_id.
+// Trước đây trainer_id cố định lấy từ registrations.trainer_id (đã bị
+// drop ở migration 005) nên log không phản ánh đúng HLV thực tế.
+router.post('/deduct-session', requireStaff, (req, res) => {
     const { registration_id, member_id, trainer_id, note } = req.body;
+    const tid = trainer_id && String(trainer_id).trim() !== '' ? Number(trainer_id) : null;
     db.query("SELECT total_sessions, used_sessions FROM registrations WHERE id = ?", [registration_id], (err, results) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
-        
+
         const reg = results[0];
         if (reg.used_sessions >= reg.total_sessions) {
             return res.status(400).send("Gói tập này đã hết số buổi!");
@@ -194,10 +252,11 @@ router.post('/deduct-session',requireStaff, (req, res) => {
 
         db.query("UPDATE registrations SET used_sessions = used_sessions + 1 WHERE id = ?", [registration_id], (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật số buổi");
-            db.query("INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)", 
-            [registration_id, member_id, trainer_id, note || 'Hoàn thành buổi tập'], (err) => {
-                res.redirect('/members/view/' + member_id);
-            });
+            db.query("INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)",
+                [registration_id, member_id, tid, note || 'Hoàn thành buổi tập'], (err) => {
+                    if (err) console.error('[deduct-session]', err.message);
+                    res.redirect('/members/view/' + member_id);
+                });
         });
     });
 });
