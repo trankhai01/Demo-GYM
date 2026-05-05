@@ -155,11 +155,14 @@ router.get('/schedule', (req, res) => {
     // lịch tập thật + HLV nằm ở bookings. View /profile/schedule chỉ
     // hiển thị thông tin gói + ngày hết hạn, member xem lịch chi tiết
     // qua /schedule (calendar).
+    // Chỉ hiện gói đã thanh toán (Success). Sau PR #8 hóa đơn được tạo
+    // ở trạng thái Pending rồi mới qua checkout → tránh hiện gói chưa
+    // trả tiền như thể đã active.
     const sqlPackage = `
         SELECT p.package_name, r.expiration_date
         FROM registrations r
         LEFT JOIN packages p ON r.package_id = p.id
-        WHERE r.member_id = ? AND (r.status = 'Active' OR r.status = 'active')
+        WHERE r.member_id = ? AND (r.status = 'Active' OR r.status = 'active') AND r.payment_status = 'Success'
         ORDER BY r.expiration_date DESC LIMIT 1
     `;
 

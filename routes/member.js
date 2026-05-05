@@ -94,7 +94,10 @@ router.post('/view/:id/register', requireStaff, (req, res) => {
     const memberId = req.params.id;
     const { package_id } = req.body;
 
-    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status = 'Success'", [memberId], (err, activePkgs) => {
+    // Guard phải bao gồm cả Pending: sau khi tạo hóa đơn staff có thể
+    // back về rồi submit lại → tạo registration thứ hai cho cùng member.
+    // Cả hai sau đó có thể checkout độc lập → member có 2 gói trùng.
+    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status IN ('Success', 'Pending')", [memberId], (err, activePkgs) => {
         if (activePkgs && activePkgs.length > 0) {
             return res.send("<script>alert('TỪ CHỐI: Hội viên này đang có gói tập chưa hết hạn!'); window.history.back();</script>");
         }
