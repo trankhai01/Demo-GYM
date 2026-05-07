@@ -59,23 +59,43 @@ app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.csrfToken = generateToken(req);
   res.locals.pendingResetCount = 0;
+  res.locals.unreadContactCount = 0;
 
   const u = req.session.user;
-  if (u && u.role === 'admin' && req.method === 'GET' && req.accepts('html')) {
-    db.query(
-      "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status = 'pending'",
-      (err, rows) => {
-        if (err) {
-          console.error('[middleware] pendingResetCount:', err.message);
-        } else if (rows && rows[0]) {
-          res.locals.pendingResetCount = rows[0].c;
+  const isAdminGet = u && u.role === 'admin' && req.method === 'GET' && req.accepts('html');
+  const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');
+
+  if (!isStaffGet) return next();
+
+  const tasks = [];
+  if (isAdminGet) {
+    tasks.push((cb) => {
+      db.query(
+        "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status = 'pending'",
+        (err, rows) => {
+          if (err) console.error('[middleware] pendingResetCount:', err.message);
+          else if (rows && rows[0]) res.locals.pendingResetCount = rows[0].c;
+          cb();
         }
-        next();
+      );
+    });
+  }
+  tasks.push((cb) => {
+    db.query(
+      "SELECT COUNT(*) AS c FROM contact_messages WHERE is_read = 0",
+      (err, rows) => {
+        if (err) console.error('[middleware] unreadContactCount:', err.message);
+        else if (rows && rows[0]) res.locals.unreadContactCount = rows[0].c;
+        cb();
       }
     );
-  } else {
-    next();
-  }
+  });
+
+  let done = 0;
+  tasks.forEach((t) => t(() => {
+    done += 1;
+    if (done === tasks.length) next();
+  }));
 });
 
 const authRoutes = require("./routes/auth");
@@ -98,6 +118,8 @@ app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
+app.use('/', require('./routes/chat'));
+app.use('/', require('./routes/contact'));
 
 const homeUrlForRole = (role) => {
     if (role === 'admin') return '/reports';

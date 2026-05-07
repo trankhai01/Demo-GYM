@@ -105,6 +105,12 @@
                     <span class="badge bg-danger ms-2"><%= pendingResetCount %></span>
                 <% } %>
             </a>
+            <a href="/admin/messages" class="nav-item fw-bold">
+                <i class="bi bi-envelope-paper me-2"></i> Tin nhắn liên hệ
+                <% if (typeof unreadContactCount !== 'undefined' && unreadContactCount > 0) { %>
+                    <span class="badge bg-danger ms-2"><%= unreadContactCount %></span>
+                <% } %>
+            </a>
         <% } %>
 
         <% if (user && user.role === 'staff') { %>
@@ -115,6 +121,12 @@
 <!--         <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>-->   
             <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
             <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
+            <a href="/admin/messages" class="nav-item fw-bold">
+                <i class="bi bi-envelope-paper me-2"></i> Tin nhắn liên hệ
+                <% if (typeof unreadContactCount !== 'undefined' && unreadContactCount > 0) { %>
+                    <span class="badge bg-danger ms-2"><%= unreadContactCount %></span>
+                <% } %>
+            </a>
             
         <% } %>
 
@@ -128,4 +140,7 @@
         <% } %>
     </div>
 </div>
+
+<%- include('chatbot') %>
+
 <div class="main-content">
