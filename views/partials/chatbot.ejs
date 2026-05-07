@@ -158,7 +158,17 @@
 <script>
 (function() {
     const STORAGE_KEY = 'gymbro_chat_history_v1';
+    const OWNER_KEY = 'gymbro_chat_owner_v1';
     const MAX_HISTORY = 30;
+    const currentOwner = <%- JSON.stringify(typeof user !== 'undefined' && user ? String(user.id) : 'guest') %>;
+
+    try {
+        const storedOwner = localStorage.getItem(OWNER_KEY);
+        if (storedOwner !== currentOwner) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.setItem(OWNER_KEY, currentOwner);
+        }
+    } catch (e) {}
 
     const $toggle = document.getElementById('gymbroChatToggle');
     const $panel = document.getElementById('gymbroChatPanel');
