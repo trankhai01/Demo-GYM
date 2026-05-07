@@ -47,7 +47,62 @@ const FAQ = [
     { q: 'Cách check-in', a: 'Quét mã hoặc nhập số điện thoại tại quầy lễ tân. Hệ thống tự động ghi nhận giờ vào và giờ ra.' }
 ];
 
-function buildSystemPrompt(ctx, user) {
+// FAQ tiếng Anh — dùng khi user chọn EN để bot trả lời nhất quán.
+const FAQ_EN = [
+    { q: 'Opening hours', a: 'The gym is open from 5am to 10pm every day, including weekends.' },
+    { q: 'How to book a session', a: 'Sign in → click "Schedule" in the sidebar → pick an empty slot → choose a trainer (optional) → confirm.' },
+    { q: 'Forgot password', a: 'On the Sign-in page click "Forgot password?". Enter your registered phone and wait for the admin to reset it.' },
+    { q: 'Cancel a session', a: 'Open the schedule, click on a booked session, and press "Cancel". You can cancel anytime before the session starts.' },
+    { q: 'Sign up for a package', a: 'Contact the front desk or send a message. Each member keeps only one active package at a time.' },
+    { q: 'How to check in', a: 'Scan the QR or enter your phone at the front desk. The system records check-in/out automatically.' }
+];
+
+function buildSystemPromptEn(ctx, user) {
+    const pkgList = ctx.packages.map(p => {
+        const pt = p.pt_sessions > 0 ? ` (${p.pt_sessions} PT sessions)` : '';
+        return `- ${p.package_name}: ${Number(p.price).toLocaleString('en-US')} VND / ${p.duration_months} month(s)${pt}`;
+    }).join('\n') || '(no packages yet)';
+
+    const trainerList = ctx.trainers.map(t => {
+        const exp = t.experience_years ? `, ${t.experience_years} yrs exp` : '';
+        const spec = t.specialty ? `, ${t.specialty}` : '';
+        return `- ${t.fullname}${spec}${exp}`;
+    }).join('\n') || '(no trainers yet)';
+
+    const faqList = FAQ_EN.map(f => `- ${f.q}: ${f.a}`).join('\n');
+    const displayName = user ? (user.username || user.fullname || 'member') : null;
+    const userInfo = user
+        ? (user.role === 'member'
+            ? `\nUser chatting: ${displayName} (role: member). You may call tools to query their personal data when relevant.`
+            : `\nUser chatting: ${displayName} (role: ${user.role}). No personal-data tool available — only general gym info.`)
+        : `\nUser is a guest (not signed in). No personal-data tool — invite them to sign in if they want their package / schedule / check-in.`;
+
+    return `You are "GymBro Assistant" — virtual assistant of GymBro gym. ALWAYS reply in English, friendly and CONCISE (max 4-5 sentences, or bullet points when helpful).
+
+MISSION:
+- Advise on packages, trainers, and how to use the system.
+- Answer common FAQ questions.
+- When user is signed in as member, you may call tools to view their current package / upcoming bookings / check-in history.
+
+RULES:
+- DO NOT make things up. If unsure, ask them to contact the front desk.
+- DO NOT answer off-topic questions (politics, programming, etc.).
+- DO NOT promise discounts or promotions that don't exist.
+- Reply in English. Money format: append " VND" after the number, e.g. 500,000 VND.
+
+CURRENT PACKAGES:
+${pkgList}
+
+ACTIVE TRAINERS:
+${trainerList}
+
+FAQ:
+${faqList}
+${userInfo}`;
+}
+
+function buildSystemPrompt(ctx, user, lang) {
+    if (lang === 'en') return buildSystemPromptEn(ctx, user);
     const pkgList = ctx.packages.map(p => {
         const pt = p.pt_sessions > 0 ? ` (${p.pt_sessions} buổi PT)` : '';
         return `- ${p.package_name}: ${Number(p.price).toLocaleString('vi-VN')}đ / ${p.duration_months} tháng${pt}`;
@@ -178,9 +233,12 @@ router.post('/api/chat', chatLimiter, async (req, res) => {
     const user = req.session.user || null;
     const isMember = !!(user && user.role === 'member' && user.id);
 
+    // Lấy ngôn ngữ từ middleware i18n (res.locals.lang)
+    const lang = (res.locals && res.locals.lang) || 'vi';
+
     try {
         const ctx = await fetchPublicContext();
-        const systemInstruction = buildSystemPrompt(ctx, user);
+        const systemInstruction = buildSystemPrompt(ctx, user, lang);
 
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 

@@ -37,6 +37,10 @@ app.use(
   })
 );
 
+const i18n = require('./lib/i18n');
+app.use(i18n.middleware);
+app.get('/lang/:code', i18n.setLangRoute);
+
 const { generateToken, csrfSynchronisedProtection } = require('./middleware/csrf');
 const CSRF_UPLOAD_SKIP_PATHS = [
   /^\/products\/add$/,

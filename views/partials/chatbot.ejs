@@ -125,33 +125,33 @@
     }
 </style>
 
-<button class="gymbro-chat-bubble" id="gymbroChatToggle" type="button" aria-label="Mở trợ lý ảo">
+<button class="gymbro-chat-bubble" id="gymbroChatToggle" type="button" aria-label="<%= t('chatbot.open_aria') %>">
     <i class="bi bi-chat-dots-fill"></i>
 </button>
 
-<div class="gymbro-chat-panel" id="gymbroChatPanel" role="dialog" aria-label="Trợ lý ảo GymBro">
+<div class="gymbro-chat-panel" id="gymbroChatPanel" role="dialog" aria-label="<%= t('chatbot.title') %>">
     <div class="gymbro-chat-header">
         <div>
-            <div>GymBro Trợ lý <i class="bi bi-stars" style="font-size:0.9rem;"></i></div>
-            <div class="subtitle">Hỏi về gói tập, HLV, lịch tập...</div>
+            <div><%= t('chatbot.title') %> <i class="bi bi-stars" style="font-size:0.9rem;"></i></div>
+            <div class="subtitle"><%= t('chatbot.subtitle') %></div>
         </div>
-        <button type="button" id="gymbroChatClose" aria-label="Đóng">&times;</button>
+        <button type="button" id="gymbroChatClose" aria-label="<%= t('chatbot.close_aria') %>">&times;</button>
     </div>
     <div class="gymbro-chat-body" id="gymbroChatBody"></div>
     <div class="gymbro-suggestions" id="gymbroSuggestions">
-        <button type="button" class="gymbro-suggestion">Có những gói tập nào?</button>
-        <button type="button" class="gymbro-suggestion">Cách đặt lịch tập?</button>
+        <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_packages') %></button>
+        <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_booking') %></button>
         <% if (typeof user !== 'undefined' && user && user.role === 'member') { %>
-            <button type="button" class="gymbro-suggestion">Gói hiện tại của tôi còn bao nhiêu buổi?</button>
-            <button type="button" class="gymbro-suggestion">Buổi tập sắp tới của tôi?</button>
+            <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_my_pt') %></button>
+            <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_my_bookings') %></button>
         <% } else { %>
-            <button type="button" class="gymbro-suggestion">Giờ mở cửa?</button>
-            <button type="button" class="gymbro-suggestion">Có HLV nào?</button>
+            <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_hours') %></button>
+            <button type="button" class="gymbro-suggestion"><%= t('chatbot.sugg_trainers') %></button>
         <% } %>
     </div>
     <form class="gymbro-chat-input" id="gymbroChatForm" autocomplete="off">
-        <input type="text" id="gymbroChatInput" placeholder="Nhập câu hỏi của bạn..." maxlength="1000" required>
-        <button type="submit" id="gymbroChatSend"><i class="bi bi-send-fill"></i></button>
+        <input type="text" id="gymbroChatInput" placeholder="<%= t('chatbot.input_ph') %>" maxlength="1000" required>
+        <button type="submit" id="gymbroChatSend" aria-label="<%= t('chatbot.send_aria') %>"><i class="bi bi-send-fill"></i></button>
     </form>
 </div>
 
@@ -159,14 +159,25 @@
 (function() {
     const STORAGE_KEY = 'gymbro_chat_history_v1';
     const OWNER_KEY = 'gymbro_chat_owner_v1';
+    const LANG_KEY = 'gymbro_chat_lang_v1';
     const MAX_HISTORY = 30;
     const currentOwner = <%- JSON.stringify(typeof user !== 'undefined' && user ? String(user.id) : 'guest') %>;
+    const currentLang = <%- JSON.stringify(lang) %>;
+    const I18N = {
+        greeting: <%- JSON.stringify(t('chatbot.greeting')) %>,
+        typing: <%- JSON.stringify(t('chatbot.typing')) %>,
+        no_reply: <%- JSON.stringify(t('chatbot.no_reply')) %>,
+        network_error: <%- JSON.stringify(t('chatbot.network_error')) %>
+    };
 
     try {
         const storedOwner = localStorage.getItem(OWNER_KEY);
-        if (storedOwner !== currentOwner) {
+        const storedLang = localStorage.getItem(LANG_KEY);
+        // Reset history khi đổi user hoặc đổi ngôn ngữ — bảo mật + tránh trộn VI/EN
+        if (storedOwner !== currentOwner || storedLang !== currentLang) {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.setItem(OWNER_KEY, currentOwner);
+            localStorage.setItem(LANG_KEY, currentLang);
         }
     } catch (e) {}
 
@@ -206,7 +217,7 @@
     function renderHistory() {
         $body.innerHTML = '';
         if (history.length === 0) {
-            appendMessage('bot', 'Chào bạn! Mình là trợ lý ảo của phòng tập GymBro. Bạn cần hỗ trợ gì hôm nay?');
+            appendMessage('bot', I18N.greeting);
         } else {
             history.forEach(h => appendMessage(h.role, h.text));
         }
@@ -222,7 +233,7 @@
 
         $input.value = '';
         $send.disabled = true;
-        const typing = appendMessage('bot', 'Đang soạn...', { typing: true });
+        const typing = appendMessage('bot', I18N.typing, { typing: true });
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]');
@@ -235,15 +246,15 @@
                 credentials: 'same-origin',
                 body: JSON.stringify({ message: text, history: history.slice(-12, -1) })
             });
-            const data = await r.json().catch(() => ({ ok: false, reply: 'Lỗi không xác định.' }));
+            const data = await r.json().catch(() => ({ ok: false, reply: I18N.no_reply }));
             typing.remove();
-            const reply = (data && data.reply) || 'Mình chưa nhận được phản hồi. Thử lại nhé.';
+            const reply = (data && data.reply) || I18N.no_reply;
             appendMessage('bot', reply);
             history.push({ role: 'model', text: reply });
             saveHistory();
         } catch (e) {
             typing.remove();
-            appendMessage('bot', 'Mạng có vấn đề. Bạn kiểm tra kết nối rồi thử lại.');
+            appendMessage('bot', I18N.network_error);
         } finally {
             $send.disabled = false;
             $input.focus();

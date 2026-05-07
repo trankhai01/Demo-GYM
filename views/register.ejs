@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="<%= lang %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gia nhập Power Gym</title>
+    <title><%= t('register.title_tab') %></title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -62,17 +62,20 @@
       <div class="row justify-content-center">
         <div class="col-md-5">
           <div class="register-card">
+            <div class="d-flex justify-content-end mb-2">
+              <%- include('partials/lang-switch') %>
+            </div>
             <div class="text-center mb-4">
-              <h2 class="display-6">TRỞ THÀNH HỘI VIÊN</h2>
+              <h2 class="display-6"><%= t('register.title') %></h2>
               <p class="text small">
-                Bắt đầu hành trình lột xác của bạn ngay hôm nay
+                <%= t('register.subtitle') %>
               </p>
             </div>
 
             <form action="/register" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="mb-3">
-                <label class="form-label">Họ và Tên</label>
+                <label class="form-label"><%= t('register.fullname') %></label>
                 <input
                   type="text"
                   name="fullname"
@@ -81,14 +84,14 @@
                 />
               </div>
               <div class="mb-3">
-                <label class="form-label">Giới tính</label>
+                <label class="form-label"><%= t('register.gender') %></label>
                 <select name="gender" class="form-control">
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
+                  <option value="Nam"><%= t('register.gender_male') %></option>
+                  <option value="Nữ"><%= t('register.gender_female') %></option>
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label">Số điện thoại</label>
+                <label class="form-label"><%= t('register.phone') %></label>
                 <input type="tel" name="phone" class="form-control" required />
               </div>
               <% if (typeof error !== 'undefined' && error) { %>
@@ -105,7 +108,7 @@
   </div>
 <% } %>
               <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
+                <label class="form-label"><%= t('register.password') %></label>
                 <input
                   type="password"
                   name="password"
@@ -114,13 +117,13 @@
                 />
               </div>
               <button type="submit" class="btn btn-danger w-100">
-                ĐĂNG KÝ
+                <%= t('register.submit') %>
               </button>
             </form>
 
             <div class="text-center mt-4">
-              <span class="text">Đã có tài khoản?</span>
-              <a href="/login">Đăng nhập</a>
+              <span class="text"><%= t('register.have_account') %></span>
+              <a href="/login"><%= t('register.login_link') %></a>
             </div>
           </div>
         </div>

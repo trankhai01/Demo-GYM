@@ -1,0 +1,32 @@
+<div class="lang-switch d-inline-flex align-items-center">
+    <a href="/lang/vi" class="lang-link <%= lang === 'vi' ? 'active' : '' %>" title="Tiếng Việt">VI</a>
+    <span class="lang-sep">/</span>
+    <a href="/lang/en" class="lang-link <%= lang === 'en' ? 'active' : '' %>" title="English">EN</a>
+</div>
+<style>
+    .lang-switch {
+        font-family: 'Oswald', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        margin-right: 6px;
+    }
+    .lang-switch .lang-link {
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        padding: 2px 6px;
+        transition: color .2s;
+    }
+    .lang-switch .lang-link.active {
+        color: #fff;
+        font-weight: 700;
+        border-bottom: 2px solid #e50914;
+    }
+    .lang-switch .lang-link:hover { color: #e50914; }
+    .lang-switch .lang-sep {
+        color: rgba(255,255,255,0.3);
+        margin: 0 2px;
+    }
+    .lang-switch.dark .lang-link {
+        color: rgba(255,255,255,0.5);
+    }
+</style>
