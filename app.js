@@ -124,6 +124,7 @@ app.use('/checkin', require('./routes/checkin'));
 app.use('/profile', profileRoutes);
 app.use('/', require('./routes/chat'));
 app.use('/', require('./routes/contact'));
+app.use('/discounts', require('./routes/discount'));
 
 const homeUrlForRole = (role) => {
     if (role === 'admin') return '/reports';

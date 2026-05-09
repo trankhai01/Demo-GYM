@@ -20,13 +20,11 @@ const forgotLimiter = rateLimit({
     message: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ.'
 });
 
-// 1. Giao diện Login 
 router.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('login');
 });
 
-// 2. Xử lý đăng nhập
 router.post('/login', loginLimiter, (req, res) => {
     const { phone, password } = req.body;
 
@@ -86,13 +84,11 @@ router.post('/login', loginLimiter, (req, res) => {
     });
 });
 
-// 3. Giao diện đăng ký
 router.get('/register', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('register');
 });
 
-// 4. Xử lý đăng ký
 router.post('/register', async (req, res) => {
     const { fullname, phone, password, gender } = req.body;
 
@@ -128,7 +124,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// 5. Quên mật khẩu
 router.get('/forgot-password', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('forgot-password', { message: null, error: null, phone: '' });
@@ -199,7 +194,6 @@ router.post('/forgot-password', forgotLimiter, (req, res) => {
     });
 });
 
-// 6. Đăng xuất
 router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) console.error('Lỗi xóa session:', err);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireStaff } = require('../middleware/auth');
+const { applyDiscountTransactional } = require('./discount');
 
 router.use(requireStaff);
 
@@ -22,15 +23,9 @@ router.get('/', (req, res) => {
     });
 });
 
-// Route /add cũ (đăng ký gói đơn giản không qua POS) đã được loại bỏ:
-// không có UI gọi tới, và sau khi đồng bộ payment_status='Pending' (PR #8)
-// route này sẽ tạo hóa đơn 'Pending' không có đường vào checkout. Mọi
-// đăng ký gói giờ đi qua /add-complex (POS) hoặc /members/view/:id/register
-// (đều redirect sang /registrations/checkout/:id).
-
-// Tạo hóa đơn POS có cả gói tập + sản phẩm. Bọc trong transaction để
+// /add-complex — tạo hóa đơn POS (gói tập + sản phẩm + mã ưu đãi) trong transaction.
 router.post('/add-complex', (req, res) => {
-    const { member_id, package_id, cart_items, total_price } = req.body;
+    const { member_id, package_id, cart_items, total_price, discount_code } = req.body;
     const reg_date = new Date().toISOString().split('T')[0];
 
     db.getConnection((err, conn) => {
@@ -58,45 +53,52 @@ router.post('/add-complex', (req, res) => {
                     exp_date = expDate.toISOString().split('T')[0];
                 }
 
-                const sql = `
-                    INSERT INTO registrations
-                    (member_id, package_id, price, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
-                    VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
-                `;
-                const params = [
-                    member_id || null,
-                    package_id || null,
-                    total_price,
-                    reg_date,
-                    exp_date,
-                    totalPt
-                ];
+                applyDiscountTransactional(conn, discount_code, Number(total_price) || 0, member_id || null, (dErr, dRes) => {
+                    if (dErr) return fail(dErr.message, 'discount');
+                    const finalPrice = dRes.final_amount;
 
-                conn.query(sql, params, (err, result) => {
-                    if (err) return fail(err.message, 'INSERT registrations');
-                    const invoiceId = result.insertId;
+                    const sql = `
+                        INSERT INTO registrations
+                        (member_id, package_id, price, discount_code_id, discount_amount, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
+                    `;
+                    const params = [
+                        member_id || null,
+                        package_id || null,
+                        finalPrice,
+                        dRes.discount_id,
+                        dRes.discount_amount,
+                        reg_date,
+                        exp_date,
+                        totalPt
+                    ];
 
-                    if (cart_items && cart_items.length > 0) {
-                        const details = cart_items.map(item => [invoiceId, item.id, item.qty, item.price]);
-                        conn.query(
-                            "INSERT INTO registration_details (registration_id, product_id, quantity, price) VALUES ?",
-                            [details],
-                            (err) => {
-                                if (err) return fail(err.message, 'INSERT registration_details');
-                                conn.commit((err) => {
-                                    if (err) return fail(err.message, 'COMMIT');
-                                    conn.release();
-                                    res.json({ invoiceId });
-                                });
-                            }
-                        );
-                    } else {
-                        conn.commit((err) => {
-                            if (err) return fail(err.message, 'COMMIT');
-                            conn.release();
-                            res.json({ invoiceId });
-                        });
-                    }
+                    conn.query(sql, params, (err, result) => {
+                        if (err) return fail(err.message, 'INSERT registrations');
+                        const invoiceId = result.insertId;
+
+                        if (cart_items && cart_items.length > 0) {
+                            const details = cart_items.map(item => [invoiceId, item.id, item.qty, item.price]);
+                            conn.query(
+                                "INSERT INTO registration_details (registration_id, product_id, quantity, price) VALUES ?",
+                                [details],
+                                (err) => {
+                                    if (err) return fail(err.message, 'INSERT registration_details');
+                                    conn.commit((err) => {
+                                        if (err) return fail(err.message, 'COMMIT');
+                                        conn.release();
+                                        res.json({ invoiceId, discount_amount: dRes.discount_amount, final_price: finalPrice });
+                                    });
+                                }
+                            );
+                        } else {
+                            conn.commit((err) => {
+                                if (err) return fail(err.message, 'COMMIT');
+                                conn.release();
+                                res.json({ invoiceId, discount_amount: dRes.discount_amount, final_price: finalPrice });
+                            });
+                        }
+                    });
                 });
             };
 
@@ -150,7 +152,7 @@ router.get('/checkout/:id', (req, res) => {
     });
 });
 
-// Xác nhận thanh toán: cập nhật trạng thái + trừ kho atomically trong transaction.
+// Xác nhận thanh toán + trừ kho atomically.
 router.post('/checkout/confirm/:id', (req, res) => {
     const registrationId = req.params.id;
     const { payment_method } = req.body;

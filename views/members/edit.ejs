@@ -21,8 +21,12 @@
                         <input type="tel" name="phone" class="form-control bg-dark text-white border-secondary" value="<%= member.phone %>" required>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Email <span class="text-muted">(nhận mail reset MK)</span></label>
+                        <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="<%= member.email || '' %>" placeholder="email@example.com">
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Số CCCD</label>
-                        <input type="text" name="cccd" class="form-control bg-dark text-white border-secondary" value="<%= member.cccd %>">
+                        <input type="text" name="cccd" class="form-control bg-dark text-white border-secondary" value="<%= member.cccd || '' %>">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Giới tính</label>

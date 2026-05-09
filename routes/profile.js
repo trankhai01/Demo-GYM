@@ -64,7 +64,6 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
             return res.redirect('/my-profile?error=duplicate_phone');
         }
 
-        // Avatar cũ để xóa sau khi update thành công (nếu có file mới).
         db.query("SELECT avatar_url FROM members WHERE id = ?", [memberId], (eAv, rowsAv) => {
             const oldAvatar = rowsAv && rowsAv[0] ? rowsAv[0].avatar_url : null;
             const uploaded = persistedFilePath(req, 'avatars');
@@ -151,13 +150,7 @@ router.get('/schedule', (req, res) => {
     }
     const userId = req.session.user.id;
     
-    // Sau migration 005, registrations không còn cột schedule/trainer_id —
-    // lịch tập thật + HLV nằm ở bookings. View /profile/schedule chỉ
-    // hiển thị thông tin gói + ngày hết hạn, member xem lịch chi tiết
-    // qua /schedule (calendar).
-    // Chỉ hiện gói đã thanh toán (Success). Sau PR #8 hóa đơn được tạo
-    // ở trạng thái Pending rồi mới qua checkout → tránh hiện gói chưa
-    // trả tiền như thể đã active.
+    // Chỉ hiện gói đã thanh toán; lịch chi tiết xem qua /schedule (bookings).
     const sqlPackage = `
         SELECT p.package_name, r.expiration_date
         FROM registrations r

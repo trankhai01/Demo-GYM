@@ -4,8 +4,8 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/db');
 const { requireAdmin } = require('../middleware/auth');
+const mailer = require('../lib/mailer');
 
-// Sinh mật khẩu tạm thời 8 ký tự gồm chữ + số.
 const TEMP_PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
 function generateTempPassword(length = 8) {
     const bytes = crypto.randomBytes(length);
@@ -19,8 +19,10 @@ router.use(requireAdmin);
 router.get('/', (req, res) => {
     const tempPassword = req.session.tempPassword || null;
     const tempMember = req.session.tempMember || null;
+    const tempEmailSent = req.session.tempEmailSent || null;
     delete req.session.tempPassword;
     delete req.session.tempMember;
+    delete req.session.tempEmailSent;
 
     const sqlPending = `
         SELECT prr.id, prr.requested_at, prr.note,
@@ -55,7 +57,8 @@ router.get('/', (req, res) => {
                 pending,
                 history,
                 tempPassword,
-                tempMember
+                tempMember,
+                tempEmailSent
             });
         });
     });
@@ -94,8 +97,10 @@ router.post('/:id/reset', async (req, res) => {
                 return res.status(500).render('error', { message: 'Lỗi mở transaction.' });
             }
             conn.query(
-                `SELECT id, member_id FROM password_reset_requests
-                 WHERE id = ? AND status = 'pending' FOR UPDATE`,
+                `SELECT prr.id, prr.member_id, m.fullname, m.email
+                 FROM password_reset_requests prr
+                 JOIN members m ON m.id = prr.member_id
+                 WHERE prr.id = ? AND prr.status = 'pending' FOR UPDATE`,
                 [requestId],
                 (err1, rows) => {
                     if (err1) return fail('SELECT request', err1);
@@ -105,7 +110,7 @@ router.post('/:id/reset', async (req, res) => {
                             res.redirect('/admin/password-resets?msg=already_resolved');
                         });
                     }
-                    const memberId = rows[0].member_id;
+                    const { member_id: memberId, fullname, email } = rows[0];
 
                     conn.query(
                         "UPDATE members SET password = ? WHERE id = ?",
@@ -125,7 +130,17 @@ router.post('/:id/reset', async (req, res) => {
                                         conn.release();
                                         req.session.tempPassword = tempPassword;
                                         req.session.tempMember = memberId;
-                                        res.redirect('/admin/password-resets');
+                                        if (email && mailer.isEnabled()) {
+                                            const loginUrl = `${req.protocol}://${req.get('host')}/login`;
+                                            const tpl = mailer.passwordResetTemplate({ fullname, tempPassword, loginUrl });
+                                            mailer.sendMail({ to: email, ...tpl })
+                                                .then(() => { req.session.tempEmailSent = email; })
+                                                .catch((e) => console.error('[admin/password-resets] sendMail:', e.message))
+                                                .finally(() => res.redirect('/admin/password-resets'));
+                                        } else {
+                                            req.session.tempEmailSent = null;
+                                            res.redirect('/admin/password-resets');
+                                        }
                                     });
                                 }
                             );

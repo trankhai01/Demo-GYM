@@ -13,7 +13,6 @@ const { csrfSynchronisedProtection } = require('../middleware/csrf');
 const trainerUpload = withFriendlyErrors(uploadTrainerImage, 'image_file');
 const trainerUploadChain = [trainerUpload, csrfSynchronisedProtection];
 
-// 1. Danh sách PT
 router.get('/', requireAdmin, (req, res) => {
     db.query("SELECT * FROM trainers ORDER BY id DESC", (err, results) => {
         if (err) return res.status(500).send("Lỗi server");
@@ -21,12 +20,10 @@ router.get('/', requireAdmin, (req, res) => {
     });
 });
 
-// 2. Giao diện Thêm
 router.get('/add', requireAdmin, (req, res) => {
     res.render('trainers/add', { error: null, form: {} });
 });
 
-// 3. Xử lý Thêm — chấp nhận file upload (image_file) hoặc URL.
 router.post('/add', requireAdmin, ...trainerUploadChain, (req, res) => {
     const { fullname, phone, specialty, experience_years, image_url, description } = req.body;
     if (req.uploadError) {
@@ -47,7 +44,6 @@ router.post('/add', requireAdmin, ...trainerUploadChain, (req, res) => {
     );
 });
 
-// 4. Giao diện Sửa
 router.get('/edit/:id', requireAdmin, (req, res) => {
     db.query("SELECT * FROM trainers WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/trainers');
@@ -55,7 +51,6 @@ router.get('/edit/:id', requireAdmin, (req, res) => {
     });
 });
 
-// 5. Xử lý Sửa — file mới ưu tiên, xoá ảnh cũ trên đĩa nếu thay thế.
 router.post('/edit/:id', requireAdmin, ...trainerUploadChain, (req, res) => {
     const { fullname, phone, specialty, experience_years, image_url, description, status } = req.body;
     if (req.uploadError) {
@@ -87,7 +82,6 @@ router.post('/edit/:id', requireAdmin, ...trainerUploadChain, (req, res) => {
     });
 });
 
-// 6. Xóa PT — xoá luôn file ảnh nội bộ.
 router.post('/delete/:id', requireAdmin, (req, res) => {
     db.query("SELECT image_url FROM trainers WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;

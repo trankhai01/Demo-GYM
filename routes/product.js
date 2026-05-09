@@ -12,7 +12,6 @@ const { csrfSynchronisedProtection } = require('../middleware/csrf');
 const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
 
-// 1. Xem danh sách sản phẩm (Kho hàng)
 router.get('/', requireStaff, (req, res) => {
     db.query("SELECT * FROM products ORDER BY category ASC, stock_quantity ASC", (err, results) => {
         if (err) return res.status(500).send("Lỗi tải dữ liệu");
@@ -20,12 +19,10 @@ router.get('/', requireStaff, (req, res) => {
     });
 });
 
-// 2. Giao diện Thêm mới
 router.get('/add', requireStaff, (req, res) => {
     res.render('products/add', { error: null, form: {} });
 });
 
-// 3. Xử lý Thêm mới
 router.post('/add', requireStaff, ...productUploadChain, (req, res) => {
     const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
@@ -46,7 +43,6 @@ router.post('/add', requireStaff, ...productUploadChain, (req, res) => {
     );
 });
 
-// 4. Giao diện Sửa
 router.get('/edit/:id', requireStaff, (req, res) => {
     db.query("SELECT * FROM products WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.redirect('/products');
@@ -54,7 +50,6 @@ router.get('/edit/:id', requireStaff, (req, res) => {
     });
 });
 
-// 5. Xử lý Sửa 
 router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
@@ -86,7 +81,6 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     });
 });
 
-// 6. Xóa sản phẩm
 router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;

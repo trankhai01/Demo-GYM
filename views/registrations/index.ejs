@@ -153,11 +153,17 @@
                 </div>
 
                 <div class="mt-auto pt-3 border-top border-secondary">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-ticket-perforated"></i></span>
+                        <input type="text" id="discountCodeInput" class="form-control" placeholder="Mã ưu đãi (nếu có)" style="text-transform:uppercase;">
+                        <button type="button" class="btn btn-outline-primary" onclick="applyDiscount()">Áp dụng</button>
+                    </div>
+                    <div id="discountInfo" class="small mb-2"></div>
                     <div class="bg-dark p-3 rounded text-center border border-secondary">
                         <div class="invoice-label mb-2">TỔNG THANH TOÁN</div>
                         <div class="total-price" id="inv-total-price">0<span class="fs-4 text-white-50 ms-1">vnđ</span></div>
                     </div>
-                    
+
                     <button type="button" class="btn btn-danger w-100 py-3 fw-bold text-uppercase fs-5 shadow mt-3" onclick="submitInvoice(event)">
                         <i class="bi bi-check2-circle me-2"></i> XUẤT HÓA ĐƠN
                     </button>
@@ -259,10 +265,55 @@
         calculateTotal();
     }
 
+    let appliedDiscount = null;
     function calculateTotal() {
-        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0); 
-        let finalTotal = currentPackagePrice + retailTotal;
-        document.getElementById('inv-total-price').innerHTML = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
+        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let baseTotal = currentPackagePrice + retailTotal;
+        let discountAmount = appliedDiscount ? appliedDiscount.discount_amount : 0;
+        let finalTotal = Math.max(0, baseTotal - discountAmount);
+        let html = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
+        if (discountAmount > 0) {
+            html += `<div class="small text-success mt-1">Đã giảm ${discountAmount.toLocaleString('vi-VN')}đ</div>`;
+        }
+        document.getElementById('inv-total-price').innerHTML = html;
+    }
+
+    function applyDiscount() {
+        const code = (document.getElementById('discountCodeInput').value || '').trim().toUpperCase();
+        const info = document.getElementById('discountInfo');
+        if (!code) {
+            appliedDiscount = null;
+            info.innerHTML = '';
+            calculateTotal();
+            return;
+        }
+        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let baseTotal = currentPackagePrice + retailTotal;
+        if (baseTotal <= 0) {
+            info.innerHTML = '<span class="text-warning">Thêm sản phẩm / gói tập trước khi nhập mã.</span>';
+            return;
+        }
+        const memberId = document.getElementById('globalMemberSelect').value || null;
+        fetch('/discounts/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ code, amount: baseTotal, member_id: memberId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) {
+                appliedDiscount = null;
+                info.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${data.error || 'Không thể áp mã.'}</span>`;
+            } else {
+                appliedDiscount = data;
+                info.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> ${data.code}: giảm ${data.discount_amount.toLocaleString('vi-VN')}đ</span>`;
+            }
+            calculateTotal();
+        })
+        .catch(() => { info.innerHTML = '<span class="text-danger">Lỗi kết nối.</span>'; });
     }
 
     $(document).ready(function() {
@@ -290,13 +341,15 @@
         }
 
         let retailTotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
-        let finalTotal = currentPackagePrice + retailTotal;
+        let baseTotal = currentPackagePrice + retailTotal;
+        const discountCode = (document.getElementById('discountCodeInput').value || '').trim().toUpperCase() || null;
 
         const payload = {
             member_id: memberId || null,
             package_id: packageId || null,
             cart_items: cart,
-            total_price: finalTotal
+            total_price: baseTotal,
+            discount_code: discountCode
         };
 
         fetch('/registrations/add-complex', {

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS members (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     fullname     VARCHAR(100) NOT NULL,
     phone        VARCHAR(20)  NOT NULL UNIQUE,
+    email        VARCHAR(120) NULL,
     gender       VARCHAR(10)  DEFAULT 'Nam',
     join_date    DATE         NOT NULL,
     password     VARCHAR(255) NOT NULL,
@@ -24,7 +25,8 @@ CREATE TABLE IF NOT EXISTS members (
     hometown     VARCHAR(100),
     address      VARCHAR(255),
     avatar_url   VARCHAR(500),
-    INDEX idx_members_phone (phone)
+    INDEX idx_members_phone (phone),
+    INDEX idx_members_email (email)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
@@ -78,6 +80,8 @@ CREATE TABLE IF NOT EXISTS registrations (
     member_id          INT,
     package_id         INT,
     price              DECIMAL(12,2) NOT NULL DEFAULT 0,
+    discount_code_id   INT NULL,
+    discount_amount    DECIMAL(12,2) NOT NULL DEFAULT 0,
     registration_date  DATE NOT NULL,
     expiration_date    DATE,
     total_sessions     INT DEFAULT 0,
@@ -179,3 +183,27 @@ INSERT INTO members (fullname, phone, gender, join_date, password, role)
 VALUES ('Admin', '0000000000', 'Nam', CURRENT_DATE(),
         '$2b$10$4XRENkLwBycjiRh.OftxquEWK0odXZ7Vw65SuQeuXUIsaYSHw4uMy', 'admin')
 ON DUPLICATE KEY UPDATE fullname = fullname;
+
+-- ---------------------------------------------------------------------------
+-- discount_codes: mã ưu đãi áp cho hóa đơn (lễ Tết, sinh nhật hội viên...)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS discount_codes (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    code            VARCHAR(40)  NOT NULL UNIQUE,
+    description     VARCHAR(255),
+    discount_type   ENUM('percent','fixed') NOT NULL DEFAULT 'percent',
+    discount_value  DECIMAL(12,2) NOT NULL,
+    min_amount      DECIMAL(12,2) NOT NULL DEFAULT 0,
+    max_discount    DECIMAL(12,2) NULL,
+    valid_from      DATE NULL,
+    valid_to        DATE NULL,
+    usage_limit     INT NULL,
+    used_count      INT NOT NULL DEFAULT 0,
+    is_birthday     TINYINT(1) NOT NULL DEFAULT 0,
+    member_id       INT NULL,
+    status          ENUM('active','disabled') NOT NULL DEFAULT 'active',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dc_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    INDEX idx_dc_status_dates (status, valid_from, valid_to),
+    INDEX idx_dc_member (member_id)
+) ENGINE=InnoDB;
