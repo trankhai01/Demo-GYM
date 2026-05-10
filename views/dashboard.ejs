@@ -2,19 +2,26 @@
 
 <div class="container-fluid">
   <!-- Hero greeting -->
-  <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: #fff;">
+  <div class="card hero-greet border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: #fff;">
+    <style>
+      .hero-greet, .hero-greet * { color: #fff !important; }
+      .hero-greet .badge { color: inherit !important; }
+      .hero-greet .text-danger { color: #fde68a !important; }
+      .hero-greet .btn-light { color: #4f46e5 !important; background:#fff !important; }
+      .hero-greet a.btn-light:hover { background:#fef08a !important; }
+    </style>
     <div class="card-body p-4">
       <div class="row align-items-center">
         <div class="col-md-8 d-flex align-items-center">
           <% if (member.avatar_url) { %>
             <img src="<%= member.avatar_url %>" alt="<%= member.fullname %>"
-                 class="rounded-circle border border-2 border-danger me-3 flex-shrink-0"
-                 style="width:64px; height:64px; object-fit:cover;">
+                 class="rounded-circle border border-2 me-3 flex-shrink-0"
+                 style="width:64px; height:64px; object-fit:cover; border-color:#fde68a !important;">
           <% } %>
           <div>
-            <h2 class="text-white mb-1">
-              <i class="bi bi-fire text-danger"></i>
-              Chào mừng trở lại, <span style="color:#fef08a;"><%= member.fullname %></span>!
+            <h2 class="mb-1">
+              <i class="bi bi-fire"></i>
+              Chào mừng trở lại, <span style="color:#fef08a !important;"><%= member.fullname %></span>!
             </h2>
             <p class="mb-0" style="color: rgba(255,255,255,0.85);">
               <i class="bi bi-telephone"></i> <%= member.phone %>
@@ -45,7 +52,7 @@
             <div class="flex-grow-1">
               <h6 class="text-muted text-uppercase small mb-1">Gói tập hiện tại</h6>
               <% if (activePackage) { %>
-                <h5 class="text-white mb-1"><%= activePackage.package_name || '—' %></h5>
+                <h5 class="mb-1" style="color:#0f172a;"><%= activePackage.package_name || '—' %></h5>
                 <% if (activePackage.days_left !== null) { %>
                   <% if (activePackage.days_left > 7) { %>
                     <span class="badge bg-success">Còn <%= activePackage.days_left %> ngày</span>
@@ -80,7 +87,7 @@
             </div>
             <div class="flex-grow-1">
               <h6 class="text-muted text-uppercase small mb-1">Buổi tập sắp tới</h6>
-              <h2 class="text-white mb-0"><%= stats.upcoming_count %></h2>
+              <h2 class="mb-0" style="color:#4f46e5;"><%= stats.upcoming_count %></h2>
               <a href="/schedule" class="small text-danger" style="text-decoration:none;">
                 Xem lịch <i class="bi bi-arrow-right"></i>
               </a>
@@ -99,7 +106,7 @@
             </div>
             <div class="flex-grow-1">
               <h6 class="text-muted text-uppercase small mb-1">Tổng số lần check-in</h6>
-              <h2 class="text-white mb-0"><%= stats.total_checkins %></h2>
+              <h2 class="mb-0" style="color:#06b6d4;"><%= stats.total_checkins %></h2>
               <a href="/profile/schedule" class="small text-success" style="text-decoration:none;">
                 Lịch sử <i class="bi bi-arrow-right"></i>
               </a>
