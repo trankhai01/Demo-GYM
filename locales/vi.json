@@ -65,7 +65,8 @@
             "feat_equipment": "Sử dụng tất cả thiết bị",
             "feat_facility": "Phòng tắm + tủ gửi đồ",
             "feat_pt": "Bao gồm {n} buổi PT cá nhân",
-            "no_packages": "Sẽ sớm cập nhật các gói mới."
+            "no_packages": "Sẽ sớm cập nhật các gói mới.",
+            "popular": "PHỔ BIẾN"
         },
         "trainers": {
             "title_1": "Đội ngũ",
