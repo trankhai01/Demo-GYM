@@ -3,58 +3,58 @@
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center mb-4 text-center">
         <div class="col-md-10">
-            <h2 class="text-white text-uppercase fw-bold m-0" style="letter-spacing: 1px;">
-                <i class="bi bi-calendar2-check-fill text-danger me-2"></i>Thông Tin Tập Luyện
+            <h2 class="text-uppercase fw-bold m-0" style="letter-spacing: 1px; color:#0f172a;">
+                <i class="bi bi-calendar2-check-fill me-2" style="color:#4f46e5;"></i>Thông Tin Tập Luyện
             </h2>
         </div>
     </div>
 
     <div class="row justify-content-center g-4">
         <div class="col-md-5">
-            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary h-100">
-                <h5 class="text-white-50 text-uppercase mb-4 fw-bold small">
+            <div class="p-4 rounded-4 shadow-sm h-100" style="background:#ffffff;border:1px solid #e2e8f0;">
+                <h5 class="text-uppercase mb-4 fw-bold small" style="color:#4f46e5;">
                     <i class="bi bi-card-heading me-2"></i>Gói tập & Lịch trình
                 </h5>
                 <% if (regInfo) { %>
-                    <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
-                        <span class="text-white-50">Gói đăng ký:</span>
-                        <span class="text-warning fw-bold"><%= regInfo.package_name %></span>
+                    <div class="d-flex justify-content-between pb-3 mb-3" style="border-bottom:1px solid #e2e8f0;">
+                        <span style="color:#64748b;">Gói đăng ký:</span>
+                        <span class="fw-bold" style="color:#4f46e5;"><%= regInfo.package_name %></span>
                     </div>
-                    <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
-                        <span class="text-white-50">Ngày hết hạn:</span>
-                        <span class="text-danger fw-bold"><%= new Date(regInfo.expiration_date).toLocaleDateString('vi-VN') %></span>
+                    <div class="d-flex justify-content-between pb-3 mb-3" style="border-bottom:1px solid #e2e8f0;">
+                        <span style="color:#64748b;">Ngày hết hạn:</span>
+                        <span class="fw-bold" style="color:#06b6d4;"><%= new Date(regInfo.expiration_date).toLocaleDateString('vi-VN') %></span>
                     </div>
                     <div class="mt-4 text-center">
-                        <a href="/schedule" class="btn btn-outline-warning fw-bold">
+                        <a href="/schedule" class="btn fw-bold text-white" style="background:linear-gradient(135deg,#4f46e5,#06b6d4);border:0;">
                             <i class="bi bi-calendar3 me-2"></i>Xem &amp; đặt lịch tập
                         </a>
                     </div>
                 <% } else { %>
-                    <div class="text-center py-4 text-white-50">Chưa có gói tập hoạt động</div>
+                    <div class="text-center py-4" style="color:#64748b;">Chưa có gói tập hoạt động</div>
                 <% } %>
             </div>
         </div>
         
         <div class="col-md-5">
-            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary h-100 text-center">
-                <h5 class="text-white-50 text-uppercase mb-4 fw-bold small">Thẻ Check-in</h5>
-                <div class="bg-white p-2 d-inline-block rounded-3 mb-3">
+            <div class="p-4 rounded-4 shadow-sm h-100 text-center" style="background:#ffffff;border:1px solid #e2e8f0;">
+                <h5 class="text-uppercase mb-4 fw-bold small" style="color:#4f46e5;">Thẻ Check-in</h5>
+                <div class="p-2 d-inline-block rounded-3 mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= user.id %>" class="img-fluid">
                 </div>
-                <div class="text-white fw-bold"><%= user.fullname %></div>
-                <div class="text-white-50 small">ID: <%= user.id %></div>
+                <div class="fw-bold" style="color:#0f172a;"><%= user.fullname %></div>
+                <div class="small" style="color:#64748b;">ID: <%= user.id %></div>
             </div>
         </div>
 
         <div class="col-md-10 mt-4">
-            <div class="bg-dark p-4 rounded-4 shadow-lg border border-secondary">
-                <h5 class="text-white-50 text-uppercase mb-3 fw-bold small">
+            <div class="p-4 rounded-4 shadow-sm" style="background:#ffffff;border:1px solid #e2e8f0;">
+                <h5 class="text-uppercase mb-3 fw-bold small" style="color:#4f46e5;">
                     <i class="bi bi-clock-history me-2"></i>Lịch sử 10 buổi tập gần nhất
                 </h5>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover border-secondary">
+                    <table class="table table-hover" style="--bs-table-bg:#ffffff;--bs-table-color:#0f172a;--bs-table-hover-bg:#f8fafc;--bs-table-hover-color:#0f172a;--bs-table-border-color:#e2e8f0;">
                         <thead>
-                            <tr class="text-white-50 small">
+                            <tr class="small" style="color:#4f46e5;text-transform:uppercase;letter-spacing:0.5px;">
                                 <th>Check-in</th>
                                 <th>Check-out</th>
                                 <th>Thời lượng</th>
@@ -73,7 +73,7 @@
                                                 <span class="badge bg-warning text-dark">Đang trong phòng</span>
                                             <% } %>
                                         </td>
-                                        <td class="text-warning fw-bold">
+                                        <td class="fw-bold" style="color:#4f46e5;">
                                             <% const min = h.duration_min || 0; %>
                                             <% if (min >= 60) { %>
                                                 <%= Math.floor(min / 60) %>h <%= min % 60 %>p
@@ -92,7 +92,7 @@
                                 <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="4" class="text-center text-white-50 py-3">Chưa có dữ liệu tập luyện</td>
+                                    <td colspan="4" class="text-center py-3" style="color:#64748b;">Chưa có dữ liệu tập luyện</td>
                                 </tr>
                             <% } %>
                         </tbody>

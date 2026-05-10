@@ -28,7 +28,7 @@
         <table class="table table-hover mb-0 align-middle">
             <thead>
                 <tr>
-                    <th class="ps-4 py-3">ID</th>
+                    <th class="ps-4 py-3">STT</th>
                     <th class="py-3">Họ và Tên</th>
                     <th class="py-3">Liên hệ</th>
                     <th class="py-3">Giới tính</th>
@@ -38,9 +38,9 @@
             </thead>
             <tbody>
                 <% if(members.length > 0) { %>
-                    <% members.forEach(member => { %>
+                    <% members.forEach((member, i) => { %>
                     <tr>
-                        <td class="ps-4" style="color:#64748b;">#<%= member.id %></td>
+                        <td class="ps-4 fw-semibold" style="color:#475569;"><%= (typeof pageOffset !== 'undefined' ? pageOffset : 0) + i + 1 %></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <% if (member.avatar_url) { %>

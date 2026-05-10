@@ -13,7 +13,7 @@ router.get('/',requireStaff, (req, res) => {
 
     const searchSql = `%${searchQuery}%`;
     const countSql = "SELECT COUNT(*) as total FROM members WHERE fullname LIKE ? OR phone LIKE ?";
-    const dataSql = "SELECT * FROM members WHERE fullname LIKE ? OR phone LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?";
+    const dataSql = "SELECT * FROM members WHERE fullname LIKE ? OR phone LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
 
     db.query(countSql, [searchSql, searchSql], (err, countResult) => {
         if (err) return res.status(500).send("Lỗi đếm dữ liệu");
@@ -27,7 +27,9 @@ router.get('/',requireStaff, (req, res) => {
                 currentPage: page,
                 totalPages: totalPages,
                 searchQuery: searchQuery,
-                error: error 
+                error: error,
+                pageOffset: offset,
+                pageLimit: limit
             });
         });
     });
