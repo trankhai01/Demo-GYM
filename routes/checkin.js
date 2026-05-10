@@ -31,9 +31,7 @@ router.post('/process', requireStaff, (req, res) => {
             WHERE member_id = ? AND status = 'Success' AND checkout_time IS NULL
             ORDER BY checkin_time DESC LIMIT 1
         `;
-        // Chỉ chấp nhận check-in cho gói đã thanh toán (Success). Sau PR #8
-        // hóa đơn được tạo ở trạng thái Pending → cấm check-in cho gói chưa
-        // trả tiền.
+        // Chỉ cho check-in gói đã thanh toán.
         const sqlCheckPackage = `
             SELECT expiration_date, package_id FROM registrations
             WHERE member_id = ? AND status = 'active' AND payment_status = 'Success'

@@ -2,20 +2,21 @@
 
 <style>
     .pricing-card { 
-        background: linear-gradient(145deg, #1e1e1e 0%, #111 100%); 
-        border: 1px solid #333; 
+        background: #ffffff; 
+        border: 1px solid #e2e8f0; 
         border-radius: 24px; 
         transition: all 0.3s ease; 
         overflow: hidden; 
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
     }
     .pricing-card:hover { 
         transform: translateY(-10px); 
-        border-color: #e50914; 
-        box-shadow: 0 15px 35px rgba(229, 9, 20, 0.15); 
+        border-color: #4f46e5; 
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.18); 
     }
     .duration-badge { 
-        background: rgba(229, 9, 20, 0.1); 
-        color: #e50914; 
+        background: rgba(79, 70, 229, 0.1); 
+        color: #4f46e5; 
         padding: 6px 16px; 
         border-radius: 20px; 
         font-weight: 700; 
@@ -26,13 +27,13 @@
         font-family: 'Oswald', sans-serif; 
         font-size: 3.2rem; 
         font-weight: 700; 
-        color: #fff; 
+        color: #4f46e5; 
         line-height: 1.2;
     }
     .feature-list { 
         list-style: none; 
         padding: 0; 
-        color: #aaa; 
+        color: #64748b; 
         text-align: left; 
     }
     .feature-list li { 
@@ -45,16 +46,16 @@
         font-size: 1.1rem;
     }
     .action-box { 
-        background: rgba(0, 0, 0, 0.4); 
+        background: rgba(15, 23, 42, 0.06); 
         padding: 20px; 
-        border-top: 1px solid #333; 
+        border-top: 1px solid #e2e8f0; 
     }
 </style>
 
 <div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-5">
-        <h2 class="fw-bold text-white text-uppercase m-0" style="letter-spacing: 1.5px;">Danh sách gói tập</h2>
-        <a href="/packages/add" class="btn btn-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
+        <h2 class="fw-bold text-uppercase m-0" style="letter-spacing: 1.5px; color:#0f172a;">Danh sách gói tập</h2>
+        <a href="/packages/add" class="btn fw-bold px-4 py-2 rounded-pill shadow-sm" style="background:#4f46e5;color:#fff;">
             <i class="bi bi-plus-lg me-2"></i>Thêm gói mới
         </a>
     </div>
@@ -68,13 +69,13 @@
                         <span class="duration-badge text-uppercase"><%= pkg.duration_months %> Tháng</span>
                     </div>
                     
-                    <h5 class="text-white-50 text-uppercase fw-bold mb-3"><%= pkg.package_name %></h5>
+                    <h5 class="text-uppercase fw-bold mb-3" style="color:#475569;"><%= pkg.package_name %></h5>
                     
                     <div class="price-amount mb-4">
-    <%= Number(pkg.price).toLocaleString('vi-VN') %><span class="fs-5 text-white-50 ms-2">vnđ</span>
+    <%= Number(pkg.price).toLocaleString('vi-VN') %><span class="fs-5 ms-2" style="color:#94a3b8;">vnđ</span>
 </div>
                     
-                    <hr class="border-secondary mx-3 opacity-50 mb-4">
+                    <hr class="mx-3 mb-4" style="border-color:#e2e8f0;opacity:1;">
                     
                     <div class="text-start mt-4 mb-4" style="min-height: 120px;">
     <% if (pkg.description) { %>
@@ -82,22 +83,26 @@
             let benefits = pkg.description.split(/\r?\n/).filter(line => line.trim() !== ''); 
         %>
         <% benefits.forEach(benefit => { %>
-            <div class="text-white-50 small mb-2 text-truncate" title="<%= benefit.trim() %>">
-                <i class="bi bi-check-circle-fill text-success me-2"></i><%= benefit.trim() %>
+            <div class="small mb-2 text-truncate" style="color:#475569;" title="<%= benefit.trim() %>">
+                <i class="bi bi-check-circle-fill me-2" style="color:#10b981;"></i><%= benefit.trim() %>
             </div>
         <% }) %>
     <% } else { %>
-        <div class="text-white-50 small fst-italic">Chưa có mô tả quyền lợi.</div>
+        <div class="small fst-italic" style="color:#94a3b8;">Chưa có mô tả quyền lợi.</div>
     <% } %>
 </div>
                 </div>
                 
                 <div class="action-box d-flex gap-2 justify-content-center">
-                    <a href="/packages/edit/<%= pkg.id %>" class="btn btn-outline-light w-50 rounded-pill fw-bold">Sửa</a>
+                    <a href="/packages/edit/<%= pkg.id %>" class="btn w-50 rounded-pill fw-bold" style="background:#4f46e5;color:#fff;border:none;">
+                        <i class="bi bi-pencil-square me-1"></i>Sửa
+                    </a>
                     <form action="/packages/delete/<%= pkg.id %>" method="POST" class="w-50"
                           onsubmit="return confirm('Bạn chắc chắn muốn xóa gói này?')">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">Xóa</button>
+                        <button type="submit" class="btn w-100 rounded-pill fw-bold" style="background:#dc2626;color:#fff;border:none;">
+                            <i class="bi bi-trash me-1"></i>Xóa
+                        </button>
                     </form>
                 </div>
             </div>

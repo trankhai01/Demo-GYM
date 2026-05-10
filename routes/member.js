@@ -13,7 +13,7 @@ router.get('/',requireStaff, (req, res) => {
 
     const searchSql = `%${searchQuery}%`;
     const countSql = "SELECT COUNT(*) as total FROM members WHERE fullname LIKE ? OR phone LIKE ?";
-    const dataSql = "SELECT * FROM members WHERE fullname LIKE ? OR phone LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?";
+    const dataSql = "SELECT * FROM members WHERE fullname LIKE ? OR phone LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
 
     db.query(countSql, [searchSql, searchSql], (err, countResult) => {
         if (err) return res.status(500).send("Lỗi đếm dữ liệu");
@@ -27,7 +27,9 @@ router.get('/',requireStaff, (req, res) => {
                 currentPage: page,
                 totalPages: totalPages,
                 searchQuery: searchQuery,
-                error: error 
+                error: error,
+                pageOffset: offset,
+                pageLimit: limit
             });
         });
     });
@@ -39,18 +41,19 @@ router.get("/add",requireStaff, (req, res) => {
 });
 
 router.post("/add",requireStaff, (req, res) => {
-    const { fullname, phone, gender } = req.body;
+    const { fullname, phone, gender, email } = req.body;
     const join_date = new Date().toISOString().split('T')[0];
+    const cleanEmail = email && email.trim() ? email.trim() : null;
     const checkSql = "SELECT id FROM members WHERE phone = ?";
     db.query(checkSql, [phone], async (err, results) => {
         if (err) return res.status(500).send("Lỗi DB");
         if (results.length > 0) {
-            return res.redirect('/members?error=duplicate_phone'); 
+            return res.redirect('/members?error=duplicate_phone');
         }
         try {
             const defaultPassword = await bcrypt.hash(phone, 10);
-            const insertSql = "INSERT INTO members (fullname, phone, gender, join_date, password, role) VALUES (?, ?, ?, ?, ?, 'member')";
-            db.query(insertSql, [fullname, phone, gender, join_date, defaultPassword], (err, result) => {
+            const insertSql = "INSERT INTO members (fullname, phone, email, gender, join_date, password, role) VALUES (?, ?, ?, ?, ?, ?, 'member')";
+            db.query(insertSql, [fullname, phone, cleanEmail, gender, join_date, defaultPassword], () => {
                 res.redirect("/members");
             });
         } catch (error) {
@@ -85,21 +88,12 @@ router.get('/view/:id', requireStaff, (req, res) => {
     });
 });
 
-// Đăng ký gói từ trang chi tiết hội viên. Tạo hóa đơn ở trạng thái
-// Pending rồi điều hướng sang màn hình checkout để staff xác nhận thanh
-// toán (giống luồng POS /add-complex). Trước đây route này lưu thẳng
-// Success không qua checkout → thiếu nhất quán + bỏ qua bước xác nhận phương
-// thức thanh toán.
 router.post('/view/:id/register', requireStaff, (req, res) => {
     const memberId = req.params.id;
     const { package_id } = req.body;
 
-    // Guard phải bao gồm cả Pending: sau khi tạo hóa đơn staff có thể
-    // back về rồi submit lại → tạo registration thứ hai cho cùng member.
-    // Cả hai sau đó có thể checkout độc lập → member có 2 gói trùng.
+    // Guard bao gồm cả Pending để staff submit hai lần không tạo registration trùng.
     db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status IN ('Success', 'Pending')", [memberId], (err, activePkgs) => {
-        // Fail-closed: nếu query lỗi không thể fallback "không có gói",
-        // sẽ vô tình bypass guard và tạo registration trùng.
         if (err) {
             console.error('[member /view/:id/register] guard query', err.message);
             return res.status(500).send('Lỗi kiểm tra gói tập hiện tại');
@@ -133,14 +127,8 @@ router.post('/view/:id/register', requireStaff, (req, res) => {
     });
 });
 
-// Xóa hội viên: phải dọn sạch dữ liệu liên quan trước khi xóa record
-// trong members. Mặc dù schema có ON DELETE CASCADE cho bookings/checkin/
-// pt_sessions_log/password_reset_requests, môi trường cũ (XAMPP MySQL,
-// MariaDB) có thể tắt FK enforcement → để lại dữ liệu rác. Xóa tường minh
-// từng bảng trong transaction để đảm bảo atomic và không phụ thuộc FK.
-// registrations giữ lại với member_id = NULL (qua ON DELETE SET NULL)
-// nhưng ở đây xóa luôn cho sạch sẽ — dữ liệu doanh thu không bị
-// orphan vì người dùng đã chủ động xóa hội viên.
+// Xóa tuần tự các bảng tham chiếu trong transaction để atomic, không dựa vào FK CASCADE
+// (XAMPP/MariaDB cũ có thể tắt enforcement, để lại dữ liệu rác).
 router.post("/delete/:id", requireStaff, (req, res) => {
     const id = req.params.id;
 
@@ -160,9 +148,6 @@ router.post("/delete/:id", requireStaff, (req, res) => {
                 return res.status(500).send("Lỗi mở transaction");
             }
 
-            // Thứ tự quan trọng: những bảng tham chiếu registrations phải
-            // xóa trước registrations (pt_sessions_log, registration_details).
-            // Các bảng tham chiếu members — sau đó — rồi xóa members cuối cùng.
             const steps = [
                 'DELETE pt FROM pt_sessions_log pt JOIN registrations r ON pt.registration_id = r.id WHERE r.member_id = ?',
                 'DELETE rd FROM registration_details rd JOIN registrations r ON rd.registration_id = r.id WHERE r.member_id = ?',
@@ -203,9 +188,9 @@ router.get("/edit/:id",requireStaff, (req, res) => {
 
 router.post("/edit/:id",requireStaff, (req, res) => {
     const id = req.params.id;
-    const { 
-        fullname, phone, gender, 
-        cccd, birth_year, height, weight, hometown, address 
+    const {
+        fullname, phone, email, gender,
+        cccd, birth_year, height, weight, hometown, address
     } = req.body;
 
     const checkSql = "SELECT id FROM members WHERE phone = ? AND id != ?";
@@ -222,32 +207,28 @@ router.post("/edit/:id",requireStaff, (req, res) => {
         }
 
         const updateSql = `
-            UPDATE members 
-            SET fullname = ?, phone = ?, gender = ?, 
-                cccd = ?, birth_year = ?, height = ?, weight = ?, 
+            UPDATE members
+            SET fullname = ?, phone = ?, email = ?, gender = ?,
+                cccd = ?, birth_year = ?, height = ?, weight = ?,
                 hometown = ?, address = ?
             WHERE id = ?
         `;
-        
+
         const values = [
-            fullname, phone, gender, 
-            cccd || null, birth_year || null, height || null, weight || null, 
-            hometown || null, address || null, 
+            fullname, phone, (email && email.trim()) ? email.trim() : null, gender,
+            cccd || null, birth_year || null, height || null, weight || null,
+            hometown || null, address || null,
             id
         ];
 
-        db.query(updateSql, values, (err, result) => {
+        db.query(updateSql, values, (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật: " + err.message);
-            
             res.redirect(`/members/view/${id}`);
         });
     });
 });
 
-// Trừ 1 buổi PT. trainer_id lấy từ select trên form (HLV thật của buổi
-// hôm đó) — nếu rỗng → "tự tập", lưu NULL vào pt_sessions_log.trainer_id.
-// Trước đây trainer_id cố định lấy từ registrations.trainer_id (đã bị
-// drop ở migration 005) nên log không phản ánh đúng HLV thực tế.
+// trainer_id null → "tự tập". Yêu cầu hóa đơn đã thanh toán mới cho điểm danh.
 router.post('/deduct-session', requireStaff, (req, res) => {
     const { registration_id, member_id, trainer_id, note } = req.body;
     const tid = trainer_id && String(trainer_id).trim() !== '' ? Number(trainer_id) : null;
@@ -255,9 +236,6 @@ router.post('/deduct-session', requireStaff, (req, res) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
 
         const reg = results[0];
-        // Sau PR #8 hóa đơn được tạo ở trạng thái Pending rồi mới qua
-        // checkout xác nhận thanh toán → cấm trừ buổi cho đến khi thanh
-        // toán xong, tránh staff trừ buổi cho gói chưa trả tiền.
         if (reg.payment_status !== 'Success') {
             return res.status(400).send("Gói tập chưa thanh toán — không thể điểm danh!");
         }

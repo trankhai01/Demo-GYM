@@ -3,43 +3,43 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <style>
-    .select2-container--default .select2-selection--single { background-color: #212529; border: 1px solid #6c757d; height: 45px; border-radius: 5px; }
+    .select2-container--default .select2-selection--single { background-color: #ffffff; border: 1px solid #6c757d; height: 45px; border-radius: 5px; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { color: #fff; line-height: 45px; }
     .select2-container--default .select2-selection--single .select2-selection__arrow { height: 45px; }
-    .select2-dropdown { background-color: #212529; border: 1px solid #6c757d; }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #e50914; color: white; }
+    .select2-dropdown { background-color: #ffffff; border: 1px solid #6c757d; }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #4f46e5; color: white; }
     .select2-results__option { color: #fff; }
     .pos-container { margin-top: 20px; margin-bottom: 50px; }
-    .glass-panel { background: rgba(30, 30, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); height: 100%; }
+    .glass-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); height: 100%; }
     
     /* Invoice Styles */
-    .invoice-preview { background: #0a0a0a; border: 1px dashed #444; border-radius: 15px; padding: 30px; position: relative; height: 100%; display: flex; flex-direction: column; }
-    .invoice-preview::before, .invoice-preview::after { content: ''; position: absolute; width: 30px; height: 30px; background: #121212; border-radius: 50%; top: -15px; }
-    .invoice-preview::before { left: -15px; border-right: 1px dashed #444; }
-    .invoice-preview::after { right: -15px; border-left: 1px dashed #444; }
+    .invoice-preview { background: #f1f5f9; border: 1px dashed #e2e8f0; border-radius: 15px; padding: 30px; position: relative; height: 100%; display: flex; flex-direction: column; }
+    .invoice-preview::before, .invoice-preview::after { content: ''; position: absolute; width: 30px; height: 30px; background: #f8fafc; border-radius: 50%; top: -15px; }
+    .invoice-preview::before { left: -15px; border-right: 1px dashed #e2e8f0; }
+    .invoice-preview::after { right: -15px; border-left: 1px dashed #e2e8f0; }
     .invoice-row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px; }
-    .invoice-label { color: #888; font-size: 0.85rem; text-transform: uppercase; }
+    .invoice-label { color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
     .invoice-value { color: #fff; font-weight: bold; text-align: right; }
-    .total-price { color: #e50914; font-size: 2.5rem; font-family: 'Oswald', sans-serif; font-weight: bold; line-height: 1; }
+    .total-price { color: #4f46e5; font-size: 2.5rem; font-family: 'Oswald', sans-serif; font-weight: bold; line-height: 1; }
     
     /* Product Grid Styles */
-    .product-card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
-    .product-card:hover { border-color: #e50914; transform: translateY(-5px); }
+    .product-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+    .product-card:hover { border-color: #4f46e5; transform: translateY(-5px); }
     .product-img { width: 100%; height: 120px; object-fit: contain; margin-bottom: 15px; border-radius: 5px; background: #222; }
     .product-title { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .product-price { color: #47cf73; font-weight: bold; }
-    .stock-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; color: #fff; }
+    .stock-badge { position: absolute; top: 10px; right: 10px; background: rgba(79, 70, 229, 0.85); font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; color: #fff; }
     .Inactive { opacity: 0.5; pointer-events: none; }
     
     /* Tab Styles */
-    .nav-tabs .nav-link { color: #888; border: none; border-bottom: 3px solid transparent; font-weight: bold; padding: 10px 20px; font-size: 1.1rem; }
-    .nav-tabs .nav-link.active { background: transparent; color: #e50914; border-bottom: 3px solid #e50914; }
+    .nav-tabs .nav-link { color: #64748b; border: none; border-bottom: 3px solid transparent; font-weight: bold; padding: 10px 20px; font-size: 1.1rem; }
+    .nav-tabs .nav-link.active { background: transparent; color: #4f46e5; border-bottom: 3px solid #4f46e5; }
     
     /* Schedule Grid */
-    .schedule-selector th { color: #888; font-size: 0.8rem; font-weight: normal; }
-    .schedule-cell { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
-    .schedule-cell:hover { border-color: #e50914; }
-    .schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
+    .schedule-selector th { color: #64748b; font-size: 0.8rem; font-weight: normal; }
+    .schedule-cell { background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
+    .schedule-cell:hover { border-color: #4f46e5; }
+    .schedule-cell.active { background: #4f46e5; border-color: #4f46e5; color: white; }
 </style>
 
 <div class="container pos-container">
@@ -153,11 +153,17 @@
                 </div>
 
                 <div class="mt-auto pt-3 border-top border-secondary">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-ticket-perforated"></i></span>
+                        <input type="text" id="discountCodeInput" class="form-control" placeholder="Mã ưu đãi (nếu có)" style="text-transform:uppercase;">
+                        <button type="button" class="btn btn-outline-primary" onclick="applyDiscount()">Áp dụng</button>
+                    </div>
+                    <div id="discountInfo" class="small mb-2"></div>
                     <div class="bg-dark p-3 rounded text-center border border-secondary">
                         <div class="invoice-label mb-2">TỔNG THANH TOÁN</div>
                         <div class="total-price" id="inv-total-price">0<span class="fs-4 text-white-50 ms-1">vnđ</span></div>
                     </div>
-                    
+
                     <button type="button" class="btn btn-danger w-100 py-3 fw-bold text-uppercase fs-5 shadow mt-3" onclick="submitInvoice(event)">
                         <i class="bi bi-check2-circle me-2"></i> XUẤT HÓA ĐƠN
                     </button>
@@ -259,10 +265,55 @@
         calculateTotal();
     }
 
+    let appliedDiscount = null;
     function calculateTotal() {
-        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0); 
-        let finalTotal = currentPackagePrice + retailTotal;
-        document.getElementById('inv-total-price').innerHTML = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
+        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let baseTotal = currentPackagePrice + retailTotal;
+        let discountAmount = appliedDiscount ? appliedDiscount.discount_amount : 0;
+        let finalTotal = Math.max(0, baseTotal - discountAmount);
+        let html = finalTotal.toLocaleString('vi-VN') + '<span class="fs-4 text-white-50 ms-1">vnđ</span>';
+        if (discountAmount > 0) {
+            html += `<div class="small text-success mt-1">Đã giảm ${discountAmount.toLocaleString('vi-VN')}đ</div>`;
+        }
+        document.getElementById('inv-total-price').innerHTML = html;
+    }
+
+    function applyDiscount() {
+        const code = (document.getElementById('discountCodeInput').value || '').trim().toUpperCase();
+        const info = document.getElementById('discountInfo');
+        if (!code) {
+            appliedDiscount = null;
+            info.innerHTML = '';
+            calculateTotal();
+            return;
+        }
+        let retailTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let baseTotal = currentPackagePrice + retailTotal;
+        if (baseTotal <= 0) {
+            info.innerHTML = '<span class="text-warning">Thêm sản phẩm / gói tập trước khi nhập mã.</span>';
+            return;
+        }
+        const memberId = document.getElementById('globalMemberSelect').value || null;
+        fetch('/discounts/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ code, amount: baseTotal, member_id: memberId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) {
+                appliedDiscount = null;
+                info.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${data.error || 'Không thể áp mã.'}</span>`;
+            } else {
+                appliedDiscount = data;
+                info.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> ${data.code}: giảm ${data.discount_amount.toLocaleString('vi-VN')}đ</span>`;
+            }
+            calculateTotal();
+        })
+        .catch(() => { info.innerHTML = '<span class="text-danger">Lỗi kết nối.</span>'; });
     }
 
     $(document).ready(function() {
@@ -290,13 +341,15 @@
         }
 
         let retailTotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
-        let finalTotal = currentPackagePrice + retailTotal;
+        let baseTotal = currentPackagePrice + retailTotal;
+        const discountCode = (document.getElementById('discountCodeInput').value || '').trim().toUpperCase() || null;
 
         const payload = {
             member_id: memberId || null,
             package_id: packageId || null,
             cart_items: cart,
-            total_price: finalTotal
+            total_price: baseTotal,
+            discount_code: discountCode
         };
 
         fetch('/registrations/add-complex', {

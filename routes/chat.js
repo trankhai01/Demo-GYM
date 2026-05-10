@@ -5,9 +5,7 @@ const db = require('../config/db');
 
 const router = express.Router();
 
-// Rate limit: 20 message/giờ/user (theo session id nếu có, IP nếu không).
-// Mục tiêu: tránh spam + bảo vệ Gemini quota free tier (1M tokens/ngày).
-// Dùng ipKeyGenerator để xử lý IPv6 đúng cách (tránh bypass quá rate limit).
+// 20 msg/giờ/user — bảo vệ quota Gemini free tier; ipKeyGenerator để IPv6 không bị bypass.
 const chatLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 20,
@@ -20,8 +18,7 @@ const chatLimiter = rateLimit({
 const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEN_CONFIG = { temperature: 0.4, maxOutputTokens: 600 };
 
-// Lấy snapshot dữ liệu công khai (gói tập + HLV) để nhồi vào system prompt.
-// Mỗi request build mới — đảm bảo bot luôn có thông tin mới nhất.
+// Snapshot data công khai cho system prompt; build mỗi request để luôn mới.
 function fetchPublicContext() {
     return new Promise((resolve) => {
         const out = { packages: [], trainers: [] };
@@ -37,7 +34,7 @@ function fetchPublicContext() {
     });
 }
 
-// FAQ tĩnh — bot tham khảo khi user hỏi câu chung.
+
 const FAQ = [
     { q: 'Giờ mở cửa', a: 'Phòng tập mở cửa từ 5h sáng đến 22h hàng ngày, cả thứ 7 và chủ nhật.' },
     { q: 'Cách đặt lịch tập', a: 'Đăng nhập → vào mục "Lịch tập" trên sidebar → chọn ô giờ trống → chọn HLV (nếu muốn) → đặt buổi.' },
@@ -47,7 +44,7 @@ const FAQ = [
     { q: 'Cách check-in', a: 'Quét mã hoặc nhập số điện thoại tại quầy lễ tân. Hệ thống tự động ghi nhận giờ vào và giờ ra.' }
 ];
 
-// FAQ tiếng Anh — dùng khi user chọn EN để bot trả lời nhất quán.
+
 const FAQ_EN = [
     { q: 'Opening hours', a: 'The gym is open from 5am to 10pm every day, including weekends.' },
     { q: 'How to book a session', a: 'Sign in → click "Schedule" in the sidebar → pick an empty slot → choose a trainer (optional) → confirm.' },
@@ -115,9 +112,6 @@ function buildSystemPrompt(ctx, user, lang) {
     }).join('\n') || '(chưa có HLV nào)';
 
     const faqList = FAQ.map(f => `- ${f.q}: ${f.a}`).join('\n');
-    // Tool function calling chỉ enable cho member (xem isMember trong handler).
-    // Admin/staff không có tool nên không hứa "có thể truy vấn dữ liệu cá nhân"
-    // để tránh bot bịa khả năng không có.
     const displayName = user ? (user.username || user.fullname || 'thành viên') : null;
     const userInfo = user
         ? (user.role === 'member'
@@ -149,7 +143,6 @@ ${faqList}
 ${userInfo}`;
 }
 
-// 3 tool function calling — chỉ kích hoạt khi user là member đã login.
 const memberTools = [
     {
         name: 'get_my_active_package',
@@ -233,7 +226,6 @@ router.post('/api/chat', chatLimiter, async (req, res) => {
     const user = req.session.user || null;
     const isMember = !!(user && user.role === 'member' && user.id);
 
-    // Lấy ngôn ngữ từ middleware i18n (res.locals.lang)
     const lang = (res.locals && res.locals.lang) || 'vi';
 
     try {
@@ -242,7 +234,6 @@ router.post('/api/chat', chatLimiter, async (req, res) => {
 
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-        // Build conversation: previous history (sanitized) + current user message.
         const contents = [];
         if (Array.isArray(history)) {
             history.slice(-12).forEach(h => {
@@ -260,7 +251,6 @@ router.post('/api/chat', chatLimiter, async (req, res) => {
             ...(isMember ? { tools: [{ functionDeclarations: memberTools }] } : {})
         };
 
-        // Function-calling loop: tối đa 3 vòng để bot có thể chain tool call.
         let response = await ai.models.generateContent({ model: MODEL, contents, config });
         for (let hop = 0; hop < 3; hop++) {
             const calls = response.functionCalls || [];
@@ -271,7 +261,6 @@ router.post('/api/chat', chatLimiter, async (req, res) => {
                 const result = isMember ? await runMemberTool(call.name, user.id) : { error: 'Login required' };
                 toolResponses.push({ functionResponse: { name: call.name, response: { result } } });
             }
-            // Push model's tool-call request + tool responses back into contents.
             if (response.candidates && response.candidates[0] && response.candidates[0].content) {
                 contents.push(response.candidates[0].content);
             }

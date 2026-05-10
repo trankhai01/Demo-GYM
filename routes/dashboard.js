@@ -3,13 +3,11 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireMember } = require('../middleware/auth');
 
-// Trang chính của hội viên sau khi đăng nhập
 router.get('/', requireMember, (req, res) => {
     const memberId = req.session.user.id;
 
     const sqlMember = "SELECT id, fullname, phone, gender, join_date, avatar_url FROM members WHERE id = ?";
-    // Chỉ tính gói đã thanh toán (Success). Sau PR #8 hóa đơn được tạo
-    // ở trạng thái Pending → Pending không được hiển thị như active.
+    // Chỉ tính gói đã thanh toán (Success); Pending không được xem như active.
     const sqlActivePackage = `
         SELECT r.id, r.expiration_date, r.total_sessions, r.used_sessions,
                r.registration_date, p.package_name,

@@ -65,7 +65,8 @@
             "feat_equipment": "Access to all equipment",
             "feat_facility": "Showers + free locker",
             "feat_pt": "Includes {n} personal training sessions",
-            "no_packages": "New packages coming soon."
+            "no_packages": "New packages coming soon.",
+            "popular": "MOST POPULAR"
         },
         "trainers": {
             "title_1": "Our",

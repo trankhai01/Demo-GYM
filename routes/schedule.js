@@ -15,7 +15,6 @@ function toMysqlDateTime(iso) {
         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-// Trang lịch tập của hội viên
 router.get('/', requireLogin, (req, res) => {
     const role = req.session.user.role;
     db.query("SELECT id, fullname FROM trainers ORDER BY fullname", (err, trainers) => {
@@ -26,14 +25,12 @@ router.get('/', requireLogin, (req, res) => {
     });
 });
 
-// Trang admin/staff: xem lịch của tất cả hội viên.
 router.get('/admin', requireStaff, (req, res) => {
     db.query("SELECT id, fullname FROM trainers ORDER BY fullname", (err, trainers) => {
         res.render('schedule/admin', { trainers: err ? [] : trainers });
     });
 });
 
-// Member chỉ thấy booking của chính mình; staff/admin thấy tất cả.
 router.get('/events', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;
@@ -87,7 +84,6 @@ router.get('/events', requireLogin, (req, res) => {
     });
 });
 
-// Đặt 1 buổi mới. Chỉ member tự đặt cho chính mình; staff đặt giùm member nếu cần.
 router.post('/book', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;
@@ -136,7 +132,6 @@ router.post('/book', requireLogin, (req, res) => {
                 return res.status(500).json({ status: 'Error', message: 'Lỗi mở transaction' });
             }
 
-            // 1. Kiểm tra chồng giờ với booking đang active của chính member.
             const sqlOverlapMember = `
                 SELECT id FROM bookings
                 WHERE member_id = ? AND status = 'booked'
@@ -153,7 +148,6 @@ router.post('/book', requireLogin, (req, res) => {
                     });
                 }
 
-                // 2. Nếu có HLV, kiểm tra HLV có trùng giờ không.
                 const checkTrainerOverlap = (cb) => {
                     if (!trainerId) return cb(null);
                     conn.query(
@@ -207,7 +201,6 @@ router.post('/book', requireLogin, (req, res) => {
     });
 });
 
-//Member chỉ hủy được booking của chính mình; staff hủy bất kỳ.
 router.post('/cancel/:id', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;

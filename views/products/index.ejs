@@ -1,17 +1,17 @@
 <%- include('../partials/header') %>
 
 <div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <div>
-            <h2 class="fw-bold text-white text-uppercase m-0"><i class="bi bi-box-seam text-danger me-2"></i>Quản lý Kho Hàng</h2>
+            <h2 class="fw-bold text-uppercase m-0" style="color:#0f172a;"><i class="bi bi-box-seam me-2" style="color:#4f46e5;"></i>Quản lý Kho Hàng</h2>
         </div>
-        <a href="/products/add" class="btn btn-danger rounded-pill px-4"><i class="bi bi-plus-lg me-1"></i>Nhập sản phẩm mới</a>
+        <a href="/products/add" class="btn rounded-pill px-4" style="background:#4f46e5;color:#fff;"><i class="bi bi-plus-lg me-1"></i>Nhập sản phẩm mới</a>
     </div>
 
-    <div class="bg-dark rounded-4 shadow border border-secondary overflow-hidden">
+    <div class="rounded-4 shadow-sm overflow-hidden" style="background:#fff;border:1px solid #e2e8f0;">
         <div class="table-responsive">
-            <table class="table table-dark table-hover align-middle mb-0">
-                <thead class="table-active text-uppercase small" style="letter-spacing: 1px;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-uppercase small" style="letter-spacing: 1px; background:#f1f5f9; color:#475569;">
                     <tr>
                         <th class="ps-4">Hình ảnh</th>
                         <th>Tên sản phẩm</th>
@@ -31,15 +31,15 @@
                                 </td>
                                 <td class="fw-bold"><%= prod.product_name %></td>
                                 <td><span class="badge bg-secondary"><%= prod.category %></span></td>
-                                <td class="text-success fw-bold"><%= Number(prod.price).toLocaleString('vi-VN') %>đ</td>
+                                <td class="fw-bold" style="color:#0d9488;"><%= Number(prod.price).toLocaleString('vi-VN') %>đ</td>
                                 
                                 <td class="text-center">
                                     <% if (prod.stock_quantity <= 0) { %>
                                         <span class="badge bg-danger fs-6">Hết hàng</span>
                                     <% } else if (prod.stock_quantity < 10) { %>
-                                        <span class="text-warning fw-bold"><%= prod.stock_quantity %> <i class="bi bi-exclamation-triangle-fill"></i></span>
+                                        <span class="fw-bold" style="color:#f59e0b;"><%= prod.stock_quantity %> <i class="bi bi-exclamation-triangle-fill"></i></span>
                                     <% } else { %>
-                                        <span class="text-white"><%= prod.stock_quantity %></span>
+                                        <span style="color:#0f172a;"><%= prod.stock_quantity %></span>
                                     <% } %>
                                 </td>
                                 
@@ -47,17 +47,17 @@
                                     <span class="badge <%= prod.status === 'Active' ? 'bg-success' : 'bg-secondary' %>"><%= prod.status %></span>
                                 </td>
                                 <td class="text-center pe-4">
-                                    <a href="/products/edit/<%= prod.id %>" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil-square"></i></a>
+                                    <a href="/products/edit/<%= prod.id %>" class="btn btn-sm" style="background:#4f46e5;color:#fff;"><i class="bi bi-pencil-square"></i> Sửa</a>
                                     <form action="/products/delete/<%= prod.id %>" method="POST" class="d-inline ms-1"
                                           onsubmit="return confirm('Xóa sản phẩm này khỏi kho?')">
                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash3"></i></button>
                                     </form>
                                 </td>
                             </tr>
                         <% }) %>
                     <% } else { %>
-                        <tr><td colspan="7" class="text-center text-white-50 py-4">Kho hàng đang trống.</td></tr>
+                        <tr><td colspan="7" class="text-center py-4" style="color:#94a3b8;">Kho hàng đang trống.</td></tr>
                     <% } %>
                 </tbody>
             </table>
