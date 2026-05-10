@@ -293,13 +293,30 @@
             border: 1px solid var(--gym-border);
             border-radius: 16px;
             padding: 36px 32px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
         }
+        .bmi-card .form-label,
+        .bmi-card .form-label.text-white-50,
+        .bmi-card label { color: #475569 !important; font-weight: 500; }
+        .bmi-result { color: var(--gym-text); }
+        .bmi-result .text-white-50 { color: #64748b !important; }
+        .bmi-result .bmi-value { color: var(--gym-red); }
+        .bmi-result .bmi-category { color: var(--gym-text); }
         .bmi-input {
-            background: var(--gym-card-2) !important;
+            background: #ffffff !important;
             border: 1px solid var(--gym-border) !important;
             color: var(--gym-text) !important;
             padding: 12px 16px !important;
             border-radius: 8px !important;
+        }
+        .bmi-input::placeholder { color: #94a3b8 !important; }
+        .bmi-input:-webkit-autofill,
+        .bmi-input:-webkit-autofill:hover,
+        .bmi-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--gym-text) !important;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            box-shadow: 0 0 0 1000px #ffffff inset !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
         .bmi-input:focus {
             border-color: var(--gym-red) !important;
