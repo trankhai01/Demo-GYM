@@ -480,7 +480,7 @@
                     <li class="nav-item"><a class="nav-link text-white" href="#contact"><%= t('nav.contact') %></a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <%- include('partials/lang-switch') %>
+                    <%- include('partials/lang-switch', { lsTheme: 'dark' }) %>
                     <% if (user) { %>
                         <span class="text-white-50 me-2 small"><%= t('nav.greeting', { name: user.username }) %></span>
                         <a href="<%= homePath %>" class="btn btn-outline-light btn-sm">

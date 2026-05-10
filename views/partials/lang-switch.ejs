@@ -1,4 +1,4 @@
-<div class="lang-switch d-inline-flex align-items-center">
+<div class="lang-switch d-inline-flex align-items-center<%= typeof lsTheme !== 'undefined' && lsTheme === 'dark' ? ' dark' : '' %>">
     <a href="/lang/vi" class="lang-link <%= lang === 'vi' ? 'active' : '' %>" title="Tiếng Việt">VI</a>
     <span class="lang-sep">/</span>
     <a href="/lang/en" class="lang-link <%= lang === 'en' ? 'active' : '' %>" title="English">EN</a>
@@ -11,22 +11,25 @@
         margin-right: 6px;
     }
     .lang-switch .lang-link {
-        color: rgba(255,255,255,0.6);
+        color: #64748b;
         text-decoration: none;
         padding: 2px 6px;
         transition: color .2s;
+        background: transparent;
     }
     .lang-switch .lang-link.active {
-        color: #fff;
+        color: #4f46e5;
         font-weight: 700;
         border-bottom: 2px solid #4f46e5;
     }
     .lang-switch .lang-link:hover { color: #4f46e5; }
     .lang-switch .lang-sep {
-        color: rgba(255,255,255,0.3);
+        color: #cbd5e1;
         margin: 0 2px;
     }
-    .lang-switch.dark .lang-link {
-        color: rgba(255,255,255,0.5);
-    }
+    /* Dark variant: header navbar trên trang Home */
+    .lang-switch.dark .lang-link { color: rgba(255,255,255,0.7); }
+    .lang-switch.dark .lang-link.active { color: #fff; border-bottom-color: #fde68a; }
+    .lang-switch.dark .lang-link:hover { color: #fde68a; }
+    .lang-switch.dark .lang-sep { color: rgba(255,255,255,0.35); }
 </style>
