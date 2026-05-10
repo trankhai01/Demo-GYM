@@ -65,7 +65,7 @@
 
         /* Hero */
         .hero-section {
-            background: linear-gradient(rgba(79, 70, 229, 0.85), rgba(8, 145, 178, 0.80)),
+            background: linear-gradient(rgba(15, 23, 42, 0.72), rgba(30, 27, 75, 0.78)),
                         url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
             min-height: 100vh;
@@ -75,8 +75,8 @@
             position: relative;
             color: #fff;
         }
-        .hero-section .hero-title { color: #fff; text-shadow: 0 2px 12px rgba(15,23,42,0.35); }
-        .hero-section .lead { color: rgba(255,255,255,0.95); }
+        .hero-section .hero-title { color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.45); }
+        .hero-section .lead { color: rgba(255,255,255,0.92); }
         .hero-title {
             font-size: clamp(2.5rem, 6vw, 5rem);
             font-weight: 700;
@@ -193,6 +193,12 @@
         .usp-desc { color: var(--gym-text-mute); font-size: 0.95rem; }
 
         /* Packages */
+        .packages-bg {
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(79, 70, 229, 0.08), transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.08), transparent 50%),
+                #eef2ff;
+        }
         .pkg-card {
             background: var(--gym-card);
             border: 1px solid var(--gym-border);
@@ -201,9 +207,11 @@
             height: 100%;
             display: flex; flex-direction: column;
             transition: 0.3s;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            border-top: 4px solid var(--gym-accent);
         }
-        .pkg-card:hover { transform: translateY(-6px); border-color: var(--gym-red); }
-        .pkg-card.featured { border: 2px solid var(--gym-red); position: relative; }
+        .pkg-card:hover { transform: translateY(-8px); border-color: var(--gym-red); box-shadow: 0 16px 40px rgba(79, 70, 229, 0.18); border-top-color: var(--gym-red); }
+        .pkg-card.featured { border: 2px solid var(--gym-red); border-top: 4px solid var(--gym-red); position: relative; box-shadow: 0 16px 40px rgba(79, 70, 229, 0.22); }
         .pkg-card.featured::before {
             content: 'PHỔ BIẾN';
             position: absolute; top: 14px; right: -32px;
@@ -231,6 +239,12 @@
         .pkg-feat-list li i { color: #28a745; margin-right: 8px; }
 
         /* Trainers */
+        .trainers-bg {
+            background:
+                radial-gradient(ellipse at 80% 0%, rgba(6, 182, 212, 0.10), transparent 55%),
+                radial-gradient(ellipse at 0% 100%, rgba(79, 70, 229, 0.10), transparent 55%),
+                #f8fafc;
+        }
         .trainer-card {
             background: var(--gym-card);
             border: 1px solid var(--gym-border);
@@ -238,8 +252,9 @@
             overflow: hidden;
             transition: 0.3s;
             height: 100%;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         }
-        .trainer-card:hover { border-color: var(--gym-red); transform: translateY(-6px); }
+        .trainer-card:hover { border-color: var(--gym-red); transform: translateY(-8px); box-shadow: 0 16px 40px rgba(79, 70, 229, 0.18); }
         .trainer-img-wrap {
             height: 280px;
             background: var(--gym-card-2);
@@ -560,7 +575,7 @@
     </section>
 
     <!-- Packages -->
-    <section id="packages" style="background: #f1f5f9;">
+    <section id="packages" class="packages-bg">
         <div class="container">
             <div class="text-center">
                 <h2 class="section-title"><%= t('home.packages.title_1') %> <span><%= t('home.packages.title_2') %></span></h2>
@@ -610,7 +625,7 @@
     </section>
 
     <!-- Trainers -->
-    <section id="trainers">
+    <section id="trainers" class="trainers-bg">
         <div class="container">
             <div class="text-center">
                 <h2 class="section-title"><%= t('home.trainers.title_1') %> <span><%= t('home.trainers.title_2') %></span></h2>
