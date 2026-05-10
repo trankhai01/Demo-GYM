@@ -43,6 +43,24 @@
             text-transform: none;
         }
 
+        /* Scroll reveal animations */
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; will-change: opacity, transform; }
+        .reveal.in-view { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal-left.in-view { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal-right.in-view { opacity: 1; transform: translateX(0); }
+        .reveal-zoom { opacity: 0; transform: scale(0.92); transition: opacity .7s ease, transform .7s ease; }
+        .reveal-zoom.in-view { opacity: 1; transform: scale(1); }
+        .reveal[data-delay="100"] { transition-delay: .10s; }
+        .reveal[data-delay="200"] { transition-delay: .20s; }
+        .reveal[data-delay="300"] { transition-delay: .30s; }
+        .reveal[data-delay="400"] { transition-delay: .40s; }
+        .reveal[data-delay="500"] { transition-delay: .50s; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .reveal-left, .reveal-right, .reveal-zoom { transition: none !important; opacity: 1 !important; transform: none !important; }
+        }
+
         /* Navbar */
         .navbar {
             background-color: rgba(15, 23, 42, 0.78) !important;
@@ -276,13 +294,16 @@
         .pkg-body { padding: 26px 24px; flex-grow: 1; display: flex; flex-direction: column; background: #fff; }
         .pkg-feat-list { list-style: none; padding: 0; margin: 0 0 22px 0; flex-grow: 1; }
         .pkg-feat-list li {
-            padding: 9px 0;
+            padding: 10px 0;
             color: #334155;
-            border-bottom: 1px dashed var(--gym-border);
-            font-size: 0.96rem;
-            display: flex; align-items: flex-start; gap: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+            display: flex; align-items: center; gap: 10px;
+            line-height: 1.4;
         }
-        .pkg-feat-list li i { color: #10b981; flex-shrink:0; margin-top: 3px; }
+        .pkg-feat-list li:last-child { border-bottom: 0; }
+        .pkg-feat-list li i { color: #10b981; flex-shrink:0; font-size: 1.05rem; }
+        .pkg-card.featured .pkg-feat-list li i { color: #4f46e5; }
         .pkg-cta {
             background: linear-gradient(90deg, var(--gym-red), var(--gym-accent));
             color: #fff !important;
@@ -344,7 +365,7 @@
             position: relative;
             border-radius: 18px;
             overflow: hidden;
-            height: 460px;
+            height: 540px;
             background: #1e293b;
             border: 1px solid rgba(255,255,255,0.08);
             box-shadow: 0 16px 40px rgba(0,0,0,0.45);
@@ -382,7 +403,7 @@
         .trainer-body {
             position: absolute;
             left: 0; right: 0; bottom: 0;
-            padding: 24px 22px;
+            padding: 28px 24px 26px;
             color: #fff;
             z-index: 2;
         }
@@ -656,12 +677,12 @@
     <!-- Hero -->
     <section class="hero-section">
         <div class="container">
-            <span class="hero-tag"><%= t('home.hero.tag') %></span>
-            <h1 class="hero-title"><%= t('home.hero.title_1') %><br><span><%= t('home.hero.title_2') %></span></h1>
-            <p class="lead text-light mb-4 fs-5 mx-auto" style="max-width: 720px;">
+            <span class="hero-tag reveal" data-delay="100"><%= t('home.hero.tag') %></span>
+            <h1 class="hero-title reveal" data-delay="200"><%= t('home.hero.title_1') %><br><span><%= t('home.hero.title_2') %></span></h1>
+            <p class="lead text-light mb-4 fs-5 mx-auto reveal" data-delay="300" style="max-width: 720px;">
                 <%= t('home.hero.subtitle') %>
             </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <div class="d-flex justify-content-center gap-3 flex-wrap reveal" data-delay="400">
                 <% if (!user) { %>
                     <a href="/register" class="btn btn-gym rounded-pill shadow-lg">
                         <i class="bi bi-lightning-charge-fill"></i> <%= t('home.hero.cta_register') %>
@@ -686,19 +707,19 @@
     <section id="stats" class="stats-section" style="padding: 50px 0;">
         <div class="container">
             <div class="row text-center g-4">
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 reveal-zoom" data-delay="100">
                     <div class="stat-number"><%= stats.members %>+</div>
                     <div class="stat-label"><%= t('home.stats.members') %></div>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 reveal-zoom" data-delay="200">
                     <div class="stat-number"><%= stats.trainers %></div>
                     <div class="stat-label"><%= t('home.stats.trainers') %></div>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 reveal-zoom" data-delay="300">
                     <div class="stat-number"><%= stats.packages %></div>
                     <div class="stat-label"><%= t('home.stats.packages') %></div>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 reveal-zoom" data-delay="400">
                     <div class="stat-number"><%= stats.checkins %>+</div>
                     <div class="stat-label"><%= t('home.stats.checkins') %></div>
                 </div>
@@ -710,35 +731,35 @@
     <section id="about">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-title"><%= t('home.about.title_1') %> <span><%= t('home.about.title_2') %></span></h2>
+                <h2 class="section-title reveal"><%= t('home.about.title_1') %> <span><%= t('home.about.title_2') %></span></h2>
                 <p class="section-sub">
                     <%= t('home.about.subtitle') %>
                 </p>
             </div>
             <div class="row g-4">
                 <div class="col-md-6 col-lg-3">
-                    <div class="usp-card">
+                    <div class="usp-card reveal" data-delay="100">
                         <div class="usp-icon"><i class="bi bi-lightning-charge-fill"></i></div>
                         <h5 class="usp-title"><%= t('home.about.f1_title') %></h5>
                         <p class="usp-desc"><%= t('home.about.f1_desc') %></p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="usp-card">
+                    <div class="usp-card reveal" data-delay="200">
                         <div class="usp-icon"><i class="bi bi-person-badge-fill"></i></div>
                         <h5 class="usp-title"><%= t('home.about.f2_title') %></h5>
                         <p class="usp-desc"><%= t('home.about.f2_desc') %></p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="usp-card">
+                    <div class="usp-card reveal" data-delay="300">
                         <div class="usp-icon"><i class="bi bi-clock-history"></i></div>
                         <h5 class="usp-title"><%= t('home.about.f3_title') %></h5>
                         <p class="usp-desc"><%= t('home.about.f3_desc') %></p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="usp-card">
+                    <div class="usp-card reveal" data-delay="400">
                         <div class="usp-icon"><i class="bi bi-shield-check"></i></div>
                         <h5 class="usp-title"><%= t('home.about.f4_title') %></h5>
                         <p class="usp-desc"><%= t('home.about.f4_desc') %></p>
@@ -752,13 +773,13 @@
     <section id="packages" class="packages-bg">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-title"><%= t('home.packages.title_1') %> <span><%= t('home.packages.title_2') %></span></h2>
+                <h2 class="section-title reveal"><%= t('home.packages.title_1') %> <span><%= t('home.packages.title_2') %></span></h2>
                 <p class="section-sub"><%= t('home.packages.subtitle') %></p>
             </div>
             <% if (packages && packages.length > 0) { %>
                 <div class="row pkg-row g-4 justify-content-center mt-2">
                     <% packages.forEach((pkg, idx) => { %>
-                        <div class="col-md-6 col-lg-4">
+                        <div class="col-md-6 col-lg-4 reveal" data-delay="<%= idx === 1 ? '200' : (idx === 0 ? '100' : '300') %>">
                             <div class="pkg-card <%= idx === 1 ? 'featured' : '' %>">
                                 <% if (idx === 1) { %><div class="pkg-badge"><%= t('home.packages.popular') %></div><% } %>
                                 <div class="pkg-head">
@@ -773,14 +794,8 @@
                                         <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_unlimited') %></li>
                                         <% if (pkg.pt_sessions > 0) { %>
                                             <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_pt', { n: pkg.pt_sessions }) %></li>
-                                        <% } else { %>
-                                            <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_self') %></li>
                                         <% } %>
-                                        <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_equipment') %></li>
                                         <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_facility') %></li>
-                                        <% if (pkg.description) { %>
-                                            <li class="small fst-italic" style="border:0; color:#64748b;"><%= pkg.description %></li>
-                                        <% } %>
                                     </ul>
                                     <a href="<%= user ? '#contact' : '/register' %>" class="btn pkg-cta w-100 rounded-pill">
                                         <i class="bi bi-lightning-charge-fill me-1"></i>
@@ -804,7 +819,7 @@
     <section id="trainers" class="trainers-bg">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-title"><%= t('home.trainers.title_1') %> <span><%= t('home.trainers.title_2') %></span></h2>
+                <h2 class="section-title reveal"><%= t('home.trainers.title_1') %> <span><%= t('home.trainers.title_2') %></span></h2>
                 <p class="section-sub"><%= t('home.trainers.subtitle') %></p>
             </div>
             <% if (trainers && trainers.length > 0) { %>
@@ -813,8 +828,8 @@
                     <button type="button" class="trainer-nav-btn" id="trainerNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
                 </div>
                 <div class="trainer-slider" id="trainerSlider">
-                    <% trainers.forEach(tr => { %>
-                        <div class="trainer-slide">
+                    <% trainers.forEach((tr, ti) => { %>
+                        <div class="trainer-slide reveal-zoom" data-delay="<%= Math.min(ti, 4) * 100 + 100 %>">
                             <div class="trainer-card">
                                 <div class="trainer-img-wrap">
                                     <% if (tr.image_url) { %>
@@ -855,12 +870,12 @@
     <section class="bmi-section" id="bmi">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title"><%= t('home.bmi.title_1') %> <span><%= t('home.bmi.title_2') %></span></h2>
+                <h2 class="section-title reveal"><%= t('home.bmi.title_1') %> <span><%= t('home.bmi.title_2') %></span></h2>
                 <p class="section-sub"><%= t('home.bmi.subtitle') %></p>
             </div>
             <div class="row g-4 align-items-stretch justify-content-center">
                 <div class="col-lg-6">
-                    <div class="bmi-card h-100">
+                    <div class="bmi-card h-100 reveal-left">
                         <form id="bmiForm" onsubmit="return false;">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -896,7 +911,7 @@
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="bmi-result" id="bmiResult">
+                    <div class="bmi-result reveal-right" id="bmiResult">
                         <div class="text-white-50 small"><%= t('home.bmi.your_bmi') %></div>
                         <div class="bmi-value" id="bmiValue">--</div>
                         <div class="bmi-category" id="bmiCategory"><%= t('home.bmi.waiting') %></div>
@@ -928,13 +943,13 @@
     <section class="contact-section" id="contact">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title text-white"><%= t('home.contact.title_1') %> <span><%= t('home.contact.title_2') %></span></h2>
+                <h2 class="section-title text-white reveal"><%= t('home.contact.title_1') %> <span><%= t('home.contact.title_2') %></span></h2>
                 <p class="section-sub"><%= t('home.contact.subtitle') %></p>
             </div>
 
             <div class="row g-4">
                 <!-- Form -->
-                <div class="col-lg-7">
+                <div class="col-lg-7 reveal-left">
                     <div class="contact-card">
                         <h4 class="text-white mb-4"><i class="bi bi-pencil-square text-danger me-2"></i> <%= t('home.contact.form_title') %></h4>
                         <form method="POST" action="/contact" autocomplete="off">
@@ -976,7 +991,7 @@
                 </div>
 
                 <!-- Info + map -->
-                <div class="col-lg-5">
+                <div class="col-lg-5 reveal-right">
                     <div class="contact-card mb-4">
                         <h4 class="text-white mb-3"><i class="bi bi-info-circle text-danger me-2"></i> <%= t('home.contact.info_title') %></h4>
                         <div class="contact-info-item">
@@ -1146,6 +1161,23 @@
             };
             prev.addEventListener('click', () => slider.scrollBy({ left: -step(), behavior: 'smooth' }));
             next.addEventListener('click', () => slider.scrollBy({ left:  step(), behavior: 'smooth' }));
+        })();
+
+        // Scroll reveal: thêm class .in-view khi element vào viewport
+        (function() {
+            if (!('IntersectionObserver' in window)) {
+                document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-zoom').forEach(el => el.classList.add('in-view'));
+                return;
+            }
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('in-view');
+                        io.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+            document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-zoom').forEach(el => io.observe(el));
         })();
     </script>
 
