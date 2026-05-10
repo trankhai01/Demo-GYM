@@ -8,11 +8,11 @@
     margin-bottom: 50px;
   }
   .stat-card {
-    background: linear-gradient(135deg, #1e1e1e 0%, #111 100%);
-    border: 1px solid #333;
+    background: linear-gradient(135deg, #ffffff 0%, #111 100%);
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
     position: relative;
     overflow: hidden;
   }
@@ -32,7 +32,7 @@
     pointer-events: none;
   }
   .stat-title {
-    color: #888;
+    color: #64748b;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -47,9 +47,9 @@
     margin-bottom: 0;
   }
   .chart-container {
-    background: rgba(30, 30, 30, 0.6);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(15, 23, 42, 0.06);
     border-radius: 20px;
     padding: 25px;
     margin-top: 30px;
@@ -141,11 +141,11 @@
             datasets: [{
                 label: 'Doanh thu (VNĐ)',
                 data: chartDataPoints, 
-                borderColor: '#e50914',
+                borderColor: '#4f46e5',
                 backgroundColor: gradient,
                 borderWidth: 3,
                 pointBackgroundColor: '#fff',
-                pointBorderColor: '#e50914',
+                pointBorderColor: '#4f46e5',
                 pointBorderWidth: 2,
                 pointRadius: 5,
                 fill: true,
@@ -168,7 +168,7 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    grid: { color: 'rgba(15, 23, 42, 0.06)' },
                     ticks: { color: '#888' }
                 },
                 x: {

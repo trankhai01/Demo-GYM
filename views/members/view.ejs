@@ -1,24 +1,24 @@
 <%- include('../partials/header') %>
 
 <style>
-    .schedule-selector th { color: #888; font-size: 0.8rem; font-weight: normal; }
-    .schedule-cell { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
-    .schedule-cell:hover { border-color: #e50914; }
-    .schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
-    .view-wrapper { padding: 20px 0 50px 0; color: #e0e0e0; }
-    .hero-header { background: linear-gradient(135deg, #1e1e1e 0%, #0a0a0a 100%); border: 1px solid #333; border-radius: 20px; padding: 35px 30px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+    .schedule-selector th { color: #64748b; font-size: 0.8rem; font-weight: normal; }
+    .schedule-cell { background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
+    .schedule-cell:hover { border-color: #4f46e5; }
+    .schedule-cell.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+    .view-wrapper { padding: 20px 0 50px 0; color: #0f172a; }
+    .hero-header { background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 20px; padding: 35px 30px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08); }
     .hero-header::after { content: 'MEMBER'; position: absolute; top: -10px; right: -10px; font-family: 'Oswald', sans-serif; font-size: 7rem; font-weight: 900; color: rgba(229, 9, 20, 0.03); transform: rotate(-5deg); pointer-events: none; }
-    .glass-card { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .section-title { color: #e50914; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-size: 1.1rem; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 25px; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 20px; padding: 30px; height: 100%; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); }
+    .section-title { color: #4f46e5; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 25px; }
     .info-group { margin-bottom: 20px; }
-    .info-label { color: #888; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+    .info-label { color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
     .info-value { color: #fff; font-size: 1.1rem; font-weight: 600; padding-left: 24px; }
-    .avatar-circle { width: 110px; height: 110px; background: #2a2a2a; border: 3px solid #e50914; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(229, 9, 20, 0.2); }
-    .stat-box { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 15px; padding: 20px 10px; text-align: center; }
-    .bmi-display { background: #111; border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #333; }
+    .avatar-circle { width: 110px; height: 110px; background: #e2e8f0; border: 3px solid #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(229, 9, 20, 0.2); }
+    .stat-box { background: rgba(15, 23, 42, 0.04); border: 1px solid #e2e8f0; border-radius: 15px; padding: 20px 10px; text-align: center; }
+    .bmi-display { background: #111; border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #e2e8f0; }
     .table-dark-gym { background-color: transparent; color: white; }
-    .table-dark-gym th { background-color: #1a1a1a; color: #888; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #333; padding: 15px; }
-    .table-dark-gym td { background-color: transparent; border-bottom: 1px solid #333; padding: 15px; vertical-align: middle; color: #e0e0e0 !important; }
+    .table-dark-gym th { background-color: #ffffff; color: #64748b; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; padding: 15px; }
+    .table-dark-gym td { background-color: transparent; border-bottom: 1px solid #e2e8f0; padding: 15px; vertical-align: middle; color: #0f172a !important; }
 </style>
 
 <div class="container view-wrapper">
@@ -57,6 +57,10 @@
                     <div class="col-md-6 info-group">
                         <div class="info-label"><i class="bi bi-telephone text-danger"></i> Số điện thoại</div>
                         <div class="info-value"><%= member.phone %></div>
+                    </div>
+                    <div class="col-md-6 info-group">
+                        <div class="info-label"><i class="bi bi-envelope text-danger"></i> Email</div>
+                        <div class="info-value"><%= member.email || '---' %></div>
                     </div>
                     <div class="col-md-6 info-group">
                         <div class="info-label"><i class="bi bi-credit-card text-danger"></i> CCCD</div>
@@ -105,7 +109,7 @@
                     </div>
                 </div>
 
-                <div class="bmi-display flex-grow-1 d-flex flex-column justify-content-center mt-2 p-4 rounded" style="background: rgba(0,0,0,0.3); border: 1px solid #333; transition: 0.3s;">
+                <div class="bmi-display flex-grow-1 d-flex flex-column justify-content-center mt-2 p-4 rounded" style="background: rgba(15, 23, 42, 0.04); border: 1px solid #e2e8f0; transition: 0.3s;">
                     <% 
                         let bmi = 0;
                         let bmiText = "Chưa có dữ liệu";
@@ -142,7 +146,7 @@
                     let percent = Math.round((used / total) * 100);
                     let isCompleted = used >= total;
     %>
-    <div class="glass-card mb-4" style="border-left: 4px solid #e50914;">
+    <div class="glass-card mb-4" style="border-left: 4px solid #4f46e5;">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="section-title border-0 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Tiến độ khóa học PT: <%= pkg.package_name %></h5>
             <span class="badge bg-danger fs-6"><%= total %> Buổi</span>
@@ -153,7 +157,7 @@
             <span>Còn lại: <strong class="text-white"><%= total - used %> buổi</strong></span>
         </div>
         
-        <div class="progress mb-4 bg-black" style="height: 20px; border: 1px solid #333;">
+        <div class="progress mb-4 bg-black" style="height: 20px; border: 1px solid #e2e8f0;">
             <div class="progress-bar <%= isCompleted ? 'bg-success' : 'bg-danger progress-bar-striped progress-bar-animated' %>" 
                 role="progressbar" 
                 style="width: <%= percent + '%' %>;" 

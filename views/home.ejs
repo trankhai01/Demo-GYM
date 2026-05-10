@@ -10,17 +10,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gym-red: #e50914;
-            --gym-red-dark: #b20710;
-            --gym-bg: #0a0a0a;
-            --gym-card: #1a1a1a;
-            --gym-card-2: #222;
-            --gym-text-mute: #b0b0b0;
+            --gym-red: #4f46e5;
+            --gym-red-dark: #4338ca;
+            --gym-accent: #06b6d4;
+            --gym-bg: #f8fafc;
+            --gym-card: #ffffff;
+            --gym-card-2: #f1f5f9;
+            --gym-text-mute: #64748b;
+            --gym-border: #e2e8f0;
+            --gym-text: #0f172a;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
             background-color: var(--gym-bg);
-            color: #fff;
+            color: var(--gym-text);
             scroll-behavior: smooth;
         }
         h1, h2, h3, .nav-link, .btn, .section-title {
@@ -42,7 +45,7 @@
 
         /* Navbar */
         .navbar {
-            background-color: rgba(0, 0, 0, 0.85) !important;
+            background-color: rgba(15, 23, 42, 0.78) !important;
             backdrop-filter: blur(10px);
             transition: background-color .3s;
         }
@@ -62,7 +65,7 @@
 
         /* Hero */
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
+            background: linear-gradient(rgba(0,0,0,0.55), rgba(15, 23, 42, 0.78)),
                         url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
             min-height: 100vh;
@@ -103,7 +106,7 @@
             background-color: var(--gym-red-dark);
             color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.30);
         }
         .btn-ghost {
             background: transparent;
@@ -153,7 +156,7 @@
         /* USP */
         .usp-card {
             background: var(--gym-card);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 12px;
             padding: 32px 24px;
             text-align: center;
@@ -163,12 +166,12 @@
         .usp-card:hover {
             border-color: var(--gym-red);
             transform: translateY(-6px);
-            box-shadow: 0 15px 35px rgba(229, 9, 20, 0.15);
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.15);
         }
         .usp-icon {
             width: 70px; height: 70px;
             margin: 0 auto 18px;
-            background: rgba(229, 9, 20, 0.12);
+            background: rgba(79, 70, 229, 0.12);
             color: var(--gym-red);
             border-radius: 50%;
             display: flex;
@@ -188,7 +191,7 @@
         /* Packages */
         .pkg-card {
             background: var(--gym-card);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 14px;
             overflow: hidden;
             height: 100%;
@@ -205,7 +208,7 @@
             transform: rotate(45deg);
             font-family: 'Oswald', sans-serif;
         }
-        .pkg-head { background: #111; padding: 30px 24px; text-align: center; border-bottom: 1px solid #2a2a2a; }
+        .pkg-head { background: var(--gym-card-2); padding: 30px 24px; text-align: center; border-bottom: 1px solid var(--gym-border); }
         .pkg-name { font-family: 'Oswald', sans-serif; font-size: 1.3rem; letter-spacing: 1.5px; margin-bottom: 12px; }
         .pkg-price {
             font-family: 'Oswald', sans-serif;
@@ -218,7 +221,7 @@
         .pkg-feat-list li {
             padding: 8px 0;
             color: #d0d0d0;
-            border-bottom: 1px dashed #2a2a2a;
+            border-bottom: 1px dashed var(--gym-border);
             font-size: 0.95rem;
         }
         .pkg-feat-list li i { color: #28a745; margin-right: 8px; }
@@ -226,7 +229,7 @@
         /* Trainers */
         .trainer-card {
             background: var(--gym-card);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 14px;
             overflow: hidden;
             transition: 0.3s;
@@ -235,7 +238,7 @@
         .trainer-card:hover { border-color: var(--gym-red); transform: translateY(-6px); }
         .trainer-img-wrap {
             height: 280px;
-            background: #111;
+            background: var(--gym-card-2);
             display: flex; align-items: center; justify-content: center;
             position: relative;
             overflow: hidden;
@@ -244,7 +247,7 @@
             width: 100%; height: 100%; object-fit: cover;
         }
         .trainer-img-wrap .ph-icon {
-            font-size: 5rem; color: #333;
+            font-size: 5rem; color: var(--gym-text-mute);
         }
         .trainer-body { padding: 22px; }
         .trainer-name {
@@ -258,30 +261,30 @@
         /* BMI */
         .bmi-section {
             background:
-                linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+                linear-gradient(rgba(79, 70, 229, 0.85), rgba(8, 145, 178, 0.85)),
                 url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
         }
         .bmi-card {
             background: var(--gym-card);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 16px;
             padding: 36px 32px;
         }
         .bmi-input {
-            background: #0f0f0f !important;
-            border: 1px solid #333 !important;
-            color: #fff !important;
+            background: var(--gym-card-2) !important;
+            border: 1px solid var(--gym-border) !important;
+            color: var(--gym-text) !important;
             padding: 12px 16px !important;
             border-radius: 8px !important;
         }
         .bmi-input:focus {
             border-color: var(--gym-red) !important;
-            box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.2) !important;
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.2) !important;
         }
         .bmi-result {
-            background: #0a0a0a;
-            border: 2px solid #2a2a2a;
+            background: var(--gym-card);
+            border: 2px solid var(--gym-border);
             border-radius: 12px;
             padding: 24px;
             text-align: center;
@@ -329,20 +332,20 @@
         /* Contact section */
         .contact-section {
             background:
-                linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+                linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)),
                 url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
         }
         .contact-card {
             background: var(--gym-card);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 16px;
             padding: 36px 32px;
         }
         .contact-info-item {
             display: flex; align-items: flex-start; gap: 14px;
             padding: 16px 0;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid var(--gym-border);
         }
         .contact-info-item:last-child { border-bottom: none; }
         .contact-info-item i {
@@ -354,21 +357,22 @@
         .contact-info-item .title {
             color: #fff; font-weight: 600; margin-bottom: 4px;
         }
+        .contact-card .contact-info-item .title { color: var(--gym-text); }
         .contact-info-item .desc {
             color: var(--gym-text-mute); font-size: 0.92rem; margin: 0;
         }
         .map-wrap {
             border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             line-height: 0;
         }
-        .map-wrap iframe { width: 100%; height: 320px; border: 0; filter: grayscale(40%) invert(0.92) hue-rotate(180deg); }
+        .map-wrap iframe { width: 100%; height: 320px; border: 0; }
 
         /* Footer */
         footer {
-            background: #050505;
-            border-top: 1px solid #1a1a1a;
+            background: #1e293b;
+            border-top: 1px solid var(--gym-border);
             padding: 50px 0 20px;
         }
         footer h5 {
@@ -384,14 +388,14 @@
             display: inline-flex;
             align-items: center; justify-content: center;
             width: 38px; height: 38px;
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--gym-border);
             border-radius: 50%;
             margin-right: 8px;
             color: #fff;
         }
         footer .social a:hover { background: var(--gym-red); border-color: var(--gym-red); }
         .copyright {
-            border-top: 1px solid #1a1a1a;
+            border-top: 1px solid var(--gym-border);
             padding-top: 18px;
             margin-top: 40px;
             color: #555;
@@ -908,8 +912,8 @@
         // Navbar đổi nền khi cuộn xuống.
         const nav = document.querySelector('.navbar');
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) nav.style.backgroundColor = 'rgba(0,0,0,0.95)';
-            else nav.style.backgroundColor = 'rgba(0,0,0,0.85)';
+            if (window.scrollY > 50) nav.style.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+            else nav.style.backgroundColor = 'rgba(15, 23, 42, 0.78)';
         });
     </script>
 

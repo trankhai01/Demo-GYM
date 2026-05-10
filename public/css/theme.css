@@ -167,3 +167,185 @@ a:hover { color: var(--gb-primary-600); }
 ::-webkit-scrollbar-track { background: var(--gb-surface-2); }
 ::-webkit-scrollbar-thumb { background: var(--gb-border); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gb-primary); }
+
+/* High-specificity overrides for legacy dark inline styles in views.
+   Use `body .class` to beat view-level inline <style> with same specificity. */
+
+/* members/index.ejs — table-custom-dark */
+body .table-custom-dark { background: var(--gb-surface) !important; border-radius: 12px; overflow: hidden; }
+body .table-custom-dark thead th {
+    background-color: var(--gb-surface-2) !important;
+    color: var(--gb-primary) !important;
+    border-bottom: 2px solid var(--gb-primary) !important;
+}
+body .table-custom-dark td {
+    border-color: var(--gb-border) !important;
+    color: var(--gb-text) !important;
+    background-color: var(--gb-surface) !important;
+}
+
+/* members/view.ejs — hero-header, glass-card, info-*, table-dark-gym */
+body .view-wrapper { color: var(--gb-text) !important; }
+body .hero-header {
+    background: linear-gradient(135deg, var(--gb-primary-100) 0%, var(--gb-accent-100) 100%) !important;
+    border: 1px solid var(--gb-border) !important;
+    box-shadow: var(--gb-shadow) !important;
+    color: var(--gb-text) !important;
+}
+body .hero-header::after { color: rgba(79, 70, 229, 0.06) !important; }
+body .glass-card {
+    background: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--gb-shadow) !important;
+    color: var(--gb-text) !important;
+}
+body .section-title {
+    color: var(--gb-primary) !important;
+    border-bottom-color: var(--gb-border) !important;
+}
+body .info-label { color: var(--gb-text-muted) !important; }
+body .info-value { color: var(--gb-text) !important; }
+body .avatar-circle {
+    background: var(--gb-surface-2) !important;
+    border-color: var(--gb-primary) !important;
+    box-shadow: 0 0 16px rgba(79, 70, 229, 0.18) !important;
+}
+body .stat-box {
+    background: var(--gb-primary-100) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+body .bmi-display {
+    background: var(--gb-surface-2) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+body .table-dark-gym { background-color: transparent !important; color: var(--gb-text) !important; }
+body .table-dark-gym th {
+    background-color: var(--gb-surface-2) !important;
+    color: var(--gb-primary) !important;
+    border-bottom: 2px solid var(--gb-border) !important;
+}
+body .table-dark-gym td {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+body .schedule-cell {
+    background: var(--gb-surface-2) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+body .schedule-cell:hover { border-color: var(--gb-primary) !important; }
+body .schedule-cell.active {
+    background: var(--gb-primary) !important;
+    border-color: var(--gb-primary) !important;
+    color: #fff !important;
+}
+
+/* packages/index.ejs — pricing-card, duration-badge, price-amount, feature-list, action-box */
+body .pricing-card {
+    background: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+    box-shadow: var(--gb-shadow) !important;
+}
+body .pricing-card:hover {
+    border-color: var(--gb-primary) !important;
+    box-shadow: var(--gb-shadow-lg) !important;
+}
+body .duration-badge {
+    background: var(--gb-primary-100) !important;
+    color: var(--gb-primary) !important;
+}
+body .price-amount { color: var(--gb-primary) !important; }
+body .feature-list { color: var(--gb-text-muted) !important; }
+body .feature-list i { color: var(--gb-success) !important; }
+body .action-box {
+    background: var(--gb-surface-2) !important;
+    border-top: 1px solid var(--gb-border) !important;
+}
+
+/* registrations/index.ejs — Select2 + form */
+body .select2-container--default .select2-selection--single {
+    background-color: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+}
+body .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--gb-text) !important;
+}
+body .select2-dropdown {
+    background-color: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+}
+body .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--gb-primary) !important;
+    color: #fff !important;
+}
+body .select2-container--default .select2-results__option {
+    color: var(--gb-text) !important;
+}
+body .select2-search__field {
+    background-color: var(--gb-surface) !important;
+    color: var(--gb-text) !important;
+    border: 1px solid var(--gb-border) !important;
+}
+
+/* schedule (FullCalendar) */
+body .fc { color: var(--gb-text); }
+body .fc-toolbar-title { color: var(--gb-text) !important; }
+body .fc .fc-button-primary {
+    background: var(--gb-primary) !important;
+    border-color: var(--gb-primary) !important;
+}
+body .fc .fc-button-primary:hover, body .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: var(--gb-primary-600) !important;
+    border-color: var(--gb-primary-600) !important;
+}
+body .fc-theme-standard td, body .fc-theme-standard th, body .fc-theme-standard .fc-scrollgrid {
+    border-color: var(--gb-border) !important;
+}
+body .fc-col-header-cell-cushion, body .fc-daygrid-day-number, body .fc-timegrid-slot-label {
+    color: var(--gb-text) !important;
+}
+
+/* admin/messages.ejs + reports — flip dark cards/tables already covered by .card / .table rules */
+body .stats-card, body .revenue-card {
+    background: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+    box-shadow: var(--gb-shadow) !important;
+}
+
+/* checkin/index.ejs — keep panel light */
+body .checkin-panel, body .gym-panel, body .room-panel {
+    background: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+
+/* trainers/index.ejs — trainer cards */
+body .trainer-card {
+    background: var(--gb-surface) !important;
+    border: 1px solid var(--gb-border) !important;
+    color: var(--gb-text) !important;
+}
+
+/* home.ejs hero — keep dramatic but use indigo gradient instead of red */
+body .hero-section {
+    background: linear-gradient(135deg, #312e81 0%, #0e7490 100%) !important;
+    color: #fff !important;
+}
+body .hero-section .lead { color: #e0e7ff !important; text-shadow: none !important; }
+
+/* Generic legacy dark surfaces — anything still using the old palette. */
+body [style*="background:#1e1e1e"],
+body [style*="background-color:#1e1e1e"],
+body [style*="background:#1a1a1a"],
+body [style*="background-color:#1a1a1a"],
+body [style*="background:#121212"],
+body [style*="background-color:#121212"] {
+    background: var(--gb-surface) !important;
+    color: var(--gb-text) !important;
+}

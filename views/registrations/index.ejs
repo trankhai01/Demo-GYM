@@ -3,43 +3,43 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <style>
-    .select2-container--default .select2-selection--single { background-color: #212529; border: 1px solid #6c757d; height: 45px; border-radius: 5px; }
+    .select2-container--default .select2-selection--single { background-color: #ffffff; border: 1px solid #6c757d; height: 45px; border-radius: 5px; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { color: #fff; line-height: 45px; }
     .select2-container--default .select2-selection--single .select2-selection__arrow { height: 45px; }
-    .select2-dropdown { background-color: #212529; border: 1px solid #6c757d; }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #e50914; color: white; }
+    .select2-dropdown { background-color: #ffffff; border: 1px solid #6c757d; }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #4f46e5; color: white; }
     .select2-results__option { color: #fff; }
     .pos-container { margin-top: 20px; margin-bottom: 50px; }
-    .glass-panel { background: rgba(30, 30, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); height: 100%; }
+    .glass-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); height: 100%; }
     
     /* Invoice Styles */
-    .invoice-preview { background: #0a0a0a; border: 1px dashed #444; border-radius: 15px; padding: 30px; position: relative; height: 100%; display: flex; flex-direction: column; }
-    .invoice-preview::before, .invoice-preview::after { content: ''; position: absolute; width: 30px; height: 30px; background: #121212; border-radius: 50%; top: -15px; }
-    .invoice-preview::before { left: -15px; border-right: 1px dashed #444; }
-    .invoice-preview::after { right: -15px; border-left: 1px dashed #444; }
+    .invoice-preview { background: #f1f5f9; border: 1px dashed #e2e8f0; border-radius: 15px; padding: 30px; position: relative; height: 100%; display: flex; flex-direction: column; }
+    .invoice-preview::before, .invoice-preview::after { content: ''; position: absolute; width: 30px; height: 30px; background: #f8fafc; border-radius: 50%; top: -15px; }
+    .invoice-preview::before { left: -15px; border-right: 1px dashed #e2e8f0; }
+    .invoice-preview::after { right: -15px; border-left: 1px dashed #e2e8f0; }
     .invoice-row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px; }
-    .invoice-label { color: #888; font-size: 0.85rem; text-transform: uppercase; }
+    .invoice-label { color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
     .invoice-value { color: #fff; font-weight: bold; text-align: right; }
-    .total-price { color: #e50914; font-size: 2.5rem; font-family: 'Oswald', sans-serif; font-weight: bold; line-height: 1; }
+    .total-price { color: #4f46e5; font-size: 2.5rem; font-family: 'Oswald', sans-serif; font-weight: bold; line-height: 1; }
     
     /* Product Grid Styles */
-    .product-card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
-    .product-card:hover { border-color: #e50914; transform: translateY(-5px); }
+    .product-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+    .product-card:hover { border-color: #4f46e5; transform: translateY(-5px); }
     .product-img { width: 100%; height: 120px; object-fit: contain; margin-bottom: 15px; border-radius: 5px; background: #222; }
     .product-title { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .product-price { color: #47cf73; font-weight: bold; }
-    .stock-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; color: #fff; }
+    .stock-badge { position: absolute; top: 10px; right: 10px; background: rgba(79, 70, 229, 0.85); font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; color: #fff; }
     .Inactive { opacity: 0.5; pointer-events: none; }
     
     /* Tab Styles */
-    .nav-tabs .nav-link { color: #888; border: none; border-bottom: 3px solid transparent; font-weight: bold; padding: 10px 20px; font-size: 1.1rem; }
-    .nav-tabs .nav-link.active { background: transparent; color: #e50914; border-bottom: 3px solid #e50914; }
+    .nav-tabs .nav-link { color: #64748b; border: none; border-bottom: 3px solid transparent; font-weight: bold; padding: 10px 20px; font-size: 1.1rem; }
+    .nav-tabs .nav-link.active { background: transparent; color: #4f46e5; border-bottom: 3px solid #4f46e5; }
     
     /* Schedule Grid */
-    .schedule-selector th { color: #888; font-size: 0.8rem; font-weight: normal; }
-    .schedule-cell { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
-    .schedule-cell:hover { border-color: #e50914; }
-    .schedule-cell.active { background: #d9534f; border-color: #d9534f; color: white; }
+    .schedule-selector th { color: #64748b; font-size: 0.8rem; font-weight: normal; }
+    .schedule-cell { background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 6px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: transparent; }
+    .schedule-cell:hover { border-color: #4f46e5; }
+    .schedule-cell.active { background: #4f46e5; border-color: #4f46e5; color: white; }
 </style>
 
 <div class="container pos-container">

@@ -6,16 +6,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #121212;
+        background-color: #f8fafc;
         padding: 20px;
     }
     .gym-card {
-        background: linear-gradient(135deg, #1e1e1e 0%, #111 100%);
-        border: 1px solid #333;
+        background: linear-gradient(135deg, #ffffff 0%, #111 100%);
+        border: 1px solid #e2e8f0;
         border-radius: 20px;
         width: 100%;
         max-width: 500px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.10);
         position: relative;
         overflow: hidden;
     }
@@ -26,7 +26,7 @@
         right: -50px;
         width: 150px;
         height: 150px;
-        background-color: #e50914;
+        background-color: #4f46e5;
         transform: rotate(45deg);
         z-index: 0;
         opacity: 0.8;
@@ -63,7 +63,7 @@
     .stat-value {
         font-size: 1.4rem;
         font-weight: bold;
-        color: #e50914;
+        color: #4f46e5;
     }
 </style>
 
@@ -71,7 +71,7 @@
     <div class="gym-card">
         <div class="card-content text-center">
             
-            <h2 class="fw-bold mb-4" style="color: #e50914; font-family: 'Oswald', sans-serif; letter-spacing: 2px;">GYM BRO</h2>
+            <h2 class="fw-bold mb-4" style="color: #4f46e5; font-family: 'Oswald', sans-serif; letter-spacing: 2px;">GYM BRO</h2>
 
             <% if (locals.success) { %>
                 <div class="alert alert-success py-2 text-center border-0" style="font-size: 0.9rem; background-color: rgba(25, 135, 84, 0.2); color: #47cf73;">
@@ -99,7 +99,7 @@
                     </div>
                     <div class="col-5 text-end">
                         <div class="info-label">Mã thẻ</div>
-                        <div class="info-value" style="color: #e50914;">#<%= member.id %></div>
+                        <div class="info-value" style="color: #4f46e5;">#<%= member.id %></div>
                     </div>
                 </div>
 
@@ -152,7 +152,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold text-uppercase" style="color: #e50914; letter-spacing: 1px;">
+                <h5 class="modal-title fw-bold text-uppercase" style="color: #4f46e5; letter-spacing: 1px;">
                     Cập nhật hồ sơ hội viên
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -169,7 +169,7 @@
                                      class="rounded-circle" style="width:64px; height:64px; object-fit:cover; background:#222;">
                             <% } else { %>
                                 <div class="rounded-circle d-flex align-items-center justify-content-center"
-                                     style="width:64px; height:64px; background:#2a2a2a; color:#999;">
+                                     style="width:64px; height:64px; background:#e2e8f0; color:#999;">
                                     <i class="bi bi-person fs-3"></i>
                                 </div>
                             <% } %>

@@ -2,15 +2,15 @@
 
 <style>
     .table-custom-dark { border-radius: 12px; overflow: hidden; }
-    .table-custom-dark thead th { background-color: #2a2a2a; color: #e50914; border-bottom: 2px solid #e50914; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
-    .table-custom-dark td { border-color: #333 !important; color: #e0e0e0; }
+    .table-custom-dark thead th { background-color: #e2e8f0; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
+    .table-custom-dark td { border-color: #e2e8f0 !important; color: #0f172a; }
     .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
     .btn-outline-warning:hover { color: #000; background-color: #ffc107; }
     .pagination .page-link:focus { box-shadow: none; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-white text-uppercase" style="letter-spacing: 1px;">QUẢN LÝ <span style="color: #e50914;">HỘI VIÊN</span></h3>
+    <h3 class="fw-bold text-white text-uppercase" style="letter-spacing: 1px;">QUẢN LÝ <span style="color: #4f46e5;">HỘI VIÊN</span></h3>
     
     <form action="/members" method="GET" class="d-flex w-50 mx-3">
         <input type="text" name="q" class="form-control bg-dark text-white border-secondary me-2" 
@@ -48,7 +48,7 @@
                                          class="rounded-circle" style="width:36px; height:36px; object-fit:cover; background:#222;">
                                 <% } else { %>
                                     <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
-                                          style="width:36px; height:36px; background:#2a2a2a; color:#888;">
+                                          style="width:36px; height:36px; background:#e2e8f0; color:#888;">
                                         <i class="bi bi-person"></i>
                                     </span>
                                 <% } %>
@@ -122,7 +122,7 @@
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
             
             <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold text-uppercase" id="addMemberModalLabel" style="color: #e50914; letter-spacing: 1px;">
+                <h5 class="modal-title fw-bold text-uppercase" id="addMemberModalLabel" style="color: #4f46e5; letter-spacing: 1px;">
                     <i class="bi bi-person-plus-fill me-2"></i>Thêm Hội Viên Mới
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
