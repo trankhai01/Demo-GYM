@@ -62,28 +62,14 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.csrfToken = generateToken(req);
-  res.locals.pendingResetCount = 0;
   res.locals.unreadContactCount = 0;
 
   const u = req.session.user;
-  const isAdminGet = u && u.role === 'admin' && req.method === 'GET' && req.accepts('html');
   const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');
 
   if (!isStaffGet) return next();
 
   const tasks = [];
-  if (isAdminGet) {
-    tasks.push((cb) => {
-      db.query(
-        "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status = 'pending'",
-        (err, rows) => {
-          if (err) console.error('[middleware] pendingResetCount:', err.message);
-          else if (rows && rows[0]) res.locals.pendingResetCount = rows[0].c;
-          cb();
-        }
-      );
-    });
-  }
   tasks.push((cb) => {
     db.query(
       "SELECT COUNT(*) AS c FROM contact_messages WHERE is_read = 0",
@@ -115,7 +101,6 @@ app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
 app.use('/schedule', require('./routes/schedule'));
 app.use('/dashboard', require('./routes/dashboard'));
-app.use('/admin/password-resets', require('./routes/passwordReset'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
 app.use('/trainers', require('./routes/trainer'));

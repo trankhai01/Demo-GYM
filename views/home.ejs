@@ -65,7 +65,7 @@
 
         /* Hero */
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.55), rgba(15, 23, 42, 0.78)),
+            background: linear-gradient(rgba(79, 70, 229, 0.85), rgba(8, 145, 178, 0.80)),
                         url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
             min-height: 100vh;
@@ -73,18 +73,22 @@
             align-items: center;
             text-align: center;
             position: relative;
+            color: #fff;
         }
+        .hero-section .hero-title { color: #fff; text-shadow: 0 2px 12px rgba(15,23,42,0.35); }
+        .hero-section .lead { color: rgba(255,255,255,0.95); }
         .hero-title {
             font-size: clamp(2.5rem, 6vw, 5rem);
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 20px;
         }
-        .hero-title span { color: var(--gym-red); }
+        .hero-title span { color: #fde68a; text-shadow: 0 2px 12px rgba(15,23,42,0.4); }
         .hero-tag {
             display: inline-block;
-            border: 1px solid var(--gym-red);
-            color: var(--gym-red);
+            border: 1px solid rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.12);
+            color: #fff;
             padding: 6px 18px;
             border-radius: 30px;
             letter-spacing: 3px;
@@ -220,7 +224,7 @@
         .pkg-feat-list { list-style: none; padding: 0; margin: 0 0 20px 0; flex-grow: 1; }
         .pkg-feat-list li {
             padding: 8px 0;
-            color: #d0d0d0;
+            color: #475569;
             border-bottom: 1px dashed var(--gym-border);
             font-size: 0.95rem;
         }
@@ -265,6 +269,10 @@
                 url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
             background-size: cover;
         }
+        .bmi-section .section-title, .bmi-section .section-sub { color: #fff; }
+        .bmi-section .section-title span { color: #fde68a; }
+        .contact-section .section-title, .contact-section .section-sub { color: #fff; }
+        .contact-section .section-title span { color: #fde68a; }
         .bmi-card {
             background: var(--gym-card);
             border: 1px solid var(--gym-border);
@@ -538,7 +546,7 @@
     </section>
 
     <!-- Packages -->
-    <section id="packages" style="background: #0d0d0d;">
+    <section id="packages" style="background: #f1f5f9;">
         <div class="container">
             <div class="text-center">
                 <h2 class="section-title"><%= t('home.packages.title_1') %> <span><%= t('home.packages.title_2') %></span></h2>

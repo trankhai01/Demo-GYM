@@ -1,31 +1,31 @@
 <%- include('../partials/header') %>
 
 <style>
-    .table-custom-dark { border-radius: 12px; overflow: hidden; }
-    .table-custom-dark thead th { background-color: #e2e8f0; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
-    .table-custom-dark td { border-color: #e2e8f0 !important; color: #0f172a; }
-    .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
-    .btn-outline-warning:hover { color: #000; background-color: #ffc107; }
+    .table-custom-dark { border-radius: 12px; overflow: hidden; background:#fff !important; }
+    .table-custom-dark .table { background:#fff !important; color:#0f172a !important; --bs-table-bg: #fff; --bs-table-color: #0f172a; --bs-table-hover-bg: #f1f5f9; --bs-table-hover-color: #0f172a; --bs-table-striped-bg: #f8fafc; --bs-table-striped-color: #0f172a; --bs-table-border-color: #e2e8f0; }
+    .table-custom-dark thead th { background-color: #f1f5f9; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
+    .table-custom-dark td, .table-custom-dark tr { border-color: #e2e8f0 !important; color: #0f172a !important; background:#fff !important; }
+    .table-custom-dark tr:hover td { background:#f8fafc !important; }
     .pagination .page-link:focus { box-shadow: none; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-white text-uppercase" style="letter-spacing: 1px;">QUẢN LÝ <span style="color: #4f46e5;">HỘI VIÊN</span></h3>
+    <h3 class="fw-bold text-uppercase" style="letter-spacing: 1px; color:#0f172a;">QUẢN LÝ <span style="color: #4f46e5;">HỘI VIÊN</span></h3>
     
     <form action="/members" method="GET" class="d-flex w-50 mx-3">
-        <input type="text" name="q" class="form-control bg-dark text-white border-secondary me-2" 
+        <input type="text" name="q" class="form-control me-2" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;"
                placeholder="Tìm theo tên hoặc số điện thoại..." value="<%= locals.searchQuery || '' %>">
-        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-search"></i></button>
+        <button type="submit" class="btn" style="background:#4f46e5;color:#fff;"><i class="bi bi-search"></i></button>
     </form>
 
-    <button type="button" class="btn btn-danger shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+    <button type="button" class="btn shadow-sm fw-bold" style="background:#4f46e5;color:#fff;" data-bs-toggle="modal" data-bs-target="#addMemberModal">
         <i class="bi bi-plus-lg"></i> THÊM MỚI
     </button>
 </div>
 
-<div class="card bg-dark border-secondary shadow-lg">
+<div class="card shadow-sm" style="background:#fff;border:1px solid #e2e8f0;">
     <div class="card-body p-0 table-custom-dark">
-        <table class="table table-dark table-hover mb-0 align-middle">
+        <table class="table table-hover mb-0 align-middle">
             <thead>
                 <tr>
                     <th class="ps-4 py-3">ID</th>
@@ -40,22 +40,22 @@
                 <% if(members.length > 0) { %>
                     <% members.forEach(member => { %>
                     <tr>
-                        <td class="ps-4 text-white-50">#<%= member.id %></td>
+                        <td class="ps-4" style="color:#64748b;">#<%= member.id %></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <% if (member.avatar_url) { %>
                                     <img src="<%= member.avatar_url %>" alt=""
-                                         class="rounded-circle" style="width:36px; height:36px; object-fit:cover; background:#222;">
+                                         class="rounded-circle" style="width:36px; height:36px; object-fit:cover; background:#f1f5f9;">
                                 <% } else { %>
                                     <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
-                                          style="width:36px; height:36px; background:#e2e8f0; color:#888;">
+                                          style="width:36px; height:36px; background:#eef2ff; color:#4f46e5;">
                                         <i class="bi bi-person"></i>
                                     </span>
                                 <% } %>
-                                <span class="fw-bold text-white"><%= member.fullname %></span>
+                                <span class="fw-bold" style="color:#0f172a;"><%= member.fullname %></span>
                             </div>
                         </td>
-                        <td><i class="bi bi-telephone text-white-50 me-2"></i><%= member.phone %></td>
+                        <td><i class="bi bi-telephone me-2" style="color:#94a3b8;"></i><%= member.phone %></td>
                         <td>
                             <% if (member.gender === 'Nam') { %>
                                 <span class="badge bg-primary px-3 py-2" style="width: 60px; display: inline-block; text-align: center;">Nam</span>
@@ -63,18 +63,18 @@
                                 <span class="badge bg-danger px-3 py-2" style="width: 60px; display: inline-block; text-align: center;">Nữ</span>
                             <% } %>
                         </td>
-                        <td class="text-white-50"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
+                        <td style="color:#64748b;"><%= new Date(member.join_date).toLocaleDateString('vi-VN') %></td>
                         <td class="text-end pe-4">
-                            <a href="/members/view/<%= member.id %>" class="btn btn-sm btn-outline-info me-2 shadow-sm">
+                            <a href="/members/view/<%= member.id %>" class="btn btn-sm me-2 shadow-sm" style="background:#06b6d4;color:#fff;">
                                 <i class="bi bi-eye"></i> Xem
                             </a>
-                            <a href="/members/edit/<%= member.id %>" class="btn btn-sm btn-outline-warning me-2 shadow-sm">
+                            <a href="/members/edit/<%= member.id %>" class="btn btn-sm me-2 shadow-sm" style="background:#4f46e5;color:#fff;">
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>
                             <form action="/members/delete/<%= member.id %>" method="POST" class="d-inline"
                                   onsubmit="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm">
+                                <button type="submit" class="btn btn-sm btn-danger shadow-sm">
                                     <i class="bi bi-trash"></i> Xóa
                                 </button>
                             </form>
@@ -98,19 +98,19 @@
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
         <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-            <a class="page-link bg-dark border-secondary text-white" 
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
                href="/members?page=<%= currentPage - 1 %>&q=<%= locals.searchQuery || '' %>">Trước</a>
         </li>
 
         <% for(let i = 1; i <= totalPages; i++) { %>
             <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                <a class="page-link <%= currentPage === i ? 'bg-danger border-danger text-white' : 'bg-dark border-secondary text-white-50' %>" 
+                <a class="page-link" style="<%= currentPage === i ? 'background:#4f46e5;border-color:#4f46e5;color:#fff;' : 'background:#fff;color:#475569;border-color:#e2e8f0;' %>"
                    href="/members?page=<%= i %>&q=<%= locals.searchQuery || '' %>"><%= i %></a>
             </li>
         <% } %>
 
         <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-            <a class="page-link bg-dark border-secondary text-white" 
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
                href="/members?page=<%= currentPage + 1 %>&q=<%= locals.searchQuery || '' %>">Sau</a>
         </li>
     </ul>
@@ -119,27 +119,28 @@
 
 <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+        <div class="modal-content shadow-lg" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;">
             
-            <div class="modal-header border-secondary">
+            <div class="modal-header" style="border-bottom:1px solid #e2e8f0;">
                 <h5 class="modal-title fw-bold text-uppercase" id="addMemberModalLabel" style="color: #4f46e5; letter-spacing: 1px;">
                     <i class="bi bi-person-plus-fill me-2"></i>Thêm Hội Viên Mới
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <div class="modal-body">
                 <form action="/members/add" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small text-uppercase">Họ và Tên</label>
-                        <input type="text" name="fullname" class="form-control bg-dark text-white border-secondary" placeholder="Nhập họ và tên..." required>
+                        <label class="form-label small text-uppercase" style="color:#64748b;">Họ và Tên</label>
+                        <input type="text" name="fullname" class="form-control" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;" placeholder="Nhập họ và tên..." required>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small text-uppercase">Số điện thoại</label>
+                        <label class="form-label small text-uppercase" style="color:#64748b;">Số điện thoại</label>
                         <input type="tel" name="phone" 
-                               class="form-control bg-dark text-white <%= locals.error === 'duplicate_phone' ? 'border-danger shadow-none' : 'border-secondary' %>" 
+                               class="form-control <%= locals.error === 'duplicate_phone' ? 'border-danger' : '' %>"
+                               style="background:#fff;color:#0f172a;<%= locals.error === 'duplicate_phone' ? '' : 'border:1px solid #e2e8f0;' %>"
                                placeholder="SĐT dùng để đăng nhập..." required>
                         
                         <% if (locals.error === 'duplicate_phone') { %>
@@ -148,17 +149,21 @@
                             </div>
                         <% } %>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase" style="color:#64748b;">Email <span style="color:#94a3b8;text-transform:none;">(tùy chọn — cần có để gửi mail reset MK)</span></label>
+                        <input type="email" name="email" class="form-control" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;" placeholder="member@example.com">
+                    </div>
                     <div class="mb-4">
-                        <label class="form-label text-white-50 small text-uppercase">Giới tính</label>
-                        <select name="gender" class="form-select bg-dark text-white border-secondary">
+                        <label class="form-label small text-uppercase" style="color:#64748b;">Giới tính</label>
+                        <select name="gender" class="form-select" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;">
                             <option value="Nam">Nam</option>
                             <option value="Nữ">Nữ</option>
                         </select>
                     </div>
                     
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Hủy bỏ</button>
-                        <button type="submit" class="btn btn-danger fw-bold px-4">LƯU HỘI VIÊN</button>
+                        <button type="button" class="btn" style="background:#e2e8f0;color:#475569;" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn fw-bold px-4" style="background:#4f46e5;color:#fff;">LƯU HỘI VIÊN</button>
                     </div>
                 </form>
             </div>
