@@ -84,6 +84,8 @@
         border-top:1px solid #f1f5f9;
     }
     .pt-actions .btn { flex:1; font-weight:600; }
+    .pt-schedule-btn { background:#06b6d4; color:#fff; }
+    .pt-schedule-btn:hover { background:#0891b2; color:#fff; }
     .pt-edit-btn { background:#4f46e5; color:#fff; }
     .pt-edit-btn:hover { background:#4338ca; color:#fff; }
     .pt-delete-btn { background:#fff; color:#dc2626; border:1px solid #fecaca; }
@@ -136,11 +138,14 @@
                         </span>
                         <p class="pt-desc"><%= pt.description || 'Chưa có mô tả.' %></p>
                         <div class="pt-actions">
+                            <a href="/schedule/trainer/<%= pt.id %>" class="btn btn-sm pt-schedule-btn" title="Xem lịch HLV">
+                                <i class="bi bi-calendar-week"></i> Lịch
+                            </a>
                             <a href="/trainers/edit/<%= pt.id %>" class="btn btn-sm pt-edit-btn">
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>
                             <form action="/trainers/delete/<%= pt.id %>" method="POST" class="flex-fill"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa HLV này không?')">
+                                  data-confirm="Bạn có chắc chắn muốn xóa HLV này không?">
                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 <button type="submit" class="btn btn-sm pt-delete-btn w-100">
                                     <i class="bi bi-trash"></i> Xóa
