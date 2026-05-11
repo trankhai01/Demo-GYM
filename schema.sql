@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS members (
     role         ENUM('admin', 'staff', 'member') NOT NULL DEFAULT 'member',
     cccd         VARCHAR(20),
     birth_year   INT,
+    birth_date   DATE NULL,
     height       DECIMAL(5,2),
     weight       DECIMAL(5,2),
     hometown     VARCHAR(100),

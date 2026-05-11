@@ -71,8 +71,14 @@
                         <div class="info-value"><span class="badge <%= member.gender === 'Nam' ? 'bg-primary' : 'bg-danger' %>"><%= member.gender %></span></div>
                     </div>
                     <div class="col-md-6 info-group">
-                        <div class="info-label"><i class="bi bi-calendar-event text-danger"></i> Năm sinh</div>
-                        <div class="info-value"><%= member.birth_year || '---' %></div>
+                        <div class="info-label"><i class="bi bi-calendar-event text-danger"></i> Ngày sinh</div>
+                        <div class="info-value"><%
+                            if (member.birth_date) {
+                                const bd = member.birth_date instanceof Date ? member.birth_date : new Date(member.birth_date);
+                                const pad = n => String(n).padStart(2, '0');
+                                %><%= pad(bd.getDate()) + '/' + pad(bd.getMonth()+1) + '/' + bd.getFullYear() %><%
+                            } else if (member.birth_year) { %><%= member.birth_year %><% } else { %>---<% }
+                        %></div>
                     </div>
                     <div class="col-md-6 info-group">
                         <div class="info-label"><i class="bi bi-geo-alt text-danger"></i> Quê quán</div>

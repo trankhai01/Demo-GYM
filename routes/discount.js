@@ -178,7 +178,10 @@ router.post('/birthday/run', (req, res) => {
 
     db.query(
         `SELECT id, fullname, email FROM members
-         WHERE role = 'member' AND birth_year IS NOT NULL`,
+         WHERE role = 'member'
+           AND birth_date IS NOT NULL
+           AND MONTH(birth_date) = ?`,
+        [month],
         (err, members) => {
             if (err) return res.status(500).render('error', { message: 'Lỗi tải hội viên.' });
             const candidates = members || [];

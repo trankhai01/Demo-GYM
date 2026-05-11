@@ -45,8 +45,14 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
     const {
         fullname, phone, gender,
         address, cccd, hometown,
-        height, weight, birth_year
+        height, weight, birth_year, birth_date
     } = req.body;
+    /* Nếu user nhập ngày sinh đầy đủ → suy ra năm sinh */
+    let resolvedBirthYear = birth_year || null;
+    if (birth_date) {
+        const y = Number(String(birth_date).slice(0, 4));
+        if (Number.isFinite(y) && y > 1900) resolvedBirthYear = y;
+    }
 
     if (req.uploadError) {
         return res.redirect('/my-profile?error=' + encodeURIComponent(req.uploadError));
@@ -73,7 +79,7 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
                 UPDATE members
                 SET fullname = ?, phone = ?, gender = ?,
                     address = ?, cccd = ?, hometown = ?,
-                    height = ?, weight = ?, birth_year = ?,
+                    height = ?, weight = ?, birth_year = ?, birth_date = ?,
                     avatar_url = ?
                 WHERE id = ?
             `;
@@ -81,7 +87,7 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
             const values = [
                 fullname, phone, gender,
                 address || null, cccd || null, hometown || null,
-                height || null, weight || null, birth_year || null,
+                height || null, weight || null, resolvedBirthYear, birth_date || null,
                 finalAvatar,
                 memberId
             ];

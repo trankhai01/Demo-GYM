@@ -166,8 +166,14 @@
                     <div class="stat-value"><%= member.weight ? member.weight : '--' %><span class="unit">kg</span></div>
                 </div>
                 <div class="col-4 stat-box">
-                    <div class="info-label">Năm sinh</div>
-                    <div class="stat-value"><%= member.birth_year || '--' %></div>
+                    <div class="info-label">Ngày sinh</div>
+                    <div class="stat-value" style="font-size:1.05rem;">
+                        <% if (member.birth_date) {
+                            const bd = member.birth_date instanceof Date ? member.birth_date : new Date(member.birth_date);
+                            const pad = n => String(n).padStart(2, '0');
+                        %><%= pad(bd.getDate()) + '/' + pad(bd.getMonth()+1) + '/' + bd.getFullYear() %><%
+                        } else if (member.birth_year) { %><%= member.birth_year %><% } else { %>--<% } %>
+                    </div>
                 </div>
             </div>
 
@@ -242,8 +248,18 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Năm sinh</label>
-                            <input type="number" name="birth_year" class="form-control" value="<%= member.birth_year %>" placeholder="VD: 1999">
+                            <label class="form-label small text-uppercase" style="color:#475569;">Ngày sinh</label>
+                            <input type="date" name="birth_date" class="form-control"
+                                   value="<%
+                                       const bd = member.birth_date;
+                                       if (bd instanceof Date) {
+                                           const pad = n => String(n).padStart(2, '0');
+                                           %><%= bd.getFullYear() + '-' + pad(bd.getMonth()+1) + '-' + pad(bd.getDate()) %><%
+                                       } else if (bd) {
+                                           %><%= String(bd).slice(0,10) %><%
+                                       }
+                                   %>">
+                            <small class="text-muted">Để hệ thống tự gửi quà sinh nhật</small>
                         </div>
                     </div>
 
