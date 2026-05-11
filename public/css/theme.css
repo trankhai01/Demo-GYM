@@ -516,20 +516,161 @@ html[data-theme="dark"] .page-link {
     border-color: #334155 !important;
 }
 
-/* Inline-style overrides cho các "background:#fff" hardcoded:
-   Không thể với CSS thường, nhưng các phần dùng var(--gb-*) sẽ tự đổi. */
+/* Inline-style overrides cho các "background:#fff" hardcoded */
 html[data-theme="dark"] [style*="background:#fff"],
 html[data-theme="dark"] [style*="background-color:#fff"],
-html[data-theme="dark"] [style*="background:#ffffff"] {
+html[data-theme="dark"] [style*="background:#ffffff"],
+html[data-theme="dark"] [style*="background:#f8fafc"],
+html[data-theme="dark"] [style*="background-color:#f8fafc"],
+html[data-theme="dark"] [style*="background:#fafbff"],
+html[data-theme="dark"] [style*="background:#f1f5f9"] {
     background-color: #1e293b !important;
 }
-html[data-theme="dark"] [style*="color:#0f172a"] { color: #e2e8f0 !important; }
+html[data-theme="dark"] [style*="color:#0f172a"],
+html[data-theme="dark"] [style*="color: #0f172a"],
+html[data-theme="dark"] [style*="color:#1e293b"],
+html[data-theme="dark"] [style*="color: #1e293b"],
+html[data-theme="dark"] [style*="color:#334155"],
+html[data-theme="dark"] [style*="color: #334155"],
+html[data-theme="dark"] [style*="color:#475569"],
+html[data-theme="dark"] [style*="color: #475569"] {
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] [style*="color:#64748b"],
+html[data-theme="dark"] [style*="color: #64748b"],
+html[data-theme="dark"] [style*="color:#94a3b8"],
+html[data-theme="dark"] [style*="color: #94a3b8"] {
+    color: #cbd5e1 !important;
+}
+html[data-theme="dark"] [style*="border-color:#e2e8f0"],
+html[data-theme="dark"] [style*="border-color: #e2e8f0"],
+html[data-theme="dark"] [style*="border:1px solid #e2e8f0"],
+html[data-theme="dark"] [style*="border: 1px solid #e2e8f0"],
+html[data-theme="dark"] [style*="border-bottom:1px solid #e2e8f0"] {
+    border-color: #334155 !important;
+}
 
-/* Pricing card / pkg card / sidebar trang chủ — tránh bị xáo trộn */
+/* Bootstrap text utilities — make them readable in dark mode */
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .text-white-50,
+html[data-theme="dark"] .text-black-50,
+html[data-theme="dark"] .text-secondary {
+    color: #cbd5e1 !important;
+}
+html[data-theme="dark"] .text-dark,
+html[data-theme="dark"] .text-black {
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .text-body,
+html[data-theme="dark"] .text-body-emphasis {
+    color: #f1f5f9 !important;
+}
+html[data-theme="dark"] .form-label,
+html[data-theme="dark"] label {
+    color: #e2e8f0 !important;
+}
+
+/* Bootstrap bg utilities — bg-dark in dark mode → slate, not black-on-black */
+html[data-theme="dark"] .bg-dark,
+html[data-theme="dark"] .bg-black {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .bg-light,
+html[data-theme="dark"] .bg-white {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .border,
+html[data-theme="dark"] .border-top,
+html[data-theme="dark"] .border-bottom,
+html[data-theme="dark"] .border-start,
+html[data-theme="dark"] .border-end {
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .border-secondary {
+    border-color: #475569 !important;
+}
+
+/* Modal: header/footer dividers + close button */
+html[data-theme="dark"] .modal-header,
+html[data-theme="dark"] .modal-footer {
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .modal-header .btn-close,
+html[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(2);
+}
+
+/* List groups & dropdowns */
+html[data-theme="dark"] .list-group-item {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .list-group-item.active {
+    background-color: #4f46e5 !important;
+    color: #fff !important;
+    border-color: #4f46e5 !important;
+}
+html[data-theme="dark"] .dropdown-menu {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .dropdown-item {
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .dropdown-item:hover,
+html[data-theme="dark"] .dropdown-item:focus {
+    background-color: #334155 !important;
+    color: #fff !important;
+}
+html[data-theme="dark"] .dropdown-divider {
+    border-color: #334155 !important;
+}
+
+/* Hardcoded heading colors (h1-h6) in dark mode */
+html[data-theme="dark"] h1, html[data-theme="dark"] h2,
+html[data-theme="dark"] h3, html[data-theme="dark"] h4,
+html[data-theme="dark"] h5, html[data-theme="dark"] h6 {
+    color: #f1f5f9;
+}
+
+/* Accordion & tabs */
+html[data-theme="dark"] .accordion-item,
+html[data-theme="dark"] .accordion-button {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .nav-tabs .nav-link {
+    color: #cbd5e1;
+}
+html[data-theme="dark"] .nav-tabs .nav-link.active {
+    background-color: #1e293b !important;
+    color: #818cf8 !important;
+    border-color: #334155 #334155 #1e293b !important;
+}
+
+/* Alert & badges (light variants) need readable text */
+html[data-theme="dark"] .alert-light,
+html[data-theme="dark"] .alert-secondary {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
+}
+
+/* Pricing card / pkg card */
 html[data-theme="dark"] .pkg-card,
 html[data-theme="dark"] .pricing-card {
     background-color: #1e293b !important;
     color: #e2e8f0 !important;
+}
+
+/* Input groups */
+html[data-theme="dark"] .input-group-text {
+    background-color: #0b1322 !important;
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
 }
 
 /* Theme toggle button chung trong sidebar */

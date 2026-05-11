@@ -218,14 +218,45 @@
                 #eef2ff;
             padding-bottom: 100px;
         }
-        .pkg-row { align-items: stretch; }
+        .pkg-slider {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            overflow-y: visible;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: thin;
+            padding: 30px 4px 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .pkg-slider::-webkit-scrollbar { height: 8px; }
+        .pkg-slider::-webkit-scrollbar-track { background: rgba(79,70,229,0.06); border-radius: 4px; }
+        .pkg-slider::-webkit-scrollbar-thumb { background: linear-gradient(90deg,#4f46e5,#06b6d4); border-radius: 4px; }
+        .pkg-slide {
+            flex: 0 0 calc((100% - 48px) / 3);
+            min-width: 0;
+            scroll-snap-align: start;
+            display: flex;
+        }
+        @media (max-width: 992px) { .pkg-slide { flex: 0 0 calc((100% - 24px) / 2); } }
+        @media (max-width: 640px) { .pkg-slide { flex: 0 0 88%; } }
+        .pkg-nav-btn {
+            background: linear-gradient(135deg,#4f46e5,#06b6d4);
+            color: #fff; border: none;
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 6px 18px rgba(79,70,229,0.30);
+        }
+        .pkg-nav-btn:hover { transform: scale(1.08); box-shadow: 0 10px 24px rgba(79,70,229,0.40); }
         .pkg-card {
             position: relative;
             background: #ffffff;
             border: 1px solid var(--gym-border);
             border-radius: 18px;
             overflow: hidden;
-            height: 100%;
+            width: 100%;
+            min-height: 560px;
             display: flex; flex-direction: column;
             transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
@@ -240,7 +271,6 @@
         .pkg-card.featured {
             border: 2px solid var(--gym-red);
             border-top: 4px solid var(--gym-red);
-            transform: scale(1.06);
             z-index: 2;
             box-shadow: 0 28px 60px rgba(79, 70, 229, 0.30);
         }
@@ -260,7 +290,7 @@
             pointer-events: none;
         }
         @keyframes glow { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
-        .pkg-card:hover.featured { transform: scale(1.08) translateY(-6px); }
+        .pkg-card:hover.featured { transform: translateY(-12px); }
         .pkg-card.featured .pkg-badge {
             position: absolute; top: 16px; right: -42px;
             background: linear-gradient(90deg, var(--gym-red), var(--gym-accent));
@@ -272,7 +302,7 @@
         }
         .pkg-head {
             background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-            padding: 32px 24px 24px; text-align: center;
+            padding: 38px 24px 28px; text-align: center;
             border-bottom: 1px solid var(--gym-border);
         }
         .pkg-card.featured .pkg-head {
@@ -291,15 +321,15 @@
         }
         .pkg-price small { color: var(--gym-text-mute); font-size: 0.85rem; font-weight: normal; letter-spacing: 1px; }
         .pkg-duration { color: var(--gym-text-mute); font-size: 0.85rem; margin-top: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
-        .pkg-body { padding: 26px 24px; flex-grow: 1; display: flex; flex-direction: column; background: #fff; }
-        .pkg-feat-list { list-style: none; padding: 0; margin: 0 0 22px 0; flex-grow: 1; }
+        .pkg-body { padding: 30px 26px; flex-grow: 1; display: flex; flex-direction: column; background: #fff; }
+        .pkg-feat-list { list-style: none; padding: 0; margin: 0 0 24px 0; flex-grow: 1; }
         .pkg-feat-list li {
-            padding: 10px 0;
+            padding: 14px 0;
             color: #334155;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 0.95rem;
-            display: flex; align-items: center; gap: 10px;
-            line-height: 1.4;
+            font-size: 0.98rem;
+            display: flex; align-items: center; gap: 12px;
+            line-height: 1.5;
         }
         .pkg-feat-list li:last-child { border-bottom: 0; }
         .pkg-feat-list li i { color: #10b981; flex-shrink:0; font-size: 1.05rem; }
@@ -777,9 +807,13 @@
                 <p class="section-sub"><%= t('home.packages.subtitle') %></p>
             </div>
             <% if (packages && packages.length > 0) { %>
-                <div class="row pkg-row g-4 justify-content-center mt-2">
+                <div class="d-flex justify-content-end gap-2 mb-2" style="position:relative;z-index:2;">
+                    <button type="button" class="pkg-nav-btn" id="pkgPrev" aria-label="Prev"><i class="bi bi-chevron-left"></i></button>
+                    <button type="button" class="pkg-nav-btn" id="pkgNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                <div class="pkg-slider" id="pkgSlider">
                     <% packages.forEach((pkg, idx) => { %>
-                        <div class="col-md-6 col-lg-4 reveal" data-delay="<%= idx === 1 ? '200' : (idx === 0 ? '100' : '300') %>">
+                        <div class="pkg-slide reveal" data-delay="<%= Math.min(idx, 4) * 100 + 100 %>">
                             <div class="pkg-card <%= idx === 1 ? 'featured' : '' %>">
                                 <% if (idx === 1) { %><div class="pkg-badge"><%= t('home.packages.popular') %></div><% } %>
                                 <div class="pkg-head">
@@ -1148,20 +1182,21 @@
             else nav.style.backgroundColor = 'rgba(15, 23, 42, 0.78)';
         });
 
-        // Trainer slider navigation
-        (function() {
-            const slider = document.getElementById('trainerSlider');
-            const prev = document.getElementById('trainerPrev');
-            const next = document.getElementById('trainerNext');
+        function bindSlider(sliderId, prevId, nextId, slideSelector, gap) {
+            const slider = document.getElementById(sliderId);
+            const prev = document.getElementById(prevId);
+            const next = document.getElementById(nextId);
             if (!slider || !prev || !next) return;
             const step = () => {
-                const card = slider.querySelector('.trainer-slide');
+                const card = slider.querySelector(slideSelector);
                 if (!card) return slider.clientWidth * 0.8;
-                return card.getBoundingClientRect().width + 24;
+                return card.getBoundingClientRect().width + gap;
             };
             prev.addEventListener('click', () => slider.scrollBy({ left: -step(), behavior: 'smooth' }));
             next.addEventListener('click', () => slider.scrollBy({ left:  step(), behavior: 'smooth' }));
-        })();
+        }
+        bindSlider('trainerSlider', 'trainerPrev', 'trainerNext', '.trainer-slide', 24);
+        bindSlider('pkgSlider', 'pkgPrev', 'pkgNext', '.pkg-slide', 24);
 
         // Scroll reveal: thêm class .in-view khi element vào viewport
         (function() {
