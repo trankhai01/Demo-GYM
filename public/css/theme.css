@@ -32,32 +32,8 @@ body {
 a { color: var(--gb-primary); }
 a:hover { color: var(--gb-primary-600); }
 
-/* Sidebar — convert from black to white card with indigo highlight. */
-.sidebar {
-    background: var(--gb-surface) !important;
-    border-right: 1px solid var(--gb-border) !important;
-    box-shadow: var(--gb-shadow);
-}
-.sidebar a.nav-item {
-    color: var(--gb-text-muted) !important;
-}
-.sidebar a.nav-item:hover {
-    background: var(--gb-primary-100) !important;
-    color: var(--gb-primary) !important;
-    border-left-color: var(--gb-primary) !important;
-}
-.sidebar a.nav-item.active {
-    background: var(--gb-primary-100) !important;
-    color: var(--gb-primary) !important;
-    border-left-color: var(--gb-primary) !important;
-}
-.sidebar .navbar-brand {
-    background: linear-gradient(90deg, var(--gb-primary), var(--gb-accent));
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    color: transparent !important;
-}
+/* Sidebar styling sống trong views/partials/header.ejs (dark theme),
+   nên không override ở đây. */
 
 /* Cards / surfaces — flip dark to light. */
 .card {

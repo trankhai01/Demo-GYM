@@ -63,6 +63,7 @@ app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.csrfToken = generateToken(req);
   res.locals.unreadContactCount = 0;
+  res.locals.currentPath = req.path;
 
   const u = req.session.user;
   const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');

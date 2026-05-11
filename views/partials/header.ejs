@@ -11,93 +11,196 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/theme.css">
     <style>
+        /* Sidebar dark — tăng tương phản so với main content sáng */
         .sidebar {
             min-height: 100vh;
             position: fixed;
             width: 250px;
             left: 0; top: 0;
+            background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
+            color: rgba(255, 255, 255, 0.85);
+            z-index: 1030;
+            overflow-y: auto;
+        }
+        .sidebar .sidebar-header {
+            padding: 24px 16px 20px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+            text-align: center;
+        }
+        .sidebar .navbar-brand {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-decoration: none;
+            background: linear-gradient(90deg, #818cf8, #22d3ee) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            color: transparent !important;
+        }
+        .sidebar .greeting-text {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 12px;
+        }
+        .sidebar .greeting-text strong { color: #ffffff; }
+        .sidebar .btn-logout {
+            margin-top: 14px;
+            width: 100%;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            transition: all .2s;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+        .sidebar .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.85);
+            color: #ffffff;
+            border-color: transparent;
+        }
+        .sidebar .nav-section {
+            padding: 12px 0;
         }
         .sidebar a.nav-item {
             text-decoration: none;
-            padding: 15px 20px;
-            display: block;
-            transition: 0.2s;
+            padding: 13px 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all .25s ease;
             font-weight: 500;
-            border-left: 4px solid transparent;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.78) !important;
+            border-left: 3px solid transparent;
+            position: relative;
         }
+        .sidebar a.nav-item i {
+            font-size: 1.1rem;
+            width: 22px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.55);
+            transition: color .25s ease;
+        }
+        .sidebar a.nav-item:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #ffffff !important;
+            border-left-color: rgba(34, 211, 238, 0.6) !important;
+        }
+        .sidebar a.nav-item:hover i { color: #22d3ee; }
+        .sidebar a.nav-item.active {
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.45), rgba(6, 182, 212, 0.18)) !important;
+            color: #ffffff !important;
+            border-left-color: #22d3ee !important;
+            font-weight: 600;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+        .sidebar a.nav-item.active i { color: #22d3ee; }
+        .sidebar a.nav-item.active::after {
+            content: '';
+            position: absolute;
+            right: 12px; top: 50%;
+            transform: translateY(-50%);
+            width: 6px; height: 6px;
+            background: #22d3ee;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22d3ee;
+        }
+        .sidebar .badge.unread {
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            margin-left: auto;
+            padding: 3px 7px;
+            border-radius: 999px;
+        }
+        /* Custom scrollbar trong sidebar */
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.30); }
+
         .main-content {
             margin-left: 250px;
             padding: 30px;
             min-height: 100vh;
         }
         .card { border-radius: 14px; }
-        .navbar-brand {
-            font-family: 'Oswald', sans-serif;
-            font-weight: 700;
-            font-size: 2rem;
-            letter-spacing: 2px;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
-    
-   <div class="sidebar shadow-sm">
-    <div class="p-4 mb-2 text-center border-bottom">
+
+<%
+    /* Active route helper:
+       - Highlight chính xác theo prefix path để các sub-page (vd /members/edit/3) cũng active /members
+       - Các route càng cụ thể (vd /schedule/admin) phải xếp TRƯỚC route ngắn hơn (vd /schedule) trong logic */
+    const _path = (typeof currentPath !== 'undefined' ? currentPath : '') || '';
+    function isActive(prefix) {
+        if (!_path) return false;
+        if (prefix === '/') return _path === '/';
+        // Exact match hoặc bắt đầu bằng prefix + "/"
+        return _path === prefix || _path.indexOf(prefix + '/') === 0;
+    }
+%>
+
+<div class="sidebar">
+    <div class="sidebar-header">
         <a href="/" class="navbar-brand">GYM BRO</a>
 
         <% if (user) { %>
-            <div class="mt-3 text-muted" style="font-size: 0.9rem;">
+            <div class="greeting-text">
                 <i class="bi bi-person-circle"></i> Xin chào, <strong><%= user.fullname %></strong>
             </div>
-            <a href="/logout" class="btn btn-outline-danger btn-sm mt-3 w-100"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
+            <a href="/logout" class="btn btn-logout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
         <% } %>
     </div>
 
-    <div class="mt-3">
+    <div class="nav-section">
         <% if (user && user.role === 'admin') { %>
-            <a href="/reports" class="nav-item fw-bold"><i class="bi bi-bar-chart-line me-2"></i> Báo cáo Doanh thu</a>
-            <a href="/members" class="nav-item fw-bold"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
-            <a href="/checkin" class="nav-item fw-bold"><i class="bi bi-upc-scan me-2"></i> Máy Check-in</a>
-            <a href="/schedule/admin" class="nav-item fw-bold"><i class="bi bi-calendar3 me-2"></i> Lịch tập</a>
-            <a href="/packages" class="nav-item fw-bold"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
-            <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>
-            <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
-            <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
-            <a href="/discounts" class="nav-item fw-bold"><i class="bi bi-ticket-perforated me-2"></i> Mã ưu đãi</a>
-            <a href="/admin/messages" class="nav-item fw-bold">
-                <i class="bi bi-envelope-paper me-2"></i> Tin nhắn liên hệ
+            <a href="/reports" class="nav-item<%= isActive('/reports') ? ' active' : '' %>"><i class="bi bi-bar-chart-line"></i> Báo cáo Doanh thu</a>
+            <a href="/members" class="nav-item<%= isActive('/members') ? ' active' : '' %>"><i class="bi bi-people-fill"></i> Quản lý Hội viên</a>
+            <a href="/checkin" class="nav-item<%= isActive('/checkin') ? ' active' : '' %>"><i class="bi bi-upc-scan"></i> Máy Check-in</a>
+            <a href="/schedule/admin" class="nav-item<%= isActive('/schedule') ? ' active' : '' %>"><i class="bi bi-calendar3"></i> Lịch tập</a>
+            <a href="/packages" class="nav-item<%= isActive('/packages') ? ' active' : '' %>"><i class="bi bi-box-seam"></i> Gói tập</a>
+            <a href="/trainers" class="nav-item<%= isActive('/trainers') ? ' active' : '' %>"><i class="bi bi-person-video3"></i> Huấn luyện viên</a>
+            <a href="/products" class="nav-item<%= isActive('/products') ? ' active' : '' %>"><i class="bi bi-box2-fill"></i> Kho hàng</a>
+            <a href="/registrations" class="nav-item<%= isActive('/registrations') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/discounts" class="nav-item<%= isActive('/discounts') ? ' active' : '' %>"><i class="bi bi-ticket-perforated"></i> Mã ưu đãi</a>
+            <a href="/admin/messages" class="nav-item<%= isActive('/admin/messages') ? ' active' : '' %>">
+                <i class="bi bi-envelope-paper"></i> Tin nhắn liên hệ
                 <% if (typeof unreadContactCount !== 'undefined' && unreadContactCount > 0) { %>
-                    <span class="badge bg-danger ms-2"><%= unreadContactCount %></span>
+                    <span class="badge unread"><%= unreadContactCount %></span>
                 <% } %>
             </a>
         <% } %>
 
         <% if (user && user.role === 'staff') { %>
-            <a href="/members" class="nav-item fw-bold"><i class="bi bi-people-fill me-2"></i> Quản lý Hội viên</a>
-            <a href="/checkin" class="nav-item fw-bold"><i class="bi bi-upc-scan me-2"></i> Máy Check-in</a>
-            <a href="/schedule/admin" class="nav-item fw-bold"><i class="bi bi-calendar3 me-2"></i> Lịch tập</a>
-            <a href="/packages" class="nav-item fw-bold"><i class="bi bi-box-seam me-2"></i> Gói tập</a>
-<!--         <a href="/trainers" class="nav-item fw-bold"><i class="bi bi-person-video3 me-2"></i> Huấn luyện viên</a>-->   
-            <a href="/products" class="nav-item fw-bold"><i class="bi bi-box2-fill me-2"></i> Kho hàng</a>
-            <a href="/registrations" class="nav-item fw-bold"><i class="bi bi-cart-plus me-2"></i> Bán hàng (POS)</a>
-            <a href="/discounts" class="nav-item fw-bold"><i class="bi bi-ticket-perforated me-2"></i> Mã ưu đãi</a>
-            <a href="/admin/messages" class="nav-item fw-bold">
-                <i class="bi bi-envelope-paper me-2"></i> Tin nhắn liên hệ
+            <a href="/members" class="nav-item<%= isActive('/members') ? ' active' : '' %>"><i class="bi bi-people-fill"></i> Quản lý Hội viên</a>
+            <a href="/checkin" class="nav-item<%= isActive('/checkin') ? ' active' : '' %>"><i class="bi bi-upc-scan"></i> Máy Check-in</a>
+            <a href="/schedule/admin" class="nav-item<%= isActive('/schedule') ? ' active' : '' %>"><i class="bi bi-calendar3"></i> Lịch tập</a>
+            <a href="/packages" class="nav-item<%= isActive('/packages') ? ' active' : '' %>"><i class="bi bi-box-seam"></i> Gói tập</a>
+            <a href="/products" class="nav-item<%= isActive('/products') ? ' active' : '' %>"><i class="bi bi-box2-fill"></i> Kho hàng</a>
+            <a href="/registrations" class="nav-item<%= isActive('/registrations') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/discounts" class="nav-item<%= isActive('/discounts') ? ' active' : '' %>"><i class="bi bi-ticket-perforated"></i> Mã ưu đãi</a>
+            <a href="/admin/messages" class="nav-item<%= isActive('/admin/messages') ? ' active' : '' %>">
+                <i class="bi bi-envelope-paper"></i> Tin nhắn liên hệ
                 <% if (typeof unreadContactCount !== 'undefined' && unreadContactCount > 0) { %>
-                    <span class="badge bg-danger ms-2"><%= unreadContactCount %></span>
+                    <span class="badge unread"><%= unreadContactCount %></span>
                 <% } %>
             </a>
-            
         <% } %>
 
         <% if (user && user.role === 'member') { %>
-            <a href="/dashboard" class="nav-item fw-bold"><i class="bi bi-speedometer2 me-2"></i> Tổng quan</a>
-            <a href="/my-profile" class="nav-item fw-bold"><i class="bi bi-person-vcard me-2"></i> Trang cá nhân</a>
-            <a href="/schedule" class="nav-item fw-bold"><i class="bi bi-calendar3 me-2"></i> Lịch tập</a>
-            <a href="/profile/schedule" class="nav-item fw-bold"><i class="bi bi-clock-history me-2"></i> Lịch sử tập</a>
-            <a href="/profile/change-password" class="nav-item fw-bold"><i class="bi bi-key me-2"></i> Đổi mật khẩu</a>
-
+            <a href="/dashboard" class="nav-item<%= isActive('/dashboard') ? ' active' : '' %>"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+            <a href="/my-profile" class="nav-item<%= isActive('/my-profile') ? ' active' : '' %>"><i class="bi bi-person-vcard"></i> Trang cá nhân</a>
+            <a href="/schedule" class="nav-item<%= (_path === '/schedule' || _path.indexOf('/schedule/') === 0) && !isActive('/profile/schedule') ? ' active' : '' %>"><i class="bi bi-calendar3"></i> Lịch tập</a>
+            <a href="/profile/schedule" class="nav-item<%= isActive('/profile/schedule') ? ' active' : '' %>"><i class="bi bi-clock-history"></i> Lịch sử tập</a>
+            <a href="/profile/change-password" class="nav-item<%= isActive('/profile/change-password') ? ' active' : '' %>"><i class="bi bi-key"></i> Đổi mật khẩu</a>
         <% } %>
     </div>
 </div>
