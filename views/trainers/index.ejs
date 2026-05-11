@@ -1,110 +1,166 @@
 <%- include('../partials/header') %>
 
 <style>
-    .table-custom-dark { border-radius: 12px; overflow: hidden; background:#fff !important; }
-    .table-custom-dark .table { background:#fff !important; color:#0f172a !important; --bs-table-bg: #fff; --bs-table-color: #0f172a; --bs-table-hover-bg: #f1f5f9; --bs-table-hover-color: #0f172a; --bs-table-striped-bg: #f8fafc; --bs-table-striped-color: #0f172a; --bs-table-border-color: #e2e8f0; }
-    .table-custom-dark thead th { background-color: #f1f5f9; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
-    .table-custom-dark td, .table-custom-dark tr { border-color: #e2e8f0 !important; color: #0f172a !important; background:#fff !important; }
-    .table-custom-dark tr:hover td { background:#f8fafc !important; }
-    .pagination .page-link:focus { box-shadow: none; }
+    .pt-page-title { color:#0f172a; letter-spacing:1px; }
+    .pt-page-title .accent { color:#4f46e5; }
+    .pt-search-input { background:#fff; color:#0f172a; border:1px solid #e2e8f0; }
+    .pt-search-btn { background:#4f46e5; color:#fff; }
+    .pt-add-btn { background:#4f46e5; color:#fff; font-weight:700; letter-spacing:.5px; }
+
+    .pt-card {
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-radius:18px;
+        overflow:hidden;
+        transition:all .3s ease;
+        height:100%;
+        display:flex;
+        flex-direction:column;
+        box-shadow:0 4px 12px rgba(15,23,42,.06);
+    }
+    .pt-card:hover {
+        transform:translateY(-6px);
+        border-color:#c7d2fe;
+        box-shadow:0 12px 28px rgba(79,70,229,.18);
+    }
+    .pt-img-wrapper {
+        height:260px;
+        overflow:hidden;
+        background:linear-gradient(135deg,#eef2ff 0%,#ecfeff 100%);
+        position:relative;
+    }
+    .pt-img { width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
+    .pt-card:hover .pt-img { transform:scale(1.06); }
+    .pt-img-fallback {
+        width:100%; height:100%;
+        display:flex; align-items:center; justify-content:center;
+        font-size:3.4rem; color:#a5b4fc;
+    }
+    .pt-specialty-badge {
+        position:absolute; top:14px; right:14px;
+        background:rgba(79,70,229,.92);
+        color:#ffffff;
+        padding:6px 14px;
+        border-radius:999px;
+        font-size:.78rem;
+        font-weight:700;
+        letter-spacing:.4px;
+        box-shadow:0 4px 10px rgba(79,70,229,.35);
+        backdrop-filter: blur(2px);
+    }
+    .pt-status-dot {
+        position:absolute; top:14px; left:14px;
+        background:rgba(255,255,255,.95);
+        padding:5px 12px;
+        border-radius:999px;
+        font-size:.74rem;
+        font-weight:600;
+    }
+    .pt-status-active { color:#16a34a; }
+    .pt-status-inactive { color:#64748b; }
+
+    .pt-body { padding:18px 18px 14px 18px; display:flex; flex-direction:column; flex-grow:1; }
+    .pt-name { color:#0f172a; font-weight:700; font-size:1.1rem; margin-bottom:4px; }
+    .pt-phone { color:#475569; font-size:.92rem; margin-bottom:6px; }
+    .pt-phone i { color:#06b6d4; }
+    .pt-exp {
+        display:inline-flex; align-items:center; gap:6px;
+        background:#fef3c7; color:#b45309;
+        padding:4px 10px; border-radius:999px;
+        font-size:.82rem; font-weight:600;
+        align-self:flex-start;
+        margin-bottom:10px;
+    }
+    .pt-desc {
+        color:#64748b; font-size:.88rem; line-height:1.5;
+        flex-grow:1;
+        display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+        overflow:hidden;
+    }
+    .pt-actions {
+        display:flex; gap:8px;
+        margin-top:14px;
+        padding-top:14px;
+        border-top:1px solid #f1f5f9;
+    }
+    .pt-actions .btn { flex:1; font-weight:600; }
+    .pt-edit-btn { background:#4f46e5; color:#fff; }
+    .pt-edit-btn:hover { background:#4338ca; color:#fff; }
+    .pt-delete-btn { background:#fff; color:#dc2626; border:1px solid #fecaca; }
+    .pt-delete-btn:hover { background:#dc2626; color:#fff; border-color:#dc2626; }
+
+    .pagination .page-link:focus { box-shadow:none; }
+    .pt-empty { color:#94a3b8; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-uppercase" style="letter-spacing: 1px; color:#0f172a;">QUẢN LÝ <span style="color: #4f46e5;">HUẤN LUYỆN VIÊN</span></h3>
+    <h3 class="fw-bold text-uppercase pt-page-title">QUẢN LÝ <span class="accent">HUẤN LUYỆN VIÊN</span></h3>
 
     <form action="/trainers" method="GET" class="d-flex w-50 mx-3">
-        <input type="text" name="q" class="form-control me-2" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;"
+        <input type="text" name="q" class="form-control me-2 pt-search-input"
                placeholder="Tìm theo tên, SĐT hoặc chuyên môn..." value="<%= locals.searchQuery || '' %>">
-        <button type="submit" class="btn" style="background:#4f46e5;color:#fff;"><i class="bi bi-search"></i></button>
+        <button type="submit" class="btn pt-search-btn"><i class="bi bi-search"></i></button>
     </form>
 
-    <a href="/trainers/add" class="btn shadow-sm fw-bold" style="background:#4f46e5;color:#fff;">
+    <a href="/trainers/add" class="btn shadow-sm pt-add-btn">
         <i class="bi bi-plus-lg"></i> THÊM MỚI
     </a>
 </div>
 
-<div class="card shadow-sm" style="background:#fff;border:1px solid #e2e8f0;">
-    <div class="card-body p-0 table-custom-dark">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead>
-                    <tr>
-                        <th class="ps-4 py-3">STT</th>
-                        <th class="py-3">Họ và Tên</th>
-                        <th class="py-3">Liên hệ</th>
-                        <th class="py-3">Chuyên môn</th>
-                        <th class="py-3">Kinh nghiệm</th>
-                        <th class="py-3">Trạng thái</th>
-                        <th class="text-center pe-4 py-3">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (trainers.length > 0) { %>
-                        <% trainers.forEach((pt, i) => { %>
-                            <tr>
-                                <td class="ps-4 fw-semibold" style="color:#475569;"><%= (typeof pageOffset !== 'undefined' ? pageOffset : 0) + i + 1 %></td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <% if (pt.image_url) { %>
-                                            <img src="<%= pt.image_url %>" alt=""
-                                                 class="rounded-circle" style="width:42px; height:42px; object-fit:cover; background:#f1f5f9; border:2px solid #eef2ff;">
-                                        <% } else { %>
-                                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                  style="width:42px; height:42px; background:#eef2ff; color:#4f46e5;">
-                                                <i class="bi bi-person-video3"></i>
-                                            </span>
-                                        <% } %>
-                                        <span class="fw-bold" style="color:#0f172a;"><%= pt.fullname %></span>
-                                    </div>
-                                </td>
-                                <td><i class="bi bi-telephone me-2" style="color:#94a3b8;"></i><%= pt.phone || '—' %></td>
-                                <td>
-                                    <% if (pt.specialty) { %>
-                                        <span class="badge px-3 py-2" style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;">
-                                            <i class="bi bi-award me-1"></i><%= pt.specialty %>
-                                        </span>
-                                    <% } else { %>
-                                        <span style="color:#94a3b8;">—</span>
-                                    <% } %>
-                                </td>
-                                <td style="color:#0f172a;">
-                                    <i class="bi bi-star-fill me-1" style="color:#f59e0b;"></i>
-                                    <%= pt.experience_years || 0 %> năm
-                                </td>
-                                <td>
-                                    <% const status = (pt.status || 'Active'); %>
-                                    <% if (status === 'Active' || status === 'Đang dạy') { %>
-                                        <span class="badge px-3 py-2" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;">Đang dạy</span>
-                                    <% } else { %>
-                                        <span class="badge px-3 py-2" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">Nghỉ</span>
-                                    <% } %>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <a href="/trainers/edit/<%= pt.id %>" class="btn btn-sm me-2 shadow-sm" style="background:#4f46e5;color:#fff;">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </a>
-                                    <form action="/trainers/delete/<%= pt.id %>" method="POST" class="d-inline"
-                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa HLV này không?')">
-                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm">
-                                            <i class="bi bi-trash"></i> Xóa
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="7" class="text-center py-5" style="color:#94a3b8;">
-                                <i class="bi bi-people fs-1 d-block mb-2"></i>
-                                Không tìm thấy huấn luyện viên nào.
-                            </td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
+<div class="row g-4">
+    <% if (trainers.length > 0) { %>
+        <% trainers.forEach(pt => { %>
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="pt-card">
+                    <div class="pt-img-wrapper">
+                        <% const ptStatus = (pt.status || 'Active'); %>
+                        <span class="pt-status-dot <%= (ptStatus === 'Active' || ptStatus === 'Đang dạy') ? 'pt-status-active' : 'pt-status-inactive' %>">
+                            <i class="bi bi-circle-fill" style="font-size:.55rem;"></i>
+                            <%= (ptStatus === 'Active' || ptStatus === 'Đang dạy') ? 'Đang dạy' : 'Nghỉ' %>
+                        </span>
+                        <% if (pt.specialty) { %>
+                            <span class="pt-specialty-badge"><i class="bi bi-award-fill me-1"></i><%= pt.specialty %></span>
+                        <% } %>
+                        <% if (pt.image_url) { %>
+                            <img src="<%= pt.image_url %>" class="pt-img" alt="<%= pt.fullname %>">
+                        <% } else { %>
+                            <div class="pt-img-fallback"><i class="bi bi-person-video3"></i></div>
+                        <% } %>
+                    </div>
+                    <div class="pt-body">
+                        <div class="pt-name"><%= pt.fullname %></div>
+                        <div class="pt-phone"><i class="bi bi-telephone-fill me-2"></i><%= pt.phone || '—' %></div>
+                        <span class="pt-exp">
+                            <i class="bi bi-star-fill"></i>
+                            <%= pt.experience_years || 0 %> năm kinh nghiệm
+                        </span>
+                        <p class="pt-desc"><%= pt.description || 'Chưa có mô tả.' %></p>
+                        <div class="pt-actions">
+                            <a href="/trainers/edit/<%= pt.id %>" class="btn btn-sm pt-edit-btn">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <form action="/trainers/delete/<%= pt.id %>" method="POST" class="flex-fill"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa HLV này không?')">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button type="submit" class="btn btn-sm pt-delete-btn w-100">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <div class="col-12 text-center pt-empty py-5">
+            <i class="bi bi-people fs-1 d-block mb-3"></i>
+            <% if (locals.searchQuery) { %>
+                Không tìm thấy huấn luyện viên nào khớp với "<strong><%= searchQuery %></strong>".
+            <% } else { %>
+                Chưa có Huấn luyện viên nào trong hệ thống.
+            <% } %>
         </div>
-    </div>
+    <% } %>
 </div>
 
 <% if (locals.totalPages && totalPages > 1) { %>
@@ -114,14 +170,12 @@
             <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
                href="/trainers?page=<%= currentPage - 1 %>&q=<%= locals.searchQuery || '' %>">Trước</a>
         </li>
-
         <% for(let i = 1; i <= totalPages; i++) { %>
             <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                 <a class="page-link" style="<%= currentPage === i ? 'background:#4f46e5;border-color:#4f46e5;color:#fff;' : 'background:#fff;color:#475569;border-color:#e2e8f0;' %>"
                    href="/trainers?page=<%= i %>&q=<%= locals.searchQuery || '' %>"><%= i %></a>
             </li>
         <% } %>
-
         <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
             <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
                href="/trainers?page=<%= currentPage + 1 %>&q=<%= locals.searchQuery || '' %>">Sau</a>
