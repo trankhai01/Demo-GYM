@@ -279,9 +279,21 @@ router.get('/export/excel', requireAdmin, async (req, res) => {
 
 function findVietnameseFont() {
     const candidates = [
+        path.join(__dirname, '..', 'assets', 'fonts', 'DejaVuSans.ttf'),
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-        '/usr/share/fonts/TTF/DejaVuSans.ttf'
+        '/Library/Fonts/Arial Unicode.ttf',
+        '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+        'C:\\Windows\\Fonts\\arial.ttf'
+    ];
+    for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
+    }
+    return null;
+}
+function findVietnameseFontBold() {
+    const candidates = [
+        path.join(__dirname, '..', 'assets', 'fonts', 'DejaVuSans-Bold.ttf'),
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
     ];
     for (const p of candidates) {
         if (fs.existsSync(p)) return p;
@@ -301,9 +313,13 @@ router.get('/export/pdf', requireAdmin, async (req, res) => {
         doc.pipe(res);
 
         const fontPath = findVietnameseFont();
+        const fontBoldPath = findVietnameseFontBold();
         if (fontPath) {
             doc.registerFont('vi', fontPath);
             doc.font('vi');
+        }
+        if (fontBoldPath) {
+            doc.registerFont('vi-bold', fontBoldPath);
         }
 
         doc.fontSize(18).fillColor('#4f46e5').text('BÁO CÁO DOANH THU & HOẠT ĐỘNG', { align: 'center' });
