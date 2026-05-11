@@ -1,0 +1,439 @@
+<%- include('../partials/header') %>
+
+<style>
+    .ad-page-title { color:#0f172a; letter-spacing:1px; }
+    .ad-page-title .accent { color:#4f46e5; }
+    .ad-section-title {
+        font-size:.85rem; letter-spacing:1.2px;
+        text-transform:uppercase; color:#64748b;
+        font-weight:700;
+        margin:24px 0 12px 0;
+        display:flex; align-items:center; gap:8px;
+    }
+    .ad-section-title .ad-pill {
+        background:#eef2ff; color:#4f46e5;
+        font-size:.7rem; padding:2px 8px;
+        border-radius:999px;
+    }
+
+    /* Stat card grid */
+    .ad-stats-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:16px;
+    }
+    .ad-stat {
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-radius:16px;
+        padding:18px 18px 16px 18px;
+        position:relative;
+        overflow:hidden;
+        box-shadow:0 4px 12px rgba(15,23,42,.05);
+        transition:all .25s ease;
+    }
+    .ad-stat:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(79,70,229,.10); }
+    .ad-stat-label { color:#64748b; font-size:.82rem; text-transform:uppercase; font-weight:600; letter-spacing:.4px; }
+    .ad-stat-value { color:#0f172a; font-size:1.7rem; font-weight:800; margin-top:4px; line-height:1.1; }
+    .ad-stat-icon {
+        position:absolute; top:14px; right:14px;
+        width:42px; height:42px; border-radius:12px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:1.2rem; color:#fff;
+    }
+    .ad-stat.indigo { border-top:4px solid #4f46e5; }
+    .ad-stat.indigo .ad-stat-icon { background:linear-gradient(135deg,#4f46e5,#06b6d4); box-shadow:0 6px 14px rgba(79,70,229,.30); }
+    .ad-stat.cyan { border-top:4px solid #06b6d4; }
+    .ad-stat.cyan .ad-stat-icon { background:linear-gradient(135deg,#06b6d4,#3b82f6); box-shadow:0 6px 14px rgba(6,182,212,.30); }
+    .ad-stat.green { border-top:4px solid #10b981; }
+    .ad-stat.green .ad-stat-icon { background:linear-gradient(135deg,#10b981,#22c55e); box-shadow:0 6px 14px rgba(16,185,129,.30); }
+    .ad-stat.amber { border-top:4px solid #f59e0b; }
+    .ad-stat.amber .ad-stat-icon { background:linear-gradient(135deg,#f59e0b,#ef4444); box-shadow:0 6px 14px rgba(245,158,11,.30); }
+    .ad-stat-foot {
+        font-size:.78rem; margin-top:8px;
+        color:#64748b;
+        display:flex; align-items:center; gap:4px;
+    }
+    .ad-growth-up { color:#10b981; font-weight:700; }
+    .ad-growth-down { color:#ef4444; font-weight:700; }
+
+    /* Two-column main layout */
+    .ad-main-grid {
+        display:grid;
+        grid-template-columns:2fr 1fr;
+        gap:18px;
+    }
+    @media (max-width:991px) { .ad-main-grid { grid-template-columns:1fr; } }
+
+    /* Generic card */
+    .ad-card {
+        background:#fff;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        padding:18px;
+        box-shadow:0 4px 12px rgba(15,23,42,.04);
+    }
+    .ad-card h6 {
+        color:#0f172a;
+        font-weight:700;
+        margin-bottom:14px;
+        display:flex; justify-content:space-between; align-items:center;
+    }
+
+    /* Top list */
+    .ad-top-list { list-style:none; padding:0; margin:0; }
+    .ad-top-list li {
+        display:flex; align-items:center; gap:12px;
+        padding:10px 0;
+        border-bottom:1px solid #f1f5f9;
+    }
+    .ad-top-list li:last-child { border-bottom:0; }
+    .ad-top-rank {
+        width:28px; height:28px;
+        background:linear-gradient(135deg,#4f46e5,#06b6d4);
+        color:#fff;
+        font-weight:700;
+        border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        font-size:.85rem;
+        flex-shrink:0;
+    }
+    .ad-top-name { flex-grow:1; color:#0f172a; font-weight:600; font-size:.95rem; }
+    .ad-top-sub { color:#64748b; font-size:.78rem; }
+    .ad-top-meta { text-align:right; }
+    .ad-top-amount { color:#4f46e5; font-weight:700; font-size:.92rem; }
+
+    /* Booking timeline */
+    .ad-booking {
+        display:flex; gap:12px; align-items:flex-start;
+        padding:10px 12px;
+        border-left:3px solid #06b6d4;
+        background:#f8fafc;
+        border-radius:0 8px 8px 0;
+        margin-bottom:8px;
+    }
+    .ad-booking-time {
+        font-weight:700; color:#4f46e5;
+        font-size:.95rem; min-width:78px;
+    }
+    .ad-booking-info { flex-grow:1; }
+    .ad-booking-info .nm { font-weight:600; color:#0f172a; font-size:.92rem; }
+    .ad-booking-info .sub { font-size:.78rem; color:#64748b; }
+
+    /* Alert list */
+    .ad-alert {
+        display:flex; gap:10px; align-items:center;
+        padding:10px 12px;
+        border-radius:10px;
+        margin-bottom:8px;
+        font-size:.88rem;
+    }
+    .ad-alert.danger { background:#fef2f2; border-left:3px solid #ef4444; color:#991b1b; }
+    .ad-alert.warn { background:#fffbeb; border-left:3px solid #f59e0b; color:#92400e; }
+    .ad-alert.info { background:#eef2ff; border-left:3px solid #4f46e5; color:#3730a3; }
+    .ad-alert .ico { font-size:1.2rem; }
+
+    .ad-empty {
+        text-align:center; color:#94a3b8;
+        padding:24px 12px;
+        font-size:.9rem;
+    }
+    .ad-empty i { font-size:2rem; display:block; margin-bottom:6px; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-uppercase ad-page-title">DASHBOARD <span class="accent">QUẢN TRỊ</span></h3>
+    <span class="text-muted small"><i class="bi bi-clock me-1"></i>Cập nhật <span id="adNow"></span></span>
+</div>
+
+<!-- 4 STAT CARDS -->
+<div class="ad-stats-grid mb-3">
+    <div class="ad-stat indigo">
+        <div class="ad-stat-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="ad-stat-label">Doanh thu hôm nay</div>
+        <div class="ad-stat-value"><%= Number(stats.todayRevenue).toLocaleString('vi-VN') %>đ</div>
+        <div class="ad-stat-foot">
+            <% if (stats.revGrowth > 0) { %>
+                <span class="ad-growth-up"><i class="bi bi-arrow-up-right"></i> +<%= stats.revGrowth %>%</span> so với hôm qua
+            <% } else if (stats.revGrowth < 0) { %>
+                <span class="ad-growth-down"><i class="bi bi-arrow-down-right"></i> <%= stats.revGrowth %>%</span> so với hôm qua
+            <% } else { %>
+                <span>=</span> bằng hôm qua
+            <% } %>
+        </div>
+    </div>
+
+    <div class="ad-stat cyan">
+        <div class="ad-stat-icon"><i class="bi bi-door-open"></i></div>
+        <div class="ad-stat-label">Check-in hôm nay</div>
+        <div class="ad-stat-value"><%= stats.todayCheckins %></div>
+        <div class="ad-stat-foot">
+            <i class="bi bi-people"></i> Đang trong phòng: <strong><%= stats.currentlyInside %></strong>
+        </div>
+    </div>
+
+    <div class="ad-stat green">
+        <div class="ad-stat-icon"><i class="bi bi-person-plus"></i></div>
+        <div class="ad-stat-label">Hội viên mới hôm nay</div>
+        <div class="ad-stat-value"><%= stats.todayNewMembers %></div>
+        <div class="ad-stat-foot">
+            <i class="bi bi-people-fill"></i> Tổng hội viên: <strong><%= stats.totalMembers %></strong>
+        </div>
+    </div>
+
+    <div class="ad-stat amber">
+        <div class="ad-stat-icon"><i class="bi bi-receipt"></i></div>
+        <div class="ad-stat-label">Đơn hôm nay</div>
+        <div class="ad-stat-value"><%= stats.todayOrders %></div>
+        <div class="ad-stat-foot">
+            <i class="bi bi-calendar-week"></i> Tuần: <strong><%= Number(stats.weekRevenue).toLocaleString('vi-VN') %>đ</strong>
+        </div>
+    </div>
+</div>
+
+<!-- CHART 7 NGÀY + ALERTS  -->
+<div class="ad-main-grid">
+    <!-- Cột trái: Chart 7 ngày + Top packages + Top products + Today bookings -->
+    <div>
+        <div class="ad-card mb-3">
+            <h6>
+                <span><i class="bi bi-graph-up-arrow text-primary me-2"></i>Doanh thu 7 ngày gần đây</span>
+                <a href="/reports" class="btn btn-sm" style="background:#eef2ff;color:#4f46e5;">
+                    Xem báo cáo chi tiết <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </h6>
+            <div style="position:relative; height:280px;">
+                <canvas id="adChart7"></canvas>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="ad-card h-100">
+                    <h6><span><i class="bi bi-trophy-fill text-warning me-2"></i>Top gói tập (tháng này)</span></h6>
+                    <% if (topPackages.length === 0) { %>
+                        <div class="ad-empty"><i class="bi bi-inbox"></i> Chưa có gói nào bán trong tháng.</div>
+                    <% } else { %>
+                        <ul class="ad-top-list">
+                            <% topPackages.forEach((p, i) => { %>
+                                <li>
+                                    <div class="ad-top-rank"><%= i + 1 %></div>
+                                    <div class="flex-grow-1">
+                                        <div class="ad-top-name"><%= p.package_name %></div>
+                                        <div class="ad-top-sub"><%= p.sold %> đơn bán</div>
+                                    </div>
+                                    <div class="ad-top-meta">
+                                        <div class="ad-top-amount"><%= Number(p.revenue).toLocaleString('vi-VN') %>đ</div>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="ad-card h-100">
+                    <h6><span><i class="bi bi-bag-check-fill text-success me-2"></i>Top sản phẩm (tháng này)</span></h6>
+                    <% if (topProducts.length === 0) { %>
+                        <div class="ad-empty"><i class="bi bi-inbox"></i> Chưa bán sản phẩm POS nào trong tháng.</div>
+                    <% } else { %>
+                        <ul class="ad-top-list">
+                            <% topProducts.forEach((p, i) => { %>
+                                <li>
+                                    <div class="ad-top-rank"><%= i + 1 %></div>
+                                    <div class="flex-grow-1">
+                                        <div class="ad-top-name"><%= p.product_name %></div>
+                                        <div class="ad-top-sub">SL bán: <%= p.qty_sold %></div>
+                                    </div>
+                                    <div class="ad-top-meta">
+                                        <div class="ad-top-amount"><%= Number(p.revenue).toLocaleString('vi-VN') %>đ</div>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-card mt-3">
+            <h6>
+                <span><i class="bi bi-calendar-check text-info me-2"></i>Lịch tập hôm nay</span>
+                <a href="/schedule/admin" class="btn btn-sm" style="background:#eef2ff;color:#4f46e5;">
+                    Quản lý lịch <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </h6>
+            <% if (todayBookings.length === 0) { %>
+                <div class="ad-empty"><i class="bi bi-calendar-x"></i> Hôm nay chưa có lịch tập nào.</div>
+            <% } else { %>
+                <% todayBookings.forEach(b => {
+                    const st = new Date(b.start_time);
+                    const et = new Date(b.end_time);
+                    const tStr = (d) => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+                %>
+                    <div class="ad-booking">
+                        <div class="ad-booking-time"><%= tStr(st) %>-<%= tStr(et) %></div>
+                        <div class="ad-booking-info">
+                            <div class="nm"><%= b.member_name || 'Khách' %></div>
+                            <div class="sub">
+                                <i class="bi bi-tag"></i> <%= b.title %>
+                                <% if (b.trainer_name) { %>
+                                    · <i class="bi bi-person-video3"></i> HLV: <%= b.trainer_name %>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Cột phải: Cảnh báo + Recent registrations -->
+    <div>
+        <div class="ad-card mb-3">
+            <h6><span><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Cảnh báo</span></h6>
+
+            <% if (stats.unreadMsgs > 0) { %>
+                <a href="/admin/messages?filter=unread" class="text-decoration-none">
+                    <div class="ad-alert info">
+                        <i class="bi bi-envelope-fill ico"></i>
+                        <div class="flex-grow-1">
+                            <strong><%= stats.unreadMsgs %></strong> tin nhắn liên hệ chưa đọc
+                        </div>
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </a>
+            <% } %>
+
+            <% if (lowStock.length > 0) { %>
+                <% lowStock.forEach(p => { %>
+                    <a href="/products/edit/<%= p.id %>" class="text-decoration-none">
+                        <div class="ad-alert <%= p.stock_quantity === 0 ? 'danger' : 'warn' %>">
+                            <i class="bi bi-box-seam ico"></i>
+                            <div class="flex-grow-1">
+                                <strong><%= p.product_name %></strong>:
+                                <% if (p.stock_quantity === 0) { %> đã hết hàng
+                                <% } else { %> chỉ còn <strong><%= p.stock_quantity %></strong> trong kho
+                                <% } %>
+                            </div>
+                        </div>
+                    </a>
+                <% }) %>
+            <% } %>
+
+            <% if (expiringPackages.length > 0) { %>
+                <% expiringPackages.forEach(e => { %>
+                    <a href="/members/view/<%= e.member_id %>" class="text-decoration-none">
+                        <div class="ad-alert warn">
+                            <i class="bi bi-hourglass-split ico"></i>
+                            <div class="flex-grow-1">
+                                <strong><%= e.fullname %></strong> — <%= e.package_name %>
+                                còn <strong><%= e.days_left %></strong> ngày
+                            </div>
+                        </div>
+                    </a>
+                <% }) %>
+            <% } %>
+
+            <% if (stats.unreadMsgs === 0 && lowStock.length === 0 && expiringPackages.length === 0) { %>
+                <div class="ad-empty"><i class="bi bi-check-circle text-success"></i> Mọi thứ đều ổn!</div>
+            <% } %>
+        </div>
+
+        <div class="ad-card">
+            <h6>
+                <span><i class="bi bi-list-stars text-primary me-2"></i>Đăng ký gần đây</span>
+                <a href="/registrations" class="btn btn-sm" style="background:#eef2ff;color:#4f46e5;">
+                    Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </h6>
+            <% if (recentRegs.length === 0) { %>
+                <div class="ad-empty"><i class="bi bi-inbox"></i> Chưa có đăng ký nào.</div>
+            <% } else { %>
+                <ul class="ad-top-list">
+                    <% recentRegs.forEach(r => { %>
+                        <li>
+                            <div class="ad-top-rank" style="background:<%= r.payment_status === 'Success' ? 'linear-gradient(135deg,#10b981,#22c55e)' : 'linear-gradient(135deg,#f59e0b,#ef4444)' %>;">
+                                <i class="bi <%= r.payment_status === 'Success' ? 'bi-check' : 'bi-clock' %>"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="ad-top-name"><%= r.member_name || 'Khách' %></div>
+                                <div class="ad-top-sub"><%= r.package_name || '—' %></div>
+                            </div>
+                            <div class="ad-top-meta">
+                                <div class="ad-top-amount"><%= Number(r.price).toLocaleString('vi-VN') %>đ</div>
+                                <div class="ad-top-sub"><%= r.payment_status === 'Success' ? 'Đã thanh toán' : 'Chờ TT' %></div>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    // Update "now"
+    (function () {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById('adNow').textContent =
+            pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' ' +
+            pad(now.getDate()) + '/' + pad(now.getMonth() + 1);
+    })();
+
+    // Chart 7 ngày
+    const chartCtx = document.getElementById('adChart7');
+    const chartLabels = <%- JSON.stringify(chart7.map(x => x.label)) %>;
+    const chartData = <%- JSON.stringify(chart7.map(x => x.revenue)) %>;
+    const grad = chartCtx.getContext('2d').createLinearGradient(0, 0, 0, 200);
+    grad.addColorStop(0, 'rgba(79, 70, 229, 0.45)');
+    grad.addColorStop(1, 'rgba(6, 182, 212, 0.05)');
+    new Chart(chartCtx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: chartData,
+                fill: true,
+                backgroundColor: grad,
+                borderColor: '#4f46e5',
+                borderWidth: 2,
+                tension: 0.35,
+                pointBackgroundColor: '#4f46e5',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => Number(ctx.parsed.y).toLocaleString('vi-VN') + 'đ'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(15,23,42,0.06)' },
+                    ticks: {
+                        color: '#64748b',
+                        callback: (v) => Number(v).toLocaleString('vi-VN')
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b' }
+                }
+            }
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

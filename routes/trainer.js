@@ -14,9 +14,31 @@ const trainerUpload = withFriendlyErrors(uploadTrainerImage, 'image_file');
 const trainerUploadChain = [trainerUpload, csrfSynchronisedProtection];
 
 router.get('/', requireAdmin, (req, res) => {
-    db.query("SELECT * FROM trainers ORDER BY id DESC", (err, results) => {
-        if (err) return res.status(500).send("Lỗi server");
-        res.render('trainers/index', { trainers: results || [] });
+    const page = parseInt(req.query.page) || 1;
+    const searchQuery = (req.query.q || '').trim();
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    const searchSql = `%${searchQuery}%`;
+
+    const countSql = "SELECT COUNT(*) AS total FROM trainers WHERE fullname LIKE ? OR phone LIKE ? OR specialty LIKE ?";
+    const dataSql = "SELECT * FROM trainers WHERE fullname LIKE ? OR phone LIKE ? OR specialty LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
+
+    db.query(countSql, [searchSql, searchSql, searchSql], (err, countResult) => {
+        if (err) return res.status(500).send("Lỗi đếm dữ liệu");
+        const totalRecords = countResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit) || 1;
+
+        db.query(dataSql, [searchSql, searchSql, searchSql, limit, offset], (err2, rows) => {
+            if (err2) return res.status(500).send("Lỗi server");
+            res.render('trainers/index', {
+                trainers: rows || [],
+                currentPage: page,
+                totalPages,
+                searchQuery,
+                pageOffset: offset,
+                pageLimit: limit
+            });
+        });
     });
 });
 

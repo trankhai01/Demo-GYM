@@ -45,8 +45,13 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
     const {
         fullname, phone, gender,
         address, cccd, hometown,
-        height, weight, birth_year
+        height, weight, birth_year, birth_date
     } = req.body;
+    let resolvedBirthYear = birth_year || null;
+    if (birth_date) {
+        const y = Number(String(birth_date).slice(0, 4));
+        if (Number.isFinite(y) && y > 1900) resolvedBirthYear = y;
+    }
 
     if (req.uploadError) {
         return res.redirect('/my-profile?error=' + encodeURIComponent(req.uploadError));
@@ -73,7 +78,7 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
                 UPDATE members
                 SET fullname = ?, phone = ?, gender = ?,
                     address = ?, cccd = ?, hometown = ?,
-                    height = ?, weight = ?, birth_year = ?,
+                    height = ?, weight = ?, birth_year = ?, birth_date = ?,
                     avatar_url = ?
                 WHERE id = ?
             `;
@@ -81,7 +86,7 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
             const values = [
                 fullname, phone, gender,
                 address || null, cccd || null, hometown || null,
-                height || null, weight || null, birth_year || null,
+                height || null, weight || null, resolvedBirthYear, birth_date || null,
                 finalAvatar,
                 memberId
             ];
@@ -96,6 +101,13 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
                 }
                 req.session.user.username = fullname;
                 if (uploaded) req.session.user.avatar_url = uploaded;
+
+                if (birth_date) {
+                    const baseUrl = `${req.protocol}://${req.get('host')}`;
+                    require('../lib/birthdayJob').runForMember(memberId, { baseUrl })
+                        .catch(e => console.error('[profile/edit -> birthdayJob]', e.message));
+                }
+
                 res.redirect('/my-profile?success=true');
             });
         });

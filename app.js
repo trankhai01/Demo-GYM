@@ -63,6 +63,7 @@ app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.csrfToken = generateToken(req);
   res.locals.unreadContactCount = 0;
+  res.locals.currentPath = req.path;
 
   const u = req.session.user;
   const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');
@@ -103,6 +104,7 @@ app.use('/schedule', require('./routes/schedule'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
+app.use("/admin", require('./routes/admin'));
 app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));
@@ -162,4 +164,8 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server chạy tại: http://localhost:${PORT}`);
+});
+
+require('./lib/birthdayJob').start({
+    baseUrl: process.env.APP_BASE_URL || `http://localhost:${PORT}`
 });

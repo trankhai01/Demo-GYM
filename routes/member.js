@@ -190,8 +190,13 @@ router.post("/edit/:id",requireStaff, (req, res) => {
     const id = req.params.id;
     const {
         fullname, phone, email, gender,
-        cccd, birth_year, height, weight, hometown, address
+        cccd, birth_year, birth_date, height, weight, hometown, address
     } = req.body;
+    let resolvedBirthYear = birth_year || null;
+    if (birth_date) {
+        const y = Number(String(birth_date).slice(0, 4));
+        if (Number.isFinite(y) && y > 1900) resolvedBirthYear = y;
+    }
 
     const checkSql = "SELECT id FROM members WHERE phone = ? AND id != ?";
     db.query(checkSql, [phone, id], (err, results) => {
@@ -209,20 +214,27 @@ router.post("/edit/:id",requireStaff, (req, res) => {
         const updateSql = `
             UPDATE members
             SET fullname = ?, phone = ?, email = ?, gender = ?,
-                cccd = ?, birth_year = ?, height = ?, weight = ?,
+                cccd = ?, birth_year = ?, birth_date = ?, height = ?, weight = ?,
                 hometown = ?, address = ?
             WHERE id = ?
         `;
 
         const values = [
             fullname, phone, (email && email.trim()) ? email.trim() : null, gender,
-            cccd || null, birth_year || null, height || null, weight || null,
+            cccd || null, resolvedBirthYear, birth_date || null, height || null, weight || null,
             hometown || null, address || null,
             id
         ];
 
         db.query(updateSql, values, (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật: " + err.message);
+
+            if (birth_date) {
+                const baseUrl = `${req.protocol}://${req.get('host')}`;
+                require('../lib/birthdayJob').runForMember(id, { baseUrl })
+                    .catch(e => console.error('[member/edit -> birthdayJob]', e.message));
+            }
+
             res.redirect(`/members/view/${id}`);
         });
     });

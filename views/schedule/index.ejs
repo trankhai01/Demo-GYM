@@ -71,13 +71,19 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small text-white-50">Huấn luyện viên (tùy chọn)</label>
+                    <label class="form-label small text-white-50">
+                        Huấn luyện viên
+                        <span id="book-trainer-hint" class="text-info ms-1" style="font-size:.78rem;"></span>
+                    </label>
                     <select id="book-trainer" class="form-select bg-dark text-white border-secondary">
                         <option value="">-- Tự tập, không cần HLV --</option>
                         <% (trainers || []).forEach(t => { %>
                             <option value="<%= t.id %>"><%= t.fullname %></option>
                         <% }) %>
                     </select>
+                    <div class="form-text text-white-50" style="font-size:.75rem;">
+                        Danh sách chỉ hiển thị HLV còn trống lịch trong khung giờ đã chọn.
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small text-white-50">Ghi chú</label>
@@ -161,7 +167,7 @@
                 const now = new Date();
                 if (info.start < now) {
                     calendar.unselect();
-                    alert('Không thể đặt lịch trong quá khứ.');
+                    Toast.warning('Không thể đặt lịch trong quá khứ.');
                     return;
                 }
                 document.getElementById('book-title').value = 'Buổi tập';
@@ -171,6 +177,7 @@
                 document.getElementById('book-note').value = '';
                 document.getElementById('book-error').style.display = 'none';
                 bookModal.show();
+                refreshAvailableTrainers();
             },
             eventClick: function(info) {
                 showDetail(info.event);
@@ -180,7 +187,45 @@
 
         document.getElementById('book-submit').addEventListener('click', submitBooking);
         document.getElementById('detail-cancel-btn').addEventListener('click', cancelBooking);
+
+        // Re-filter HLV available khi đổi giờ
+        ['book-start', 'book-end'].forEach(id => {
+            document.getElementById(id).addEventListener('change', refreshAvailableTrainers);
+        });
     });
+
+    /* Lấy danh sách HLV available cho khung giờ đang chọn */
+    function refreshAvailableTrainers() {
+        const startVal = document.getElementById('book-start').value;
+        const endVal = document.getElementById('book-end').value;
+        const sel = document.getElementById('book-trainer');
+        const hint = document.getElementById('book-trainer-hint');
+        if (!startVal || !endVal) return;
+
+        const startIso = new Date(startVal).toISOString();
+        const endIso = new Date(endVal).toISOString();
+        if (new Date(startVal) >= new Date(endVal)) return;
+
+        hint.textContent = '⏳ đang kiểm tra HLV trống lịch...';
+        const prevValue = sel.value;
+        fetch('/schedule/available-trainers?start=' + encodeURIComponent(startIso) + '&end=' + encodeURIComponent(endIso))
+            .then(r => r.json())
+            .then(list => {
+                sel.innerHTML = '<option value="">-- Tự tập, không cần HLV --</option>';
+                (list || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.fullname + (t.specialty ? ' • ' + t.specialty : '');
+                    sel.appendChild(opt);
+                });
+                /* Giữ giá trị cũ nếu vẫn còn trong danh sách */
+                if (prevValue && Array.from(sel.options).some(o => o.value === String(prevValue))) {
+                    sel.value = prevValue;
+                }
+                hint.textContent = list.length > 0 ? `✓ ${list.length} HLV trống` : '— không HLV nào trống —';
+            })
+            .catch(() => { hint.textContent = '✗ lỗi tải HLV'; });
+    }
 
     function submitBooking() {
         const startVal = document.getElementById('book-start').value;
@@ -270,10 +315,10 @@
                 detailModal.hide();
                 calendar.refetchEvents();
             } else {
-                alert(data.message || 'Không hủy được.');
+                Toast.warning(data.message || 'Không hủy được.');
             }
         })
-        .catch(() => alert('Lỗi kết nối, vui lòng thử lại.'));
+        .catch(() => Toast.warning('Lỗi kết nối, vui lòng thử lại.'));
     }
 </script>
 

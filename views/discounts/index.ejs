@@ -3,13 +3,7 @@
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-ticket-perforated text-primary"></i> Quản lý mã ưu đãi</h2>
-    <div>
-      <form action="/discounts/birthday/run" method="POST" class="d-inline" onsubmit="return confirm('Sinh mã sinh nhật cho hội viên có sinh nhật trong tháng này?');">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-outline-primary"><i class="bi bi-cake2"></i> Sinh mã sinh nhật tháng này</button>
-      </form>
-      <a href="/discounts/add" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Thêm mã mới</a>
-    </div>
+    <a href="/discounts/add" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Thêm mã mới</a>
   </div>
 
   <div class="card">

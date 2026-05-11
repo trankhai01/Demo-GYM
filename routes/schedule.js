@@ -31,6 +31,99 @@ router.get('/admin', requireStaff, (req, res) => {
     });
 });
 
+/* ============================================================
+ * GET /schedule/available-trainers?start=...&end=...
+ * Trả về danh sách HLV chưa bị conflict trong khoảng thời gian.
+ * Nếu trainer đã có booking khác overlap -> không trả về.
+ * ============================================================ */
+router.get('/available-trainers', requireLogin, (req, res) => {
+    const { start, end } = req.query;
+    if (!isValidIsoDateTime(start) || !isValidIsoDateTime(end)) {
+        return res.status(400).json({ error: 'Tham số start/end không hợp lệ' });
+    }
+    const startSql = toMysqlDateTime(start);
+    const endSql = toMysqlDateTime(end);
+
+    /* HLV available = HLV không có booking nào overlap với khoảng [start, end) */
+    const sql = `
+        SELECT t.id, t.fullname, t.specialty
+        FROM trainers t
+        WHERE t.status = 'Active'
+          AND NOT EXISTS (
+              SELECT 1 FROM bookings b
+              WHERE b.trainer_id = t.id
+                AND b.status = 'booked'
+                AND b.start_time < ?
+                AND b.end_time > ?
+          )
+        ORDER BY t.fullname
+    `;
+    db.query(sql, [endSql, startSql], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
+        res.json(rows || []);
+    });
+});
+
+/* ============================================================
+ * GET /schedule/trainer/:id  (admin/staff)
+ * Xem lịch của 1 HLV cụ thể.
+ * ============================================================ */
+router.get('/trainer/:id', requireStaff, (req, res) => {
+    const trainerId = Number(req.params.id);
+    if (!Number.isFinite(trainerId) || trainerId <= 0) {
+        return res.status(400).render('error', { message: 'ID HLV không hợp lệ' });
+    }
+    db.query(
+        "SELECT id, fullname, specialty, phone, image_url FROM trainers WHERE id = ?",
+        [trainerId],
+        (err, rows) => {
+            if (err || rows.length === 0) {
+                return res.status(404).render('error', { message: 'Không tìm thấy HLV.' });
+            }
+            res.render('schedule/trainer', { trainer: rows[0] });
+        }
+    );
+});
+
+/* ============================================================
+ * GET /schedule/trainer-events/:id?start=...&end=...
+ * JSON các booking của 1 HLV trong khoảng thời gian.
+ * ============================================================ */
+router.get('/trainer-events/:id', requireStaff, (req, res) => {
+    const trainerId = Number(req.params.id);
+    const { start, end } = req.query;
+    if (!Number.isFinite(trainerId) || !isValidIsoDateTime(start) || !isValidIsoDateTime(end)) {
+        return res.status(400).json({ error: 'Tham số không hợp lệ' });
+    }
+    const sql = `
+        SELECT b.id, b.start_time, b.end_time, b.title, b.note, b.status,
+               m.id AS member_id, m.fullname AS member_name
+        FROM bookings b
+        JOIN members m ON b.member_id = m.id
+        WHERE b.trainer_id = ?
+          AND b.start_time < ? AND b.end_time > ?
+          AND b.status IN ('booked', 'completed')
+        ORDER BY b.start_time
+    `;
+    db.query(sql, [trainerId, toMysqlDateTime(end), toMysqlDateTime(start)], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
+        const events = rows.map(r => ({
+            id: r.id,
+            title: r.member_name + ' • ' + r.title,
+            start: r.start_time,
+            end: r.end_time,
+            extendedProps: {
+                member_id: r.member_id,
+                member_name: r.member_name,
+                note: r.note,
+                status: r.status
+            },
+            color: r.status === 'completed' ? '#10b981' : '#4f46e5'
+        }));
+        res.json(events);
+    });
+});
+
 router.get('/events', requireLogin, (req, res) => {
     const role = req.session.user.role;
     const userId = req.session.user.id;

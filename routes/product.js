@@ -13,10 +13,45 @@ const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
 
 router.get('/', requireStaff, (req, res) => {
-    db.query("SELECT * FROM products ORDER BY category ASC, stock_quantity ASC", (err, results) => {
-        if (err) return res.status(500).send("Lỗi tải dữ liệu");
-        res.render('products/index', { products: results || [] });
-    });
+    const searchQuery = (req.query.q || '').trim();
+    const selectedCategory = (req.query.category || '').trim();
+    const searchSql = `%${searchQuery}%`;
+
+    /* 1) Lấy list danh mục distinct (cho sidebar filter) */
+    db.query(
+        "SELECT category, COUNT(*) AS cnt FROM products WHERE category IS NOT NULL AND category <> '' GROUP BY category ORDER BY category ASC",
+        (errCat, catRows) => {
+            if (errCat) return res.status(500).send("Lỗi tải danh mục");
+
+            /* 2) Tổng số sản phẩm (cho badge "Tất cả") */
+            db.query(
+                "SELECT COUNT(*) AS total FROM products",
+                (errTotal, totalRows) => {
+                    if (errTotal) return res.status(500).send("Lỗi tổng sản phẩm");
+
+                    /* 3) Query data với filter */
+                    let dataSql = "SELECT * FROM products WHERE (product_name LIKE ? OR category LIKE ?)";
+                    const params = [searchSql, searchSql];
+                    if (selectedCategory) {
+                        dataSql += " AND category = ?";
+                        params.push(selectedCategory);
+                    }
+                    dataSql += " ORDER BY id ASC";
+
+                    db.query(dataSql, params, (err3, rows) => {
+                        if (err3) return res.status(500).send("Lỗi tải dữ liệu");
+                        res.render('products/index', {
+                            products: rows || [],
+                            categories: catRows || [],
+                            totalProducts: totalRows[0].total || 0,
+                            searchQuery,
+                            selectedCategory
+                        });
+                    });
+                }
+            );
+        }
+    );
 });
 
 router.get('/add', requireStaff, (req, res) => {

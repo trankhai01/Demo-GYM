@@ -139,7 +139,7 @@
     function processManualCheckin() {
         const inputVal = document.getElementById('manual-input').value.trim();
         if (inputVal === '') {
-            alert("Vui lòng nhập Số điện thoại hoặc ID!");
+            Toast.warning("Vui lòng nhập Số điện thoại hoặc ID!");
             return;
         }
         processCheckin(inputVal);
@@ -236,7 +236,7 @@
                 isScanning = false;
             } else {
                 audioError.play().catch(() => {});
-                alert(data.message || 'Không check-out được');
+                Toast.warning(data.message || 'Không check-out được');
             }
             loadActiveSessions();
         })

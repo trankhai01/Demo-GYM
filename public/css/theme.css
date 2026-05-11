@@ -32,32 +32,8 @@ body {
 a { color: var(--gb-primary); }
 a:hover { color: var(--gb-primary-600); }
 
-/* Sidebar — convert from black to white card with indigo highlight. */
-.sidebar {
-    background: var(--gb-surface) !important;
-    border-right: 1px solid var(--gb-border) !important;
-    box-shadow: var(--gb-shadow);
-}
-.sidebar a.nav-item {
-    color: var(--gb-text-muted) !important;
-}
-.sidebar a.nav-item:hover {
-    background: var(--gb-primary-100) !important;
-    color: var(--gb-primary) !important;
-    border-left-color: var(--gb-primary) !important;
-}
-.sidebar a.nav-item.active {
-    background: var(--gb-primary-100) !important;
-    color: var(--gb-primary) !important;
-    border-left-color: var(--gb-primary) !important;
-}
-.sidebar .navbar-brand {
-    background: linear-gradient(90deg, var(--gb-primary), var(--gb-accent));
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    color: transparent !important;
-}
+/* Sidebar styling sống trong views/partials/header.ejs (dark theme),
+   nên không override ở đây. */
 
 /* Cards / surfaces — flip dark to light. */
 .card {
@@ -348,4 +324,226 @@ body [style*="background:#121212"],
 body [style*="background-color:#121212"] {
     background: var(--gb-surface) !important;
     color: var(--gb-text) !important;
+}
+
+/* ============================================================
+ * Toast Notifications (window.Toast)
+ * ============================================================ */
+.gym-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.gym-toast {
+    pointer-events: auto;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 12px 38px 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .15);
+    border-left: 4px solid #4f46e5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 420px;
+    font-size: .94rem;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform .25s ease, opacity .25s ease;
+    position: relative;
+}
+.gym-toast.show { transform: translateX(0); opacity: 1; }
+.gym-toast-icon { font-size: 1.4rem; flex-shrink: 0; }
+.gym-toast-msg { flex-grow: 1; word-break: break-word; }
+.gym-toast-close {
+    position: absolute;
+    top: 6px; right: 8px;
+    background: transparent;
+    border: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0 6px;
+}
+.gym-toast-close:hover { color: #0f172a; }
+.gym-toast-success { border-left-color: #10b981; }
+.gym-toast-success .gym-toast-icon { color: #10b981; }
+.gym-toast-error { border-left-color: #ef4444; }
+.gym-toast-error .gym-toast-icon { color: #ef4444; }
+.gym-toast-warning { border-left-color: #f59e0b; }
+.gym-toast-warning .gym-toast-icon { color: #f59e0b; }
+.gym-toast-info { border-left-color: #06b6d4; }
+.gym-toast-info .gym-toast-icon { color: #06b6d4; }
+
+/* Confirm dialog (Toast.confirm) */
+.gym-confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, .5);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+.gym-confirm-overlay.show { opacity: 1; }
+.gym-confirm-dialog {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 28px 24px 18px 24px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, .25);
+    transform: scale(.92);
+    transition: transform .2s ease;
+}
+.gym-confirm-overlay.show .gym-confirm-dialog { transform: scale(1); }
+.gym-confirm-icon { font-size: 3rem; color: #f59e0b; margin-bottom: 8px; }
+.gym-confirm-msg { color: #0f172a; font-size: 1rem; margin-bottom: 18px; line-height: 1.5; }
+.gym-confirm-actions { display: flex; gap: 8px; }
+.gym-confirm-actions .btn { flex: 1; }
+
+/* ============================================================
+ * Skeleton loading
+ * ============================================================ */
+.gym-skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: gymSkeletonShimmer 1.4s infinite;
+    border-radius: 6px;
+    color: transparent !important;
+    user-select: none;
+    pointer-events: none;
+}
+@keyframes gymSkeletonShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.gym-skeleton-line { height: 14px; margin: 6px 0; }
+.gym-skeleton-circle { border-radius: 50%; }
+
+/* ============================================================
+ * Dark mode (data-theme="dark") — chỉ override các surface chính
+ * ============================================================ */
+html[data-theme="dark"] {
+    --gb-bg: #0f172a;
+    --gb-surface: #1e293b;
+    --gb-surface-2: #0f172a;
+    --gb-border: #334155;
+    --gb-text: #e2e8f0;
+    --gb-text-muted: #94a3b8;
+    --gb-shadow: 0 4px 12px rgba(0, 0, 0, 0.40);
+    --gb-shadow-lg: 0 12px 32px rgba(79, 70, 229, 0.30);
+    --gb-primary-100: #312e81;
+    --gb-accent-100: #155e75;
+}
+html[data-theme="dark"] body {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .main-content { background-color: #0f172a; }
+
+/* Cards / tables / modals */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .modal-content {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .table {
+    color: #e2e8f0 !important;
+    --bs-table-bg: #1e293b !important;
+    --bs-table-color: #e2e8f0 !important;
+    --bs-table-hover-bg: #334155 !important;
+    --bs-table-hover-color: #ffffff !important;
+    --bs-table-border-color: #334155 !important;
+}
+html[data-theme="dark"] .table-light,
+html[data-theme="dark"] .table thead th,
+html[data-theme="dark"] .table-light th,
+html[data-theme="dark"] .table-custom-dark thead th {
+    background-color: #0b1322 !important;
+    color: #818cf8 !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .table-custom-dark,
+html[data-theme="dark"] .table-custom-dark .table,
+html[data-theme="dark"] .table-custom-dark td,
+html[data-theme="dark"] .table-custom-dark tr {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* Forms */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+    background-color: #0b1322 !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+html[data-theme="dark"] .form-control::placeholder { color: #64748b; }
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus {
+    background-color: #0b1322 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+}
+
+/* Toast / confirm in dark */
+html[data-theme="dark"] .gym-toast,
+html[data-theme="dark"] .gym-confirm-dialog {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+html[data-theme="dark"] .gym-confirm-msg { color: #e2e8f0; }
+
+/* Pagination */
+html[data-theme="dark"] .page-link {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+/* Inline-style overrides cho các "background:#fff" hardcoded:
+   Không thể với CSS thường, nhưng các phần dùng var(--gb-*) sẽ tự đổi. */
+html[data-theme="dark"] [style*="background:#fff"],
+html[data-theme="dark"] [style*="background-color:#fff"],
+html[data-theme="dark"] [style*="background:#ffffff"] {
+    background-color: #1e293b !important;
+}
+html[data-theme="dark"] [style*="color:#0f172a"] { color: #e2e8f0 !important; }
+
+/* Pricing card / pkg card / sidebar trang chủ — tránh bị xáo trộn */
+html[data-theme="dark"] .pkg-card,
+html[data-theme="dark"] .pricing-card {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+/* Theme toggle button chung trong sidebar */
+.gym-theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fde68a;
+    cursor: pointer;
+    transition: all .2s;
+}
+.gym-theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: rotate(15deg);
 }
