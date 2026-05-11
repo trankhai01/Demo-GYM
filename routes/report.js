@@ -26,8 +26,8 @@ router.get('/', requireAdmin, (req, res) => {
         FROM registrations
         WHERE payment_status = 'Success'
         AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 9 DAY)
-        GROUP BY DATE(registration_date), day_month
-        ORDER BY DATE(registration_date) ASC
+        GROUP BY DATE_FORMAT(registration_date, '%Y-%m-%d'), day_month
+        ORDER BY DATE_FORMAT(registration_date, '%Y-%m-%d') ASC
     `;
     db.query(revenueSql, (err, revenueResult) => {
         if (err) return res.status(500).send("Lỗi tính doanh thu");

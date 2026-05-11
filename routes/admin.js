@@ -101,14 +101,14 @@ router.get('/', requireAdmin, async (req, res) => {
                  GROUP BY pr.id, pr.product_name, pr.image_url
                  ORDER BY qty_sold DESC LIMIT 5`
             ],
-            /* Doanh thu 7 ngày qua (chart) */
+            /* Doanh thu 7 ngày qua (chart). Dùng DATE_FORMAT để nhận string, tránh shift timezone khi mysql2 parse DATE thành JS Date */
             chart7days: [
-                `SELECT DATE(registration_date) AS d,
+                `SELECT DATE_FORMAT(registration_date, '%Y-%m-%d') AS d,
                         COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS revenue
                  FROM registrations
                  WHERE payment_status = 'Success'
                    AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY)
-                 GROUP BY DATE(registration_date)
+                 GROUP BY DATE_FORMAT(registration_date, '%Y-%m-%d')
                  ORDER BY d ASC`
             ],
             /* Booking hôm nay (lịch tập) */
@@ -171,18 +171,15 @@ router.get('/', requireAdmin, async (req, res) => {
             revGrowth = 100;
         }
 
-        /* Build chart 7 ngày: bù 0 cho ngày không có */
+        /* Build chart 7 ngày: bù 0 cho ngày không có. Dùng local date (không UTC) để tránh shift timezone */
+        const pad = n => String(n).padStart(2, '0');
         const chart7 = [];
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            const ymd = d.toISOString().slice(0, 10);
-            const label = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
-            const found = r.chart7days.find(row => {
-                /* row.d có thể là Date object hoặc string YYYY-MM-DD */
-                const rd = row.d instanceof Date ? row.d.toISOString().slice(0, 10) : String(row.d).slice(0, 10);
-                return rd === ymd;
-            });
+            const ymd = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const label = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+            const found = r.chart7days.find(row => String(row.d).slice(0, 10) === ymd);
             chart7.push({ label, revenue: found ? Number(found.revenue) : 0 });
         }
 
