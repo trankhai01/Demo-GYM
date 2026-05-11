@@ -229,6 +229,15 @@ router.post("/edit/:id",requireStaff, (req, res) => {
 
         db.query(updateSql, values, (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật: " + err.message);
+
+            /* Nếu admin vừa nhập/sửa ngày sinh trùng tháng hiện tại
+               → tự sinh mã sinh nhật + gửi email cho HV ngay */
+            if (birth_date) {
+                const baseUrl = `${req.protocol}://${req.get('host')}`;
+                require('../lib/birthdayJob').runForMember(id, { baseUrl })
+                    .catch(e => console.error('[member/edit -> birthdayJob]', e.message));
+            }
+
             res.redirect(`/members/view/${id}`);
         });
     });
