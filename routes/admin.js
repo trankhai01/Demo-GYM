@@ -101,7 +101,6 @@ router.get('/', requireAdmin, async (req, res) => {
                  GROUP BY pr.id, pr.product_name, pr.image_url
                  ORDER BY qty_sold DESC LIMIT 5`
             ],
-            /* Doanh thu 7 ngày qua (chart). Dùng DATE_FORMAT để nhận string, tránh shift timezone khi mysql2 parse DATE thành JS Date */
             chart7days: [
                 `SELECT DATE_FORMAT(registration_date, '%Y-%m-%d') AS d,
                         COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS revenue
@@ -171,7 +170,6 @@ router.get('/', requireAdmin, async (req, res) => {
             revGrowth = 100;
         }
 
-        /* Build chart 7 ngày: bù 0 cho ngày không có. Dùng local date (không UTC) để tránh shift timezone */
         const pad = n => String(n).padStart(2, '0');
         const chart7 = [];
         for (let i = 6; i >= 0; i--) {

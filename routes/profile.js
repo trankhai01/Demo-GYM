@@ -47,7 +47,6 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
         address, cccd, hometown,
         height, weight, birth_year, birth_date
     } = req.body;
-    /* Nếu user nhập ngày sinh đầy đủ → suy ra năm sinh */
     let resolvedBirthYear = birth_year || null;
     if (birth_date) {
         const y = Number(String(birth_date).slice(0, 4));
@@ -103,8 +102,6 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
                 req.session.user.username = fullname;
                 if (uploaded) req.session.user.avatar_url = uploaded;
 
-                /* Nếu HV vừa nhập ngày sinh + tháng đó là tháng hiện tại
-                   → trigger sinh mã sinh nhật ngay (không đợi cron 24h) */
                 if (birth_date) {
                     const baseUrl = `${req.protocol}://${req.get('host')}`;
                     require('../lib/birthdayJob').runForMember(memberId, { baseUrl })

@@ -192,7 +192,6 @@ router.post("/edit/:id",requireStaff, (req, res) => {
         fullname, phone, email, gender,
         cccd, birth_year, birth_date, height, weight, hometown, address
     } = req.body;
-    /* Nếu user nhập birth_date → suy ra birth_year tự động */
     let resolvedBirthYear = birth_year || null;
     if (birth_date) {
         const y = Number(String(birth_date).slice(0, 4));
@@ -230,8 +229,6 @@ router.post("/edit/:id",requireStaff, (req, res) => {
         db.query(updateSql, values, (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật: " + err.message);
 
-            /* Nếu admin vừa nhập/sửa ngày sinh trùng tháng hiện tại
-               → tự sinh mã sinh nhật + gửi email cho HV ngay */
             if (birth_date) {
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
                 require('../lib/birthdayJob').runForMember(id, { baseUrl })
