@@ -1,68 +1,142 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <div>
-            <h2 class="fw-bold text-uppercase m-0" style="color:#0f172a;"><i class="bi bi-box-seam me-2" style="color:#4f46e5;"></i>Quản lý Kho Hàng</h2>
-        </div>
-        <a href="/products/add" class="btn rounded-pill px-4" style="background:#4f46e5;color:#fff;"><i class="bi bi-plus-lg me-1"></i>Nhập sản phẩm mới</a>
-    </div>
+<style>
+    .table-custom-dark { border-radius: 12px; overflow: hidden; background:#fff !important; }
+    .table-custom-dark .table { background:#fff !important; color:#0f172a !important; --bs-table-bg: #fff; --bs-table-color: #0f172a; --bs-table-hover-bg: #f1f5f9; --bs-table-hover-color: #0f172a; --bs-table-striped-bg: #f8fafc; --bs-table-striped-color: #0f172a; --bs-table-border-color: #e2e8f0; }
+    .table-custom-dark thead th { background-color: #f1f5f9; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
+    .table-custom-dark td, .table-custom-dark tr { border-color: #e2e8f0 !important; color: #0f172a !important; background:#fff !important; }
+    .table-custom-dark tr:hover td { background:#f8fafc !important; }
+    .pagination .page-link:focus { box-shadow: none; }
+</style>
 
-    <div class="rounded-4 shadow-sm overflow-hidden" style="background:#fff;border:1px solid #e2e8f0;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-uppercase" style="letter-spacing: 1px; color:#0f172a;">QUẢN LÝ <span style="color: #4f46e5;">KHO HÀNG</span></h3>
+
+    <form action="/products" method="GET" class="d-flex w-50 mx-3">
+        <input type="text" name="q" class="form-control me-2" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;"
+               placeholder="Tìm theo tên sản phẩm hoặc danh mục..." value="<%= locals.searchQuery || '' %>">
+        <button type="submit" class="btn" style="background:#4f46e5;color:#fff;"><i class="bi bi-search"></i></button>
+    </form>
+
+    <a href="/products/add" class="btn shadow-sm fw-bold" style="background:#4f46e5;color:#fff;">
+        <i class="bi bi-plus-lg"></i> THÊM MỚI
+    </a>
+</div>
+
+<div class="card shadow-sm" style="background:#fff;border:1px solid #e2e8f0;">
+    <div class="card-body p-0 table-custom-dark">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="text-uppercase small" style="letter-spacing: 1px; background:#f1f5f9; color:#475569;">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
                     <tr>
-                        <th class="ps-4">Hình ảnh</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Danh mục</th>
-                        <th>Giá bán</th>
-                        <th class="text-center">Tồn kho</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th class="text-center pe-4">Thao tác</th>
+                        <th class="ps-4 py-3">STT</th>
+                        <th class="py-3">Sản phẩm</th>
+                        <th class="py-3">Danh mục</th>
+                        <th class="py-3">Giá bán</th>
+                        <th class="text-center py-3">Tồn kho</th>
+                        <th class="text-center py-3">Trạng thái</th>
+                        <th class="text-center pe-4 py-3">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% if (products.length > 0) { %>
-                        <% products.forEach(prod => { %>
+                        <% products.forEach((prod, i) => { %>
                             <tr>
-                                <td class="ps-4">
-                                    <img src="<%= prod.image_url || 'https://via.placeholder.com/50' %>" class="rounded bg-secondary object-fit-cover" width="50" height="50">
+                                <td class="ps-4 fw-semibold" style="color:#475569;"><%= (typeof pageOffset !== 'undefined' ? pageOffset : 0) + i + 1 %></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <% if (prod.image_url) { %>
+                                            <img src="<%= prod.image_url %>" alt=""
+                                                 class="rounded" style="width:48px; height:48px; object-fit:cover; background:#f1f5f9; border:1px solid #e2e8f0;">
+                                        <% } else { %>
+                                            <span class="rounded d-inline-flex align-items-center justify-content-center"
+                                                  style="width:48px; height:48px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe;">
+                                                <i class="bi bi-box2-fill"></i>
+                                            </span>
+                                        <% } %>
+                                        <span class="fw-bold" style="color:#0f172a;"><%= prod.product_name %></span>
+                                    </div>
                                 </td>
-                                <td class="fw-bold"><%= prod.product_name %></td>
-                                <td><span class="badge bg-secondary"><%= prod.category %></span></td>
-                                <td class="fw-bold" style="color:#0d9488;"><%= Number(prod.price).toLocaleString('vi-VN') %>đ</td>
-                                
-                                <td class="text-center">
-                                    <% if (prod.stock_quantity <= 0) { %>
-                                        <span class="badge bg-danger fs-6">Hết hàng</span>
-                                    <% } else if (prod.stock_quantity < 10) { %>
-                                        <span class="fw-bold" style="color:#f59e0b;"><%= prod.stock_quantity %> <i class="bi bi-exclamation-triangle-fill"></i></span>
+                                <td>
+                                    <% if (prod.category) { %>
+                                        <span class="badge px-3 py-2" style="background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;">
+                                            <%= prod.category %>
+                                        </span>
                                     <% } else { %>
-                                        <span style="color:#0f172a;"><%= prod.stock_quantity %></span>
+                                        <span style="color:#94a3b8;">—</span>
                                     <% } %>
                                 </td>
-                                
-                                <td class="text-center">
-                                    <span class="badge <%= prod.status === 'Active' ? 'bg-success' : 'bg-secondary' %>"><%= prod.status %></span>
+                                <td class="fw-bold" style="color:#4f46e5;">
+                                    <%= Number(prod.price).toLocaleString('vi-VN') %>đ
                                 </td>
-                                <td class="text-center pe-4">
-                                    <a href="/products/edit/<%= prod.id %>" class="btn btn-sm" style="background:#4f46e5;color:#fff;"><i class="bi bi-pencil-square"></i> Sửa</a>
-                                    <form action="/products/delete/<%= prod.id %>" method="POST" class="d-inline ms-1"
-                                          onsubmit="return confirm('Xóa sản phẩm này khỏi kho?')">
+                                <td class="text-center">
+                                    <% if (prod.stock_quantity <= 0) { %>
+                                        <span class="badge px-3 py-2" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">Hết hàng</span>
+                                    <% } else if (prod.stock_quantity < 10) { %>
+                                        <span class="fw-bold" style="color:#f59e0b;">
+                                            <%= prod.stock_quantity %>
+                                            <i class="bi bi-exclamation-triangle-fill ms-1"></i>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="fw-semibold" style="color:#16a34a;"><%= prod.stock_quantity %></span>
+                                    <% } %>
+                                </td>
+                                <td class="text-center">
+                                    <% if (prod.status === 'Active') { %>
+                                        <span class="badge px-3 py-2" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;">Đang bán</span>
+                                    <% } else { %>
+                                        <span class="badge px-3 py-2" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">Ngừng bán</span>
+                                    <% } %>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/products/edit/<%= prod.id %>" class="btn btn-sm me-2 shadow-sm" style="background:#4f46e5;color:#fff;">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <form action="/products/delete/<%= prod.id %>" method="POST" class="d-inline"
+                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')">
                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash3"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
                         <% }) %>
                     <% } else { %>
-                        <tr><td colspan="7" class="text-center py-4" style="color:#94a3b8;">Kho hàng đang trống.</td></tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-5" style="color:#94a3b8;">
+                                <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+                                Không tìm thấy sản phẩm nào.
+                            </td>
+                        </tr>
                     <% } %>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<% if (locals.totalPages && totalPages > 1) { %>
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
+               href="/products?page=<%= currentPage - 1 %>&q=<%= locals.searchQuery || '' %>">Trước</a>
+        </li>
+
+        <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link" style="<%= currentPage === i ? 'background:#4f46e5;border-color:#4f46e5;color:#fff;' : 'background:#fff;color:#475569;border-color:#e2e8f0;' %>"
+                   href="/products?page=<%= i %>&q=<%= locals.searchQuery || '' %>"><%= i %></a>
+            </li>
+        <% } %>
+
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
+               href="/products?page=<%= currentPage + 1 %>&q=<%= locals.searchQuery || '' %>">Sau</a>
+        </li>
+    </ul>
+</nav>
+<% } %>
 
 <%- include('../partials/footer') %>

@@ -13,9 +13,31 @@ const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
 
 router.get('/', requireStaff, (req, res) => {
-    db.query("SELECT * FROM products ORDER BY category ASC, stock_quantity ASC", (err, results) => {
-        if (err) return res.status(500).send("Lỗi tải dữ liệu");
-        res.render('products/index', { products: results || [] });
+    const page = parseInt(req.query.page) || 1;
+    const searchQuery = (req.query.q || '').trim();
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    const searchSql = `%${searchQuery}%`;
+
+    const countSql = "SELECT COUNT(*) AS total FROM products WHERE product_name LIKE ? OR category LIKE ?";
+    const dataSql = "SELECT * FROM products WHERE product_name LIKE ? OR category LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
+
+    db.query(countSql, [searchSql, searchSql], (err, countResult) => {
+        if (err) return res.status(500).send("Lỗi đếm dữ liệu");
+        const totalRecords = countResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit) || 1;
+
+        db.query(dataSql, [searchSql, searchSql, limit, offset], (err2, rows) => {
+            if (err2) return res.status(500).send("Lỗi tải dữ liệu");
+            res.render('products/index', {
+                products: rows || [],
+                currentPage: page,
+                totalPages,
+                searchQuery,
+                pageOffset: offset,
+                pageLimit: limit
+            });
+        });
     });
 });
 

@@ -1,57 +1,133 @@
 <%- include('../partials/header') %>
 
 <style>
-    .pt-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 15px; overflow: hidden; transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
-    .pt-card:hover { transform: translateY(-5px); border-color: #4f46e5; box-shadow: 0 10px 20px rgba(229, 9, 20, 0.2); }
-    .pt-img-wrapper { height: 250px; overflow: hidden; background: #222; }
-    .pt-img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-    .pt-card:hover .pt-img { transform: scale(1.05); }
-    .pt-specialty { position: absolute; top: 15px; right: 15px; background: rgba(229, 9, 20, 0.9); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+    .table-custom-dark { border-radius: 12px; overflow: hidden; background:#fff !important; }
+    .table-custom-dark .table { background:#fff !important; color:#0f172a !important; --bs-table-bg: #fff; --bs-table-color: #0f172a; --bs-table-hover-bg: #f1f5f9; --bs-table-hover-color: #0f172a; --bs-table-striped-bg: #f8fafc; --bs-table-striped-color: #0f172a; --bs-table-border-color: #e2e8f0; }
+    .table-custom-dark thead th { background-color: #f1f5f9; color: #4f46e5; border-bottom: 2px solid #4f46e5; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;}
+    .table-custom-dark td, .table-custom-dark tr { border-color: #e2e8f0 !important; color: #0f172a !important; background:#fff !important; }
+    .table-custom-dark tr:hover td { background:#f8fafc !important; }
+    .pagination .page-link:focus { box-shadow: none; }
 </style>
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
-        <div>
-            <h2 class="fw-bold text-white text-uppercase m-0"><i class="bi bi-person-video3 text-danger me-2"></i>Quản lý Huấn Luyện Viên</h2>
-        </div>
-        <a href="/trainers/add" class="btn btn-danger rounded-pill px-4"><i class="bi bi-plus-lg me-1"></i>Thêm PT mới</a>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-uppercase" style="letter-spacing: 1px; color:#0f172a;">QUẢN LÝ <span style="color: #4f46e5;">HUẤN LUYỆN VIÊN</span></h3>
 
-    <div class="row g-4">
-        <% if (trainers.length > 0) { %>
-            <% trainers.forEach(pt => { %>
-                <div class="col-md-4 col-lg-3">
-                    <div class="pt-card position-relative">
-                        <span class="pt-specialty"><%= pt.specialty %></span>
-                        <div class="pt-img-wrapper">
-                            <img src="<%= pt.image_url || 'https://via.placeholder.com/300x400?text=No+Image' %>" class="pt-img" alt="<%= pt.fullname %>">
-                        </div>
-                        <div class="p-3 d-flex flex-column flex-grow-1">
-                            <h5 class="text-white fw-bold mb-1"><%= pt.fullname %></h5>
-                            <div class="text-white-50 small mb-2"><i class="bi bi-telephone-fill me-2"></i><%= pt.phone %></div>
-                            <div class="text-warning small mb-3"><i class="bi bi-star-fill me-1"></i>Kinh nghiệm: <%= pt.experience_years %> năm</div>
-                            
-                            <p class="text-secondary small line-clamp-2 flex-grow-1"><%= pt.description %></p>
-                            
-                            <div class="d-flex gap-2 mt-auto pt-3 border-top border-secondary">
-                                <a href="/trainers/edit/<%= pt.id %>" class="btn btn-outline-warning btn-sm w-50">Sửa</a>
-                                <form action="/trainers/delete/<%= pt.id %>" method="POST" class="w-50"
-                                      onsubmit="return confirm('Xóa PT này?')">
-                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Xóa</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <% }) %>
-        <% } else { %>
-            <div class="col-12 text-center text-white-50 py-5">
-                <i class="bi bi-people fs-1 d-block mb-3"></i>
-                Chưa có Huấn luyện viên nào trong hệ thống.
-            </div>
-        <% } %>
+    <form action="/trainers" method="GET" class="d-flex w-50 mx-3">
+        <input type="text" name="q" class="form-control me-2" style="background:#fff;color:#0f172a;border:1px solid #e2e8f0;"
+               placeholder="Tìm theo tên, SĐT hoặc chuyên môn..." value="<%= locals.searchQuery || '' %>">
+        <button type="submit" class="btn" style="background:#4f46e5;color:#fff;"><i class="bi bi-search"></i></button>
+    </form>
+
+    <a href="/trainers/add" class="btn shadow-sm fw-bold" style="background:#4f46e5;color:#fff;">
+        <i class="bi bi-plus-lg"></i> THÊM MỚI
+    </a>
+</div>
+
+<div class="card shadow-sm" style="background:#fff;border:1px solid #e2e8f0;">
+    <div class="card-body p-0 table-custom-dark">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4 py-3">STT</th>
+                        <th class="py-3">Họ và Tên</th>
+                        <th class="py-3">Liên hệ</th>
+                        <th class="py-3">Chuyên môn</th>
+                        <th class="py-3">Kinh nghiệm</th>
+                        <th class="py-3">Trạng thái</th>
+                        <th class="text-center pe-4 py-3">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (trainers.length > 0) { %>
+                        <% trainers.forEach((pt, i) => { %>
+                            <tr>
+                                <td class="ps-4 fw-semibold" style="color:#475569;"><%= (typeof pageOffset !== 'undefined' ? pageOffset : 0) + i + 1 %></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <% if (pt.image_url) { %>
+                                            <img src="<%= pt.image_url %>" alt=""
+                                                 class="rounded-circle" style="width:42px; height:42px; object-fit:cover; background:#f1f5f9; border:2px solid #eef2ff;">
+                                        <% } else { %>
+                                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                  style="width:42px; height:42px; background:#eef2ff; color:#4f46e5;">
+                                                <i class="bi bi-person-video3"></i>
+                                            </span>
+                                        <% } %>
+                                        <span class="fw-bold" style="color:#0f172a;"><%= pt.fullname %></span>
+                                    </div>
+                                </td>
+                                <td><i class="bi bi-telephone me-2" style="color:#94a3b8;"></i><%= pt.phone || '—' %></td>
+                                <td>
+                                    <% if (pt.specialty) { %>
+                                        <span class="badge px-3 py-2" style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;">
+                                            <i class="bi bi-award me-1"></i><%= pt.specialty %>
+                                        </span>
+                                    <% } else { %>
+                                        <span style="color:#94a3b8;">—</span>
+                                    <% } %>
+                                </td>
+                                <td style="color:#0f172a;">
+                                    <i class="bi bi-star-fill me-1" style="color:#f59e0b;"></i>
+                                    <%= pt.experience_years || 0 %> năm
+                                </td>
+                                <td>
+                                    <% const status = (pt.status || 'Active'); %>
+                                    <% if (status === 'Active' || status === 'Đang dạy') { %>
+                                        <span class="badge px-3 py-2" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;">Đang dạy</span>
+                                    <% } else { %>
+                                        <span class="badge px-3 py-2" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">Nghỉ</span>
+                                    <% } %>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/trainers/edit/<%= pt.id %>" class="btn btn-sm me-2 shadow-sm" style="background:#4f46e5;color:#fff;">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <form action="/trainers/delete/<%= pt.id %>" method="POST" class="d-inline"
+                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa HLV này không?')">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="7" class="text-center py-5" style="color:#94a3b8;">
+                                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                Không tìm thấy huấn luyện viên nào.
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<% if (locals.totalPages && totalPages > 1) { %>
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
+               href="/trainers?page=<%= currentPage - 1 %>&q=<%= locals.searchQuery || '' %>">Trước</a>
+        </li>
+
+        <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link" style="<%= currentPage === i ? 'background:#4f46e5;border-color:#4f46e5;color:#fff;' : 'background:#fff;color:#475569;border-color:#e2e8f0;' %>"
+                   href="/trainers?page=<%= i %>&q=<%= locals.searchQuery || '' %>"><%= i %></a>
+            </li>
+        <% } %>
+
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+            <a class="page-link" style="background:#fff;color:#475569;border-color:#e2e8f0;"
+               href="/trainers?page=<%= currentPage + 1 %>&q=<%= locals.searchQuery || '' %>">Sau</a>
+        </li>
+    </ul>
+</nav>
+<% } %>
 
 <%- include('../partials/footer') %>
