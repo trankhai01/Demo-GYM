@@ -1,5 +1,16 @@
 <%- include('../partials/header') %>
 
+<%
+  function fmtDate(v) {
+      if (!v) return '';
+      if (v instanceof Date) {
+          const pad = n => String(n).padStart(2, '0');
+          return v.getFullYear() + '-' + pad(v.getMonth() + 1) + '-' + pad(v.getDate());
+      }
+      return String(v).slice(0, 10);
+  }
+%>
+
 <div class="container mt-4 mb-5" style="max-width: 720px;">
   <div class="card shadow-sm">
     <div class="card-header"><h4 class="mb-0"><i class="bi bi-pencil text-primary"></i> Sửa mã <code><%= code.code %></code></h4></div>
@@ -43,11 +54,11 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Có hiệu lực từ</label>
-            <input type="date" name="valid_from" class="form-control" value="<%= code.valid_from ? String(code.valid_from).slice(0,10) : '' %>">
+            <input type="date" name="valid_from" class="form-control" value="<%= fmtDate(code.valid_from) %>">
           </div>
           <div class="col-md-4">
             <label class="form-label">Có hiệu lực đến</label>
-            <input type="date" name="valid_to" class="form-control" value="<%= code.valid_to ? String(code.valid_to).slice(0,10) : '' %>">
+            <input type="date" name="valid_to" class="form-control" value="<%= fmtDate(code.valid_to) %>">
           </div>
           <div class="col-md-6">
             <label class="form-label">Giới hạn số lần dùng</label>

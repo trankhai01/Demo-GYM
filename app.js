@@ -165,3 +165,9 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server chạy tại: http://localhost:${PORT}`);
 });
+
+/* Tự động sinh mã ưu đãi sinh nhật cho tháng hiện tại + gửi email
+   (chạy khi app boot và mỗi 24h sau đó) */
+require('./lib/birthdayJob').start({
+    baseUrl: process.env.APP_BASE_URL || `http://localhost:${PORT}`
+});
