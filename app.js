@@ -104,6 +104,7 @@ app.use('/schedule', require('./routes/schedule'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use("/", profileRoutes);
 app.use("/reports", reportRoutes);
+app.use("/admin", require('./routes/admin'));
 app.use('/trainers', require('./routes/trainer'));
 app.use('/products', require('./routes/product'));
 app.use('/checkin', require('./routes/checkin'));

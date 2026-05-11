@@ -220,6 +220,7 @@
 
     <div class="nav-section">
         <% if (user && user.role === 'admin') { %>
+            <a href="/admin" class="nav-item<%= (_path === '/admin' || _path === '/admin/' || _path === '/') ? ' active' : '' %>"><i class="bi bi-speedometer2"></i> Dashboard</a>
             <a href="/reports" class="nav-item<%= isActive('/reports') ? ' active' : '' %>"><i class="bi bi-bar-chart-line"></i> Báo cáo Doanh thu</a>
             <a href="/members" class="nav-item<%= isActive('/members') ? ' active' : '' %>"><i class="bi bi-people-fill"></i> Quản lý Hội viên</a>
             <a href="/checkin" class="nav-item<%= isActive('/checkin') ? ' active' : '' %>"><i class="bi bi-upc-scan"></i> Máy Check-in</a>
