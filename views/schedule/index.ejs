@@ -161,7 +161,7 @@
                 const now = new Date();
                 if (info.start < now) {
                     calendar.unselect();
-                    alert('Không thể đặt lịch trong quá khứ.');
+                    Toast.warning('Không thể đặt lịch trong quá khứ.');
                     return;
                 }
                 document.getElementById('book-title').value = 'Buổi tập';
@@ -270,10 +270,10 @@
                 detailModal.hide();
                 calendar.refetchEvents();
             } else {
-                alert(data.message || 'Không hủy được.');
+                Toast.warning(data.message || 'Không hủy được.');
             }
         })
-        .catch(() => alert('Lỗi kết nối, vui lòng thử lại.'));
+        .catch(() => Toast.warning('Lỗi kết nối, vui lòng thử lại.'));
     }
 </script>
 

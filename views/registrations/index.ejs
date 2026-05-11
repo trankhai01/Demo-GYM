@@ -209,13 +209,13 @@
 
         if (existingItem) {
             if (Number(existingItem.qty) >= stockLimit) { 
-                alert(`Cảnh báo: Kho chỉ còn ${stockLimit} sản phẩm này!`);
+                Toast.warning(`Cảnh báo: Kho chỉ còn ${stockLimit} sản phẩm này!`);
                 return; 
             }
             existingItem.qty += 1;
         } else {
             if (stockLimit <= 0) {
-                alert(`Sản phẩm này đã hết hàng!`);
+                Toast.warning(`Sản phẩm này đã hết hàng!`);
                 return;
             }
             cart.push({ id: String(id), name: name, price: Number(price), qty: 1, maxStock: stockLimit });
@@ -334,10 +334,10 @@
         const memberId = document.getElementById('globalMemberSelect').value;
         const packageId = document.getElementById('packageSelect').value;
         if (!packageId && cart.length === 0) {
-            return alert('Hóa đơn đang trống! Vui lòng chọn sản phẩm.');
+            return Toast.warning('Hóa đơn đang trống! Vui lòng chọn sản phẩm.');
         }
         if (packageId && !memberId) {
-            return alert('Vui lòng chọn Hội viên khi đăng ký Gói tập!');
+            return Toast.warning('Vui lòng chọn Hội viên khi đăng ký Gói tập!');
         }
 
         let retailTotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
@@ -375,12 +375,12 @@
                 window.location.replace('/registrations/checkout/' + data.invoiceId);
             }, 100);
             } else {
-                alert('Có lỗi: ' + (data.error || 'Lưu thất bại'));
+                Toast.warning('Có lỗi: ' + (data.error || 'Lưu thất bại'));
             }
         })
         .catch(err => {
             console.error("Chi tiết lỗi:", err);
-            alert('Có lỗi xảy ra: ' + err.message);
+            Toast.warning('Có lỗi xảy ra: ' + err.message);
         });
     }
 </script>

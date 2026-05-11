@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/theme.css">
+    <script src="/js/ui-helpers.js"></script>
     <style>
         /* Sidebar dark — tăng tương phản so với main content sáng */
         .sidebar {
@@ -131,6 +132,51 @@
             min-height: 100vh;
         }
         .card { border-radius: 14px; }
+
+        /* Mobile hamburger toggle (chỉ hiện <992px) */
+        .mobile-hamburger {
+            display: none;
+            position: fixed;
+            top: 14px; left: 14px;
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: #ffffff;
+            border: 0;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            z-index: 1040;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, .25);
+            cursor: pointer;
+            align-items: center; justify-content: center;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1029;
+        }
+        .sidebar-backdrop.show { display: block; }
+
+        /* Tablet & mobile: <992px → sidebar slide-in */
+        @media (max-width: 991.98px) {
+            .mobile-hamburger { display: inline-flex; }
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .3s ease;
+                width: 260px;
+            }
+            .sidebar.is-open { transform: translateX(0); }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 76px 16px 30px 16px;
+            }
+        }
+        @media (max-width: 575.98px) {
+            .main-content { padding: 76px 12px 20px 12px; }
+        }
+
+        /* Sidebar dark theme override khi html data-theme="dark" */
+        html[data-theme="dark"] .main-content { background-color: #0b1220; }
     </style>
 </head>
 <body>
@@ -148,9 +194,21 @@
     }
 %>
 
-<div class="sidebar">
+<% if (user) { %>
+<button type="button" class="mobile-hamburger" id="gymHamburger" aria-label="Mở menu">
+    <i class="bi bi-list"></i>
+</button>
+<div class="sidebar-backdrop" id="gymSidebarBackdrop"></div>
+<% } %>
+
+<div class="sidebar" id="gymSidebar">
     <div class="sidebar-header">
-        <a href="/" class="navbar-brand">GYM BRO</a>
+        <div class="d-flex align-items-center justify-content-between">
+            <a href="/" class="navbar-brand mx-auto">GYM BRO</a>
+            <button type="button" class="gym-theme-toggle" data-gym-theme-btn aria-label="Toggle theme">
+                <i class="bi bi-moon-stars-fill"></i>
+            </button>
+        </div>
 
         <% if (user) { %>
             <div class="greeting-text">
