@@ -192,6 +192,8 @@
         "close_aria": "Close",
         "title": "GymBro Assistant",
         "subtitle": "Ask about packages, trainers, schedule...",
+        "contact_actions_aria": "Quick contact actions",
+        "zalo_aria": "Contact via Zalo",
         "hotline_aria": "Call hotline",
         "hotline_btn": "Hotline: 0900 000 000",
         "input_ph": "Type your question...",

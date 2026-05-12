@@ -99,33 +99,75 @@
         display: flex;
         gap: 8px;
     }
-    .gymbro-hotline-fab {
+    .gymbro-contact-fab-group {
         position: fixed;
-        right: 24px;
-        bottom: 96px;
+        left: 24px;
+        bottom: 24px;
         z-index: 1080;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .gymbro-contact-fab {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        border-radius: 999px;
+        justify-content: center;
         background: rgba(79, 70, 229, 0.92);
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 10px 26px rgba(79, 70, 229, 0.28);
         text-decoration: none;
-        font-weight: 700;
-        font-size: 0.88rem;
-        letter-spacing: 0.2px;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
-    .gymbro-hotline-fab:hover {
+    .gymbro-contact-fab:hover {
         transform: translateY(-2px);
         background: rgba(79, 70, 229, 1);
         box-shadow: 0 14px 34px rgba(79, 70, 229, 0.34);
         color: #fff;
     }
-    .gymbro-hotline-fab i { font-size: 1.05rem; }
+    .gymbro-contact-fab i { font-size: 1.2rem; }
+    .gymbro-contact-fab.zalo {
+        background: rgba(6, 182, 212, 0.95);
+        box-shadow: 0 10px 26px rgba(6, 182, 212, 0.3);
+    }
+    .gymbro-contact-fab.zalo:hover {
+        background: rgba(6, 182, 212, 1);
+        box-shadow: 0 14px 34px rgba(6, 182, 212, 0.38);
+    }
+    .gymbro-zalo-mark {
+        font-weight: 800;
+        font-size: 0.78rem;
+        letter-spacing: 0.2px;
+        line-height: 1;
+    }
+    .gymbro-phone-wrap {
+        position: relative;
+    }
+    .gymbro-phone-label {
+        position: absolute;
+        left: 62px;
+        top: 50%;
+        transform: translateY(-50%) translateX(-8px);
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        background: rgba(15, 23, 42, 0.95);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .gymbro-phone-wrap:hover .gymbro-phone-label,
+    .gymbro-phone-wrap:focus-within .gymbro-phone-label {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
     .gymbro-chat-input input {
         flex: 1;
         background: #2a2a2a;
@@ -149,14 +191,22 @@
     @media (max-width: 480px) {
         .gymbro-chat-panel { right: 8px; left: 8px; width: auto; bottom: 88px; }
         .gymbro-chat-bubble { right: 16px; bottom: 16px; }
-        .gymbro-hotline-fab { right: 16px; bottom: 88px; padding: 9px 11px; font-size: 0.84rem; }
+        .gymbro-contact-fab-group { left: 16px; bottom: 16px; }
+        .gymbro-phone-label { display: none; }
     }
 </style>
 
-<a class="gymbro-hotline-fab" href="tel:0900000000" aria-label="<%= t('chatbot.hotline_aria') %>">
-    <i class="bi bi-telephone-fill"></i>
-    <span><%= t('chatbot.hotline_btn') %></span>
-</a>
+<div class="gymbro-contact-fab-group" aria-label="<%= t('chatbot.contact_actions_aria') %>">
+    <a class="gymbro-contact-fab zalo" href="https://zalo.me/0900000000" target="_blank" rel="noopener" aria-label="<%= t('chatbot.zalo_aria') %>">
+        <span class="gymbro-zalo-mark">Zalo</span>
+    </a>
+    <div class="gymbro-phone-wrap">
+        <a class="gymbro-contact-fab" href="tel:0900000000" aria-label="<%= t('chatbot.hotline_aria') %>">
+            <i class="bi bi-telephone-fill"></i>
+        </a>
+        <span class="gymbro-phone-label"><%= t('chatbot.hotline_btn') %></span>
+    </div>
+</div>
 
 <button class="gymbro-chat-bubble" id="gymbroChatToggle" type="button" aria-label="<%= t('chatbot.open_aria') %>">
     <i class="bi bi-chat-dots-fill"></i>
