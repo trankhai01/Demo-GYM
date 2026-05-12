@@ -192,6 +192,8 @@
         "close_aria": "Đóng",
         "title": "GymBro Trợ lý",
         "subtitle": "Hỏi về gói tập, HLV, lịch tập...",
+        "hotline_aria": "Gọi hotline",
+        "hotline_btn": "Hotline: 0900 000 000",
         "input_ph": "Nhập câu hỏi của bạn...",
         "send_aria": "Gửi",
         "greeting": "Chào bạn! Mình là trợ lý ảo của phòng tập GymBro. Bạn cần hỗ trợ gì hôm nay?",
@@ -202,7 +204,6 @@
         "sugg_booking": "Cách đặt lịch tập?",
         "sugg_hours": "Giờ mở cửa?",
         "sugg_trainers": "Có HLV nào?",
-        "contact_phone_btn": "Liên hệ nhanh: 0900 000 000",
         "sugg_my_pt": "Gói hiện tại của tôi còn bao nhiêu buổi?",
         "sugg_my_bookings": "Buổi tập sắp tới của tôi?"
     }

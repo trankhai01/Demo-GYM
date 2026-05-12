@@ -192,6 +192,8 @@
         "close_aria": "Close",
         "title": "GymBro Assistant",
         "subtitle": "Ask about packages, trainers, schedule...",
+        "hotline_aria": "Call hotline",
+        "hotline_btn": "Hotline: 0900 000 000",
         "input_ph": "Type your question...",
         "send_aria": "Send",
         "greeting": "Hi! I'm GymBro's virtual assistant. How can I help you today?",
@@ -202,7 +204,6 @@
         "sugg_booking": "How do I book a session?",
         "sugg_hours": "Opening hours?",
         "sugg_trainers": "Any trainers available?",
-        "contact_phone_btn": "Quick contact: 0900 000 000",
         "sugg_my_pt": "How many PT sessions do I have left?",
         "sugg_my_bookings": "My upcoming sessions?"
     }
