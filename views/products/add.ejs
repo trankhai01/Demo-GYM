@@ -30,8 +30,8 @@
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small">Trạng thái</label>
                         <select name="status" class="form-select bg-transparent text-white border-secondary">
-                            <option value="Active" class="text-dark">Đang bán (Active)</option>
-                            <option value="Out of Stock" class="text-dark">Ngưng bán</option>
+                            <option value="<%= STATUS.INVENTORY.ACTIVE %>" class="text-dark">Đang bán</option>
+                            <option value="<%= STATUS.INVENTORY.INACTIVE %>" class="text-dark">Ngừng bán</option>
                         </select>
                     </div>
                 </div>

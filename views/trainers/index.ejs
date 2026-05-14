@@ -115,10 +115,10 @@
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="pt-card">
                     <div class="pt-img-wrapper">
-                        <% const ptStatus = (pt.status || 'Active'); %>
-                        <span class="pt-status-dot <%= (ptStatus === 'Active' || ptStatus === 'Đang dạy') ? 'pt-status-active' : 'pt-status-inactive' %>">
+                        <% const isActiveTrainer = (pt.status || STATUS.TRAINER.ACTIVE) === STATUS.TRAINER.ACTIVE; %>
+                        <span class="pt-status-dot <%= isActiveTrainer ? 'pt-status-active' : 'pt-status-inactive' %>">
                             <i class="bi bi-circle-fill" style="font-size:.55rem;"></i>
-                            <%= (ptStatus === 'Active' || ptStatus === 'Đang dạy') ? 'Đang dạy' : 'Nghỉ' %>
+                            <%= isActiveTrainer ? 'Đang dạy' : 'Nghỉ' %>
                         </span>
                         <% if (pt.specialty) { %>
                             <span class="pt-specialty-badge"><i class="bi bi-award-fill me-1"></i><%= pt.specialty %></span>
@@ -190,3 +190,17 @@
 <% } %>
 
 <%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            delete_success: { type: 'success', text: 'Đã xóa huấn luyện viên thành công.' },
+            delete_in_use: { type: 'warning', text: 'Không thể xóa HLV đang có lịch dạy.' },
+            delete_error: { type: 'error', text: 'Không thể xóa HLV. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/trainers");
+    });
+</script>
+<% } %>

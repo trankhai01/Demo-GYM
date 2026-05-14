@@ -2,6 +2,7 @@ const express = require('express');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { GoogleGenAI, Type } = require('@google/genai');
 const db = require('../config/db');
+const { STATUS } = require('../lib/status');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ function fetchPublicContext() {
             if (!err && rows) out.packages = rows;
             if (++done === 2) resolve(out);
         });
-        db.query("SELECT id, fullname, specialty, experience_years FROM trainers WHERE status = 'Active' OR status IS NULL ORDER BY id ASC LIMIT 20", (err, rows) => {
+        db.query("SELECT id, fullname, specialty, experience_years FROM trainers WHERE status = ? OR status IS NULL ORDER BY id ASC LIMIT 20", [STATUS.TRAINER.ACTIVE], (err, rows) => {
             if (!err && rows) out.trainers = rows;
             if (++done === 2) resolve(out);
         });
@@ -168,10 +169,10 @@ function runMemberTool(name, memberId) {
                 SELECT p.package_name, r.expiration_date, r.total_sessions, r.used_sessions,
                        DATEDIFF(r.expiration_date, CURRENT_DATE()) AS days_left
                 FROM registrations r LEFT JOIN packages p ON r.package_id = p.id
-                WHERE r.member_id = ? AND r.status = 'active' AND r.payment_status = 'Success'
+                WHERE r.member_id = ? AND r.status = ? AND r.payment_status = ?
                   AND (r.expiration_date IS NULL OR r.expiration_date >= CURRENT_DATE())
                 ORDER BY r.expiration_date DESC LIMIT 1
-            `, [memberId], (err, rows) => {
+            `, [memberId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.SUCCESS], (err, rows) => {
                 if (err || !rows || rows.length === 0) return resolve({ has_package: false });
                 const r = rows[0];
                 resolve({
@@ -188,9 +189,9 @@ function runMemberTool(name, memberId) {
             db.query(`
                 SELECT b.start_time, b.end_time, b.title, b.note, t.fullname AS trainer_name
                 FROM bookings b LEFT JOIN trainers t ON b.trainer_id = t.id
-                WHERE b.member_id = ? AND b.status = 'booked' AND b.end_time >= NOW()
+                WHERE b.member_id = ? AND b.status = ? AND b.end_time >= NOW()
                 ORDER BY b.start_time ASC LIMIT 5
-            `, [memberId], (err, rows) => {
+            `, [memberId, STATUS.BOOKING.BOOKED], (err, rows) => {
                 if (err) return resolve({ bookings: [] });
                 resolve({ bookings: rows || [] });
             });

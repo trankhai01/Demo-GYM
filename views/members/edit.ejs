@@ -85,3 +85,15 @@
 </div>
 
 <%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            duplicate_phone: { type: 'warning', text: 'Số điện thoại này đã được sử dụng cho hội viên khác.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/members/edit/<%= member.id %>");
+    });
+</script>
+<% } %>

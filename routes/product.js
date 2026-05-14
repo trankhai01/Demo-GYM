@@ -9,8 +9,29 @@ const {
     deleteUploadedFile
 } = require('../middleware/upload');
 const { csrfSynchronisedProtection } = require('../middleware/csrf');
+const { normalizeProductStatus } = require('../lib/status');
 const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
+
+function parseProductPayload(body) {
+    const productName = String(body.product_name || '').trim();
+    const category = String(body.category || '').trim();
+    const price = Number(body.price);
+    const stockQuantity = Number(body.stock_quantity);
+
+    if (!productName) return { error: 'Vui lòng nhập tên sản phẩm.' };
+    if (!Number.isFinite(price) || price < 0) return { error: 'Giá sản phẩm không hợp lệ.' };
+    if (!Number.isInteger(stockQuantity) || stockQuantity < 0) return { error: 'Số lượng tồn kho không hợp lệ.' };
+
+    return {
+        productName,
+        category,
+        price,
+        stockQuantity,
+        imageUrl: String(body.image_url || '').trim() || null,
+        status: normalizeProductStatus(body.status)
+    };
+}
 
 router.get('/', requireStaff, (req, res) => {
     const searchQuery = (req.query.q || '').trim();
@@ -59,18 +80,23 @@ router.get('/add', requireStaff, (req, res) => {
 });
 
 router.post('/add', requireStaff, ...productUploadChain, (req, res) => {
-    const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
         return res.status(400).render('products/add', { error: req.uploadError, form: req.body });
     }
-    const finalImage = persistedFilePath(req, 'products') || image_url || null;
+    const payload = parseProductPayload(req.body);
+    const uploaded = persistedFilePath(req, 'products');
+    if (payload.error) {
+        deleteUploadedFile(uploaded);
+        return res.status(400).render('products/add', { error: payload.error, form: req.body });
+    }
+    const finalImage = uploaded || payload.imageUrl;
 
     db.query(
         "INSERT INTO products (product_name, category, price, stock_quantity, image_url, status) VALUES (?, ?, ?, ?, ?, ?)",
-        [product_name, category, price, stock_quantity, finalImage, status],
+        [payload.productName, payload.category, payload.price, payload.stockQuantity, finalImage, payload.status],
         (err) => {
             if (err) {
-                deleteUploadedFile(persistedFilePath(req, 'products'));
+                deleteUploadedFile(uploaded);
                 return res.status(500).send("Lỗi thêm dữ liệu");
             }
             res.redirect('/products');
@@ -86,7 +112,6 @@ router.get('/edit/:id', requireStaff, (req, res) => {
 });
 
 router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
-    const { product_name, category, price, stock_quantity, image_url, status } = req.body;
     if (req.uploadError) {
         return db.query("SELECT * FROM products WHERE id = ?", [req.params.id], (e, rows) => {
             const product = (rows && rows[0]) || { id: req.params.id };
@@ -97,11 +122,21 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;
         const uploaded = persistedFilePath(req, 'products');
-        const finalImage = uploaded || image_url || oldImage || null;
+        const payload = parseProductPayload(req.body);
+        if (payload.error) {
+            deleteUploadedFile(uploaded);
+            const product = {
+                id: req.params.id,
+                ...req.body,
+                image_url: oldImage
+            };
+            return res.status(400).render('products/edit', { product, error: payload.error });
+        }
+        const finalImage = uploaded || payload.imageUrl || oldImage || null;
 
         db.query(
             "UPDATE products SET product_name=?, category=?, price=?, stock_quantity=?, image_url=?, status=? WHERE id=?",
-            [product_name, category, price, stock_quantity, finalImage, status, req.params.id],
+            [payload.productName, payload.category, payload.price, payload.stockQuantity, finalImage, payload.status, req.params.id],
             (err) => {
                 if (err) {
                     deleteUploadedFile(uploaded);
@@ -120,9 +155,12 @@ router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;
         db.query("DELETE FROM products WHERE id = ?", [req.params.id], (err) => {
-            if (err) return res.send("<script>alert('Không thể xóa! Sản phẩm này đã nằm trong hóa đơn cũ.'); window.location.href='/products';</script>");
+            if (err) {
+                console.error('[products/delete]', err.message);
+                return res.redirect('/products?notice=delete_in_use');
+            }
             deleteUploadedFile(oldImage);
-            res.redirect('/products');
+            res.redirect('/products?notice=delete_success');
         });
     });
 });

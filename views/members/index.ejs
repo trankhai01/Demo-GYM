@@ -72,7 +72,7 @@
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>
                             <form action="/members/delete/<%= member.id %>" method="POST" class="d-inline"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?')">
+                                  data-confirm="Bạn có chắc chắn muốn xóa hội viên này không?">
                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 <button type="submit" class="btn btn-sm btn-danger shadow-sm">
                                     <i class="bi bi-trash"></i> Xóa
@@ -178,6 +178,19 @@
     document.addEventListener("DOMContentLoaded", function() {
         var myModal = new bootstrap.Modal(document.getElementById('addMemberModal'));
         myModal.show();
+        window.history.replaceState({}, document.title, "/members");
+    });
+</script>
+<% } %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            delete_success: { type: 'success', text: 'Đã xóa hội viên thành công.' },
+            delete_error: { type: 'error', text: 'Không thể xóa hội viên. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
         window.history.replaceState({}, document.title, "/members");
     });
 </script>

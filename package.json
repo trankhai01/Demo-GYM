@@ -2,9 +2,11 @@
   "name": "gym",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "check": "for f in $(find . -name '*.js' -not -path './node_modules/*'); do node --check \"$f\" || exit 1; done",
+    "test": "npm run check"
   },
   "keywords": [],
   "author": "",

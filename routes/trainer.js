@@ -9,6 +9,7 @@ const {
     deleteUploadedFile
 } = require('../middleware/upload');
 const { csrfSynchronisedProtection } = require('../middleware/csrf');
+const { normalizeTrainerStatus } = require('../lib/status');
 
 const trainerUpload = withFriendlyErrors(uploadTrainerImage, 'image_file');
 const trainerUploadChain = [trainerUpload, csrfSynchronisedProtection];
@@ -47,15 +48,15 @@ router.get('/add', requireAdmin, (req, res) => {
 });
 
 router.post('/add', requireAdmin, ...trainerUploadChain, (req, res) => {
-    const { fullname, phone, specialty, experience_years, image_url, description } = req.body;
+    const { fullname, phone, specialty, experience_years, image_url, description, status } = req.body;
     if (req.uploadError) {
         return res.status(400).render('trainers/add', { error: req.uploadError, form: req.body });
     }
     const finalImage = persistedFilePath(req, 'trainers') || image_url || null;
 
     db.query(
-        "INSERT INTO trainers (fullname, phone, specialty, experience_years, image_url, description) VALUES (?, ?, ?, ?, ?, ?)",
-        [fullname, phone, specialty, experience_years, finalImage, description],
+        "INSERT INTO trainers (fullname, phone, specialty, experience_years, image_url, description, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [fullname, phone, specialty, experience_years, finalImage, description, normalizeTrainerStatus(status)],
         (err) => {
             if (err) {
                 deleteUploadedFile(persistedFilePath(req, 'trainers'));
@@ -89,7 +90,7 @@ router.post('/edit/:id', requireAdmin, ...trainerUploadChain, (req, res) => {
 
         db.query(
             "UPDATE trainers SET fullname=?, phone=?, specialty=?, experience_years=?, image_url=?, description=?, status=? WHERE id=?",
-            [fullname, phone, specialty, experience_years, finalImage, description, status, req.params.id],
+            [fullname, phone, specialty, experience_years, finalImage, description, normalizeTrainerStatus(status), req.params.id],
             (err) => {
                 if (err) {
                     deleteUploadedFile(uploaded);
@@ -108,9 +109,12 @@ router.post('/delete/:id', requireAdmin, (req, res) => {
     db.query("SELECT image_url FROM trainers WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
         const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;
         db.query("DELETE FROM trainers WHERE id = ?", [req.params.id], (err) => {
-            if (err) return res.send("<script>alert('Không thể xóa PT đang có lịch dạy!'); window.location.href='/trainers';</script>");
+            if (err) {
+                console.error('[trainers/delete]', err.message);
+                return res.redirect('/trainers?notice=delete_in_use');
+            }
             deleteUploadedFile(oldImage);
-            res.redirect('/trainers');
+            res.redirect('/trainers?notice=delete_success');
         });
     });
 });

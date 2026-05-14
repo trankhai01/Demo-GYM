@@ -6,6 +6,7 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
+const { STATUS } = require('../lib/status');
 
 function parseDateRange(query) {
     const preset = (query.preset || '').toLowerCase();
@@ -90,11 +91,15 @@ async function collectReportData({ from, to, page = 1, pageSize = 10 }) {
         txnTotal, txnRows
     ] = await Promise.all([
         q(`SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS v
-           FROM registrations WHERE payment_status='Success' AND registration_date BETWEEN ? AND ?`, [from, to]),
+           FROM registrations WHERE payment_status = ? AND registration_date BETWEEN ? AND ?`,
+            [STATUS.PAYMENT.SUCCESS, from, to]),
         q(`SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS v
-           FROM registrations WHERE payment_status='Success' AND registration_date BETWEEN ? AND ?`, [prev.from, prev.to]),
-        q(`SELECT COUNT(*) AS v FROM registrations WHERE package_id IS NOT NULL AND payment_status='Success' AND registration_date BETWEEN ? AND ?`, [from, to]),
-        q(`SELECT COUNT(*) AS v FROM registrations WHERE package_id IS NOT NULL AND payment_status='Success' AND registration_date BETWEEN ? AND ?`, [prev.from, prev.to]),
+           FROM registrations WHERE payment_status = ? AND registration_date BETWEEN ? AND ?`,
+            [STATUS.PAYMENT.SUCCESS, prev.from, prev.to]),
+        q(`SELECT COUNT(*) AS v FROM registrations WHERE package_id IS NOT NULL AND payment_status = ? AND registration_date BETWEEN ? AND ?`,
+            [STATUS.PAYMENT.SUCCESS, from, to]),
+        q(`SELECT COUNT(*) AS v FROM registrations WHERE package_id IS NOT NULL AND payment_status = ? AND registration_date BETWEEN ? AND ?`,
+            [STATUS.PAYMENT.SUCCESS, prev.from, prev.to]),
         q(`SELECT COUNT(*) AS v FROM checkin_history WHERE DATE(checkin_time) BETWEEN ? AND ?`, [from, to]),
         q(`SELECT COUNT(*) AS v FROM checkin_history WHERE DATE(checkin_time) BETWEEN ? AND ?`, [prev.from, prev.to]),
         q(`SELECT COUNT(*) AS v FROM members WHERE role='member' AND join_date BETWEEN ? AND ?`, [from, to]),
@@ -103,9 +108,9 @@ async function collectReportData({ from, to, page = 1, pageSize = 10 }) {
         q(`SELECT DATE_FORMAT(registration_date,'%Y-%m-%d') AS ymd,
                   COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS revenue
            FROM registrations
-           WHERE payment_status='Success' AND registration_date BETWEEN ? AND ?
+           WHERE payment_status = ? AND registration_date BETWEEN ? AND ?
            GROUP BY DATE_FORMAT(registration_date,'%Y-%m-%d')
-           ORDER BY ymd ASC`, [from, to]),
+           ORDER BY ymd ASC`, [STATUS.PAYMENT.SUCCESS, from, to]),
         q(`SELECT DATE_FORMAT(checkin_time,'%Y-%m-%d') AS ymd, COUNT(*) AS cnt
            FROM checkin_history
            WHERE DATE(checkin_time) BETWEEN ? AND ?
@@ -117,14 +122,14 @@ async function collectReportData({ from, to, page = 1, pageSize = 10 }) {
                   COUNT(r.id) AS sold
            FROM registrations r
            JOIN packages p ON p.id = r.package_id
-           WHERE r.payment_status='Success' AND r.registration_date BETWEEN ? AND ?
+           WHERE r.payment_status = ? AND r.registration_date BETWEEN ? AND ?
            GROUP BY p.id, p.package_name
-           ORDER BY revenue DESC`, [from, to]),
+           ORDER BY revenue DESC`, [STATUS.PAYMENT.SUCCESS, from, to]),
         q(`SELECT
               SUM(CASE WHEN package_id IS NOT NULL THEN price - COALESCE(discount_amount,0) ELSE 0 END) AS pkg_rev,
               SUM(CASE WHEN package_id IS NULL THEN price - COALESCE(discount_amount,0) ELSE 0 END) AS pos_rev
            FROM registrations
-           WHERE payment_status='Success' AND registration_date BETWEEN ? AND ?`, [from, to]),
+           WHERE payment_status = ? AND registration_date BETWEEN ? AND ?`, [STATUS.PAYMENT.SUCCESS, from, to]),
 
         q(`SELECT t.fullname AS name, COUNT(*) AS sessions
            FROM pt_sessions_log s

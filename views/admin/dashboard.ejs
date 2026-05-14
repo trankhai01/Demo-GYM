@@ -353,8 +353,8 @@
                 <ul class="ad-top-list">
                     <% recentRegs.forEach(r => { %>
                         <li>
-                            <div class="ad-top-rank" style="background:<%= r.payment_status === 'Success' ? 'linear-gradient(135deg,#10b981,#22c55e)' : 'linear-gradient(135deg,#f59e0b,#ef4444)' %>;">
-                                <i class="bi <%= r.payment_status === 'Success' ? 'bi-check' : 'bi-clock' %>"></i>
+                            <div class="ad-top-rank" style="background:<%= r.payment_status === STATUS.PAYMENT.SUCCESS ? 'linear-gradient(135deg,#10b981,#22c55e)' : 'linear-gradient(135deg,#f59e0b,#ef4444)' %>;">
+                                <i class="bi <%= r.payment_status === STATUS.PAYMENT.SUCCESS ? 'bi-check' : 'bi-clock' %>"></i>
                             </div>
                             <div class="flex-grow-1">
                                 <div class="ad-top-name"><%= r.member_name || 'Khách' %></div>
@@ -362,7 +362,7 @@
                             </div>
                             <div class="ad-top-meta">
                                 <div class="ad-top-amount"><%= Number(r.price).toLocaleString('vi-VN') %>đ</div>
-                                <div class="ad-top-sub"><%= r.payment_status === 'Success' ? 'Đã thanh toán' : 'Chờ TT' %></div>
+                                <div class="ad-top-sub"><%= r.payment_status === STATUS.PAYMENT.SUCCESS ? 'Đã thanh toán' : 'Chờ TT' %></div>
                             </div>
                         </li>
                     <% }) %>

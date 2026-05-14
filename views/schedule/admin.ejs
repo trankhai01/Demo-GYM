@@ -56,6 +56,9 @@
 </div>
 
 <script>
+    const SCHEDULE_STATUS = <%- JSON.stringify(STATUS.BOOKING) %>;
+    const API_STATUS = <%- JSON.stringify(STATUS.API) %>;
+
     function csrfToken() {
         return document.querySelector('meta[name="csrf-token"]').content;
     }
@@ -99,8 +102,8 @@
         const start = event.start ? event.start.toLocaleString('vi-VN') : '';
         const end = event.end ? event.end.toLocaleString('vi-VN') : '';
         const isPast = event.start < new Date();
-        const isCancelled = p.status === 'cancelled';
-        const isCompleted = p.status === 'completed';
+        const isCancelled = p.status === SCHEDULE_STATUS.CANCELLED;
+        const isCompleted = p.status === SCHEDULE_STATUS.COMPLETED;
         currentBookingId = event.id;
 
         document.getElementById('detail-body').innerHTML = `
@@ -123,9 +126,12 @@
         detailModal.show();
     }
 
-    function cancelBooking() {
+    async function cancelBooking() {
         if (!currentBookingId) return;
-        if (!confirm('Bạn chắc chắn muốn hủy buổi tập này của hội viên?')) return;
+        const okConfirm = window.Toast
+            ? await Toast.confirm('Bạn chắc chắn muốn hủy buổi tập này của hội viên?')
+            : true;
+        if (!okConfirm) return;
 
         fetch('/schedule/cancel/' + currentBookingId, {
             method: 'POST',
@@ -133,7 +139,7 @@
         })
         .then(res => Promise.all([res.ok, res.json()]))
         .then(([ok, data]) => {
-            if (ok && data.status === 'Success') {
+            if (ok && data.status === API_STATUS.SUCCESS) {
                 detailModal.hide();
                 calendar.refetchEvents();
             } else {

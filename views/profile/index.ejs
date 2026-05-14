@@ -25,7 +25,7 @@
                     <% if (package) { %>
                         <h5 class="text-primary fw-bold"><%= package.package_name %></h5>
                         <p class="mb-1 text-muted">Trạng thái: 
-                            <span class="badge <%= package.status === 'Active' ? 'bg-success' : 'bg-danger' %>">
+                            <span class="badge <%= package.status === STATUS.INVENTORY.ACTIVE ? 'bg-success' : 'bg-danger' %>">
                                 <%= package.status %>
                             </span>
                         </p>

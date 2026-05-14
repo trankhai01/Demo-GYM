@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireLogin, requireStaff } = require('../middleware/auth');
+const { STATUS } = require('../lib/status');
 
 function isValidIsoDateTime(s) {
     if (typeof s !== 'string') return false;
@@ -13,6 +14,13 @@ function toMysqlDateTime(iso) {
     const pad = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function parseDateRange(start, end) {
+    if (!isValidIsoDateTime(start) || !isValidIsoDateTime(end)) return null;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (endDate <= startDate) return null;
+    return { startDate, endDate, startSql: toMysqlDateTime(start), endSql: toMysqlDateTime(end) };
 }
 
 router.get('/', requireLogin, (req, res) => {
@@ -38,27 +46,26 @@ router.get('/admin', requireStaff, (req, res) => {
  * ============================================================ */
 router.get('/available-trainers', requireLogin, (req, res) => {
     const { start, end } = req.query;
-    if (!isValidIsoDateTime(start) || !isValidIsoDateTime(end)) {
+    const range = parseDateRange(start, end);
+    if (!range) {
         return res.status(400).json({ error: 'Tham số start/end không hợp lệ' });
     }
-    const startSql = toMysqlDateTime(start);
-    const endSql = toMysqlDateTime(end);
 
     /* HLV available = HLV không có booking nào overlap với khoảng [start, end) */
     const sql = `
         SELECT t.id, t.fullname, t.specialty
         FROM trainers t
-        WHERE t.status = 'Active'
+        WHERE t.status = ?
           AND NOT EXISTS (
               SELECT 1 FROM bookings b
               WHERE b.trainer_id = t.id
-                AND b.status = 'booked'
+                AND b.status = ?
                 AND b.start_time < ?
                 AND b.end_time > ?
           )
         ORDER BY t.fullname
     `;
-    db.query(sql, [endSql, startSql], (err, rows) => {
+    db.query(sql, [STATUS.TRAINER.ACTIVE, STATUS.BOOKING.BOOKED, range.endSql, range.startSql], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
         res.json(rows || []);
     });
@@ -92,7 +99,8 @@ router.get('/trainer/:id', requireStaff, (req, res) => {
 router.get('/trainer-events/:id', requireStaff, (req, res) => {
     const trainerId = Number(req.params.id);
     const { start, end } = req.query;
-    if (!Number.isFinite(trainerId) || !isValidIsoDateTime(start) || !isValidIsoDateTime(end)) {
+    const range = parseDateRange(start, end);
+    if (!Number.isInteger(trainerId) || trainerId <= 0 || !range) {
         return res.status(400).json({ error: 'Tham số không hợp lệ' });
     }
     const sql = `
@@ -102,10 +110,10 @@ router.get('/trainer-events/:id', requireStaff, (req, res) => {
         JOIN members m ON b.member_id = m.id
         WHERE b.trainer_id = ?
           AND b.start_time < ? AND b.end_time > ?
-          AND b.status IN ('booked', 'completed')
+          AND b.status IN (?, ?)
         ORDER BY b.start_time
     `;
-    db.query(sql, [trainerId, toMysqlDateTime(end), toMysqlDateTime(start)], (err, rows) => {
+    db.query(sql, [trainerId, range.endSql, range.startSql, STATUS.BOOKING.BOOKED, STATUS.BOOKING.COMPLETED], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
         const events = rows.map(r => ({
             id: r.id,
@@ -118,7 +126,7 @@ router.get('/trainer-events/:id', requireStaff, (req, res) => {
                 note: r.note,
                 status: r.status
             },
-            color: r.status === 'completed' ? '#10b981' : '#4f46e5'
+            color: r.status === STATUS.BOOKING.COMPLETED ? '#10b981' : '#4f46e5'
         }));
         res.json(events);
     });
@@ -129,7 +137,8 @@ router.get('/events', requireLogin, (req, res) => {
     const userId = req.session.user.id;
     const { start, end } = req.query;
 
-    if (!isValidIsoDateTime(start) || !isValidIsoDateTime(end)) {
+    const range = parseDateRange(start, end);
+    if (!range) {
         return res.status(400).json({ error: 'Tham số start/end không hợp lệ' });
     }
 
@@ -142,14 +151,14 @@ router.get('/events', requireLogin, (req, res) => {
         JOIN members m ON b.member_id = m.id
         LEFT JOIN trainers t ON b.trainer_id = t.id
         WHERE b.start_time < ? AND b.end_time > ?
-          AND b.status IN ('booked', 'completed')
+          AND b.status IN (?, ?)
     `;
     const sql = isStaff
         ? baseSql + " ORDER BY b.start_time"
         : baseSql + " AND b.member_id = ? ORDER BY b.start_time";
     const params = isStaff
-        ? [toMysqlDateTime(end), toMysqlDateTime(start)]
-        : [toMysqlDateTime(end), toMysqlDateTime(start), userId];
+        ? [range.endSql, range.startSql, STATUS.BOOKING.BOOKED, STATUS.BOOKING.COMPLETED]
+        : [range.endSql, range.startSql, STATUS.BOOKING.BOOKED, STATUS.BOOKING.COMPLETED, userId];
 
     db.query(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
@@ -171,7 +180,7 @@ router.get('/events', requireLogin, (req, res) => {
                 title_raw: r.title
             },
             classNames: ['booking-' + r.status],
-            color: r.status === 'completed' ? '#198754' : (r.trainer_id ? '#dc3545' : '#0d6efd')
+            color: r.status === STATUS.BOOKING.COMPLETED ? '#198754' : (r.trainer_id ? '#dc3545' : '#0d6efd')
         }));
         res.json(events);
     });
@@ -200,9 +209,15 @@ router.post('/book', requireLogin, (req, res) => {
         return res.status(400).json({ status: 'Error', message: 'Buổi tập phải từ 15 phút đến 4 giờ.' });
     }
 
-    const targetMemberId = isStaff && member_id ? Number(member_id) : userId;
+    const targetMemberId = isStaff && member_id ? Number(member_id) : Number(userId);
     const trainerId = trainer_id ? Number(trainer_id) : null;
-    const finalTitle = (title && String(title).trim()) || 'Buổi tập';
+    if (!Number.isInteger(targetMemberId) || targetMemberId <= 0) {
+        return res.status(400).json({ status: 'Error', message: 'Hội viên không hợp lệ.' });
+    }
+    if (trainer_id && (!Number.isInteger(trainerId) || trainerId <= 0)) {
+        return res.status(400).json({ status: 'Error', message: 'Huấn luyện viên không hợp lệ.' });
+    }
+    const finalTitle = ((title && String(title).trim()) || 'Buổi tập').slice(0, 120);
     const finalNote = note ? String(note).slice(0, 255) : null;
 
     const startSql = toMysqlDateTime(start_time);
@@ -225,14 +240,44 @@ router.post('/book', requireLogin, (req, res) => {
                 return res.status(500).json({ status: 'Error', message: 'Lỗi mở transaction' });
             }
 
-            const sqlOverlapMember = `
+            const checkMember = (cb) => {
+                conn.query(
+                    "SELECT id FROM members WHERE id = ? AND role = 'member' LIMIT 1",
+                    [targetMemberId],
+                    (errMember, memberRows) => {
+                        if (errMember) return cb({ http: 500, message: 'Lỗi kiểm tra hội viên', sqlErr: errMember });
+                        if (!memberRows || memberRows.length === 0) {
+                            return cb({ http: 404, message: 'Không tìm thấy hội viên.' });
+                        }
+                        cb(null);
+                    }
+                );
+            };
+
+            const checkTrainer = (cb) => {
+                if (!trainerId) return cb(null);
+                conn.query(
+                    "SELECT id FROM trainers WHERE id = ? AND status = ? LIMIT 1",
+                    [trainerId, STATUS.TRAINER.ACTIVE],
+                    (errTrainer, trainerRows) => {
+                        if (errTrainer) return cb({ http: 500, message: 'Lỗi kiểm tra HLV', sqlErr: errTrainer });
+                        if (!trainerRows || trainerRows.length === 0) {
+                            return cb({ http: 404, message: 'HLV không tồn tại hoặc đã ngừng dạy.' });
+                        }
+                        cb(null);
+                    }
+                );
+            };
+
+            const checkOverlap = () => {
+                const sqlOverlapMember = `
                 SELECT id FROM bookings
-                WHERE member_id = ? AND status = 'booked'
+                WHERE member_id = ? AND status = ?
                   AND start_time < ? AND end_time > ?
                 LIMIT 1
                 FOR UPDATE
             `;
-            conn.query(sqlOverlapMember, [targetMemberId, endSql, startSql], (err, rows) => {
+                conn.query(sqlOverlapMember, [targetMemberId, STATUS.BOOKING.BOOKED, endSql, startSql], (err, rows) => {
                 if (err) return fail(500, { status: 'Error', message: 'Lỗi truy vấn' }, err);
                 if (rows.length > 0) {
                     return fail(409, {
@@ -245,11 +290,11 @@ router.post('/book', requireLogin, (req, res) => {
                     if (!trainerId) return cb(null);
                     conn.query(
                         `SELECT id FROM bookings
-                         WHERE trainer_id = ? AND status = 'booked'
+                         WHERE trainer_id = ? AND status = ?
                            AND start_time < ? AND end_time > ?
                          LIMIT 1
                          FOR UPDATE`,
-                        [trainerId, endSql, startSql],
+                        [trainerId, STATUS.BOOKING.BOOKED, endSql, startSql],
                         (err2, trainerRows) => {
                             if (err2) return cb({ http: 500, message: 'Lỗi truy vấn HLV', sqlErr: err2 });
                             if (trainerRows.length > 0) {
@@ -263,7 +308,7 @@ router.post('/book', requireLogin, (req, res) => {
                     );
                 };
 
-                checkTrainerOverlap((conflictErr) => {
+                    checkTrainerOverlap((conflictErr) => {
                     if (conflictErr) {
                         return fail(conflictErr.http, {
                             status: 'Conflict',
@@ -273,21 +318,34 @@ router.post('/book', requireLogin, (req, res) => {
 
                     conn.query(
                         `INSERT INTO bookings (member_id, trainer_id, start_time, end_time, title, note, status)
-                         VALUES (?, ?, ?, ?, ?, ?, 'booked')`,
-                        [targetMemberId, trainerId, startSql, endSql, finalTitle, finalNote],
+                         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        [targetMemberId, trainerId, startSql, endSql, finalTitle, finalNote, STATUS.BOOKING.BOOKED],
                         (err3, result) => {
                             if (err3) return fail(500, { status: 'Error', message: 'Lỗi lưu lịch' }, err3);
                             conn.commit((errCommit) => {
                                 if (errCommit) return fail(500, { status: 'Error', message: 'Lỗi commit' }, errCommit);
                                 conn.release();
                                 res.status(201).json({
-                                    status: 'Success',
+                                    status: STATUS.API.SUCCESS,
                                     booking_id: result.insertId,
                                     message: 'Đã đặt lịch thành công!'
                                 });
                             });
                         }
                     );
+                });
+            });
+            };
+
+            checkMember((memberErr) => {
+                if (memberErr) {
+                    return fail(memberErr.http, { status: 'Error', message: memberErr.message }, memberErr.sqlErr);
+                }
+                checkTrainer((trainerErr) => {
+                    if (trainerErr) {
+                        return fail(trainerErr.http, { status: 'Error', message: trainerErr.message }, trainerErr.sqlErr);
+                    }
+                    checkOverlap();
                 });
             });
         });
@@ -304,9 +362,11 @@ router.post('/cancel/:id', requireLogin, (req, res) => {
         return res.status(400).json({ status: 'Error', message: 'ID không hợp lệ' });
     }
     const sql = isStaff
-        ? "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'booked'"
-        : "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'booked' AND member_id = ?";
-    const params = isStaff ? [id] : [id, userId];
+        ? "UPDATE bookings SET status = ? WHERE id = ? AND status = ?"
+        : "UPDATE bookings SET status = ? WHERE id = ? AND status = ? AND member_id = ?";
+    const params = isStaff
+        ? [STATUS.BOOKING.CANCELLED, id, STATUS.BOOKING.BOOKED]
+        : [STATUS.BOOKING.CANCELLED, id, STATUS.BOOKING.BOOKED, userId];
 
     db.query(sql, params, (err, result) => {
         if (err) return res.status(500).json({ status: 'Error', message: 'Lỗi cập nhật' });
@@ -316,7 +376,7 @@ router.post('/cancel/:id', requireLogin, (req, res) => {
                 message: 'Không tìm thấy buổi hoặc buổi đã bị hủy/hoàn thành (hoặc bạn không có quyền).'
             });
         }
-        res.json({ status: 'Success', message: 'Đã hủy buổi tập!' });
+        res.json({ status: STATUS.API.SUCCESS, message: 'Đã hủy buổi tập!' });
     });
 });
 

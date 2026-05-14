@@ -228,7 +228,8 @@
             <a href="/packages" class="nav-item<%= isActive('/packages') ? ' active' : '' %>"><i class="bi bi-box-seam"></i> Gói tập</a>
             <a href="/trainers" class="nav-item<%= isActive('/trainers') ? ' active' : '' %>"><i class="bi bi-person-video3"></i> Huấn luyện viên</a>
             <a href="/products" class="nav-item<%= isActive('/products') ? ' active' : '' %>"><i class="bi bi-box2-fill"></i> Kho hàng</a>
-            <a href="/registrations" class="nav-item<%= isActive('/registrations') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/registrations" class="nav-item<%= (_path === '/registrations' || _path === '/registrations/') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/registrations/invoices" class="nav-item<%= isActive('/registrations/invoices') ? ' active' : '' %>"><i class="bi bi-receipt-cutoff"></i> Hóa đơn</a>
             <a href="/discounts" class="nav-item<%= isActive('/discounts') ? ' active' : '' %>"><i class="bi bi-ticket-perforated"></i> Mã ưu đãi</a>
             <a href="/admin/messages" class="nav-item<%= isActive('/admin/messages') ? ' active' : '' %>">
                 <i class="bi bi-envelope-paper"></i> Tin nhắn liên hệ
@@ -244,7 +245,8 @@
             <a href="/schedule/admin" class="nav-item<%= isActive('/schedule') ? ' active' : '' %>"><i class="bi bi-calendar3"></i> Lịch tập</a>
             <a href="/packages" class="nav-item<%= isActive('/packages') ? ' active' : '' %>"><i class="bi bi-box-seam"></i> Gói tập</a>
             <a href="/products" class="nav-item<%= isActive('/products') ? ' active' : '' %>"><i class="bi bi-box2-fill"></i> Kho hàng</a>
-            <a href="/registrations" class="nav-item<%= isActive('/registrations') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/registrations" class="nav-item<%= (_path === '/registrations' || _path === '/registrations/') ? ' active' : '' %>"><i class="bi bi-cart-plus"></i> Bán hàng (POS)</a>
+            <a href="/registrations/invoices" class="nav-item<%= isActive('/registrations/invoices') ? ' active' : '' %>"><i class="bi bi-receipt-cutoff"></i> Hóa đơn</a>
             <a href="/discounts" class="nav-item<%= isActive('/discounts') ? ' active' : '' %>"><i class="bi bi-ticket-perforated"></i> Mã ưu đãi</a>
             <a href="/admin/messages" class="nav-item<%= isActive('/admin/messages') ? ' active' : '' %>">
                 <i class="bi bi-envelope-paper"></i> Tin nhắn liên hệ

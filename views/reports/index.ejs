@@ -273,7 +273,7 @@
               <td class="text-end" style="color:#dc2626;"><%= disc > 0 ? '-' + disc.toLocaleString('vi-VN') : '' %></td>
               <td class="text-end fw-bold" style="color:#0f172a;"><%= (price-disc).toLocaleString('vi-VN') %></td>
               <td>
-                <% if (t.payment_status === 'Success') { %>
+                <% if (t.payment_status === STATUS.PAYMENT.SUCCESS) { %>
                   <span class="badge-status-success">Đã thanh toán</span>
                 <% } else { %>
                   <span class="badge-status-pending">Chờ TT</span>

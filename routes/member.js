@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require("../config/db");
 const bcrypt = require("bcrypt"); 
 const { requireStaff } = require('../middleware/auth');
+const { STATUS } = require('../lib/status');
 
 router.get('/',requireStaff, (req, res) => {
     const page = parseInt(req.query.page) || 1; 
@@ -89,40 +90,87 @@ router.get('/view/:id', requireStaff, (req, res) => {
 });
 
 router.post('/view/:id/register', requireStaff, (req, res) => {
-    const memberId = req.params.id;
-    const { package_id } = req.body;
+    const memberId = Number(req.params.id);
+    const packageId = Number(req.body.package_id);
 
-    // Guard bao gồm cả Pending để staff submit hai lần không tạo registration trùng.
-    db.query("SELECT id FROM registrations WHERE member_id = ? AND expiration_date >= CURRENT_DATE() AND status = 'active' AND payment_status IN ('Success', 'Pending')", [memberId], (err, activePkgs) => {
-        if (err) {
-            console.error('[member /view/:id/register] guard query', err.message);
-            return res.status(500).send('Lỗi kiểm tra gói tập hiện tại');
-        }
-        if (activePkgs && activePkgs.length > 0) {
-            return res.send("<script>alert('TỪ CHỐI: Hội viên này đang có gói tập chưa hết hạn!'); window.history.back();</script>");
-        }
-        db.query("SELECT * FROM packages WHERE id = ?", [package_id], (err, pkgs) => {
-            if (err || pkgs.length === 0) return res.status(500).send("Lỗi gói tập");
+    if (!Number.isInteger(memberId) || memberId <= 0 || !Number.isInteger(packageId) || packageId <= 0) {
+        return res.status(400).send('Dữ liệu đăng ký không hợp lệ');
+    }
 
-            const pkg = pkgs[0];
-            const regDate = new Date().toISOString().split('T')[0];
+    db.getConnection((err, conn) => {
+        if (err) return res.status(500).send('Không lấy được kết nối DB');
 
-            let expDate = new Date();
-            expDate.setMonth(expDate.getMonth() + pkg.duration_months);
-            const expDateStr = expDate.toISOString().split('T')[0];
-
-            const sql = `
-                INSERT INTO registrations
-                (member_id, package_id, price, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
-                VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Tiền mặt', 'active')
-            `;
-            db.query(sql, [memberId, package_id, pkg.price, regDate, expDateStr, pkg.pt_sessions || 0], (err, result) => {
-                if (err) {
-                    console.error('[member /view/:id/register]', err.message);
-                    return res.status(500).send('Lỗi tạo hóa đơn');
-                }
-                res.redirect('/registrations/checkout/' + result.insertId);
+        const fail = (message, sqlErr) => {
+            if (sqlErr) console.error('[member /view/:id/register]', sqlErr.message);
+            conn.rollback(() => {
+                conn.release();
+                res.status(500).send(message);
             });
+        };
+
+        conn.beginTransaction((err) => {
+            if (err) {
+                conn.release();
+                return res.status(500).send('Lỗi mở transaction');
+            }
+
+            // Guard bao gồm cả Pending để staff submit hai lần không tạo registration trùng.
+            conn.query(
+                `SELECT id FROM registrations
+                 WHERE member_id = ?
+                   AND status = ?
+                   AND payment_status IN (?, ?)
+                   AND (expiration_date IS NULL OR expiration_date >= CURRENT_DATE())
+                 LIMIT 1
+                 FOR UPDATE`,
+                [memberId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.SUCCESS, STATUS.PAYMENT.PENDING],
+                (err, activePkgs) => {
+                    if (err) return fail('Lỗi kiểm tra gói tập hiện tại', err);
+                    if (activePkgs && activePkgs.length > 0) {
+                        return conn.rollback(() => {
+                            conn.release();
+                            res.redirect(`/members/view/${memberId}?notice=active_package_exists`);
+                        });
+                    }
+
+                    conn.query("SELECT * FROM packages WHERE id = ? FOR UPDATE", [packageId], (err, pkgs) => {
+                        if (err) return fail('Lỗi gói tập', err);
+                        if (!pkgs || pkgs.length === 0) return fail('Gói tập không tồn tại');
+
+                        const pkg = pkgs[0];
+                        const regDate = new Date().toISOString().split('T')[0];
+
+                        let expDate = new Date();
+                        expDate.setMonth(expDate.getMonth() + Number(pkg.duration_months || 0));
+                        const expDateStr = expDate.toISOString().split('T')[0];
+
+                        const sql = `
+                            INSERT INTO registrations
+                            (member_id, package_id, price, registration_date, expiration_date, total_sessions, payment_status, payment_method, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, 'Tiền mặt', ?)
+                        `;
+                        const params = [
+                            memberId,
+                            packageId,
+                            pkg.price,
+                            regDate,
+                            expDateStr,
+                            pkg.pt_sessions || 0,
+                            STATUS.PAYMENT.PENDING,
+                            STATUS.REGISTRATION.ACTIVE
+                        ];
+
+                        conn.query(sql, params, (err, result) => {
+                            if (err) return fail('Lỗi tạo hóa đơn', err);
+                            conn.commit((err) => {
+                                if (err) return fail('Lỗi commit', err);
+                                conn.release();
+                                res.redirect('/registrations/checkout/' + result.insertId);
+                            });
+                        });
+                    });
+                }
+            );
         });
     });
 });
@@ -136,9 +184,10 @@ router.post("/delete/:id", requireStaff, (req, res) => {
         if (err) return res.status(500).send("Không lấy được kết nối DB");
 
         const fail = (msg) => {
+            console.error('[members/delete]', msg);
             conn.rollback(() => {
                 conn.release();
-                res.status(500).send(msg);
+                res.redirect('/members?notice=delete_error');
             });
         };
 
@@ -164,7 +213,7 @@ router.post("/delete/:id", requireStaff, (req, res) => {
                     return conn.commit((err) => {
                         if (err) return fail("Lỗi commit: " + err.message);
                         conn.release();
-                        res.redirect("/members");
+                        res.redirect("/members?notice=delete_success");
                     });
                 }
                 conn.query(steps[i++], [id], (err) => {
@@ -202,14 +251,7 @@ router.post("/edit/:id",requireStaff, (req, res) => {
     db.query(checkSql, [phone, id], (err, results) => {
         if (err) return res.status(500).send("Lỗi hệ thống");
 
-        if (results.length > 0) {
-            return res.send(`
-                <script>
-                    alert('Lỗi: Số điện thoại này đã được sử dụng cho hội viên khác!');
-                    window.history.back();
-                </script>
-            `);
-        }
+        if (results.length > 0) return res.redirect(`/members/edit/${id}?notice=duplicate_phone`);
 
         const updateSql = `
             UPDATE members
@@ -248,7 +290,7 @@ router.post('/deduct-session', requireStaff, (req, res) => {
         if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
 
         const reg = results[0];
-        if (reg.payment_status !== 'Success') {
+        if (reg.payment_status !== STATUS.PAYMENT.SUCCESS) {
             return res.status(400).send("Gói tập chưa thanh toán — không thể điểm danh!");
         }
         if (reg.used_sessions >= reg.total_sessions) {

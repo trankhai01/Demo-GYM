@@ -60,6 +60,8 @@
 </div>
 
 <script>
+    const API_STATUS = <%- JSON.stringify(STATUS.API) %>;
+
     let isScanning = false;
     let currentMemberId = null;
     let currentSessionId = null;
@@ -93,9 +95,9 @@
 
             resBox.style.display = 'block';
             resName.innerText = data.member ? data.member.fullname : 'KHÔNG XÁC ĐỊNH';
-            resMsg.innerText = data.message || (data.status === 'Success' ? 'Hợp lệ' : 'Lỗi');
+            resMsg.innerText = data.message || (data.status === API_STATUS.SUCCESS ? 'Hợp lệ' : 'Lỗi');
 
-            if (data.status === 'Success') {
+            if (data.status === API_STATUS.SUCCESS) {
                 resBox.className = 'mt-4 p-4 rounded-4 shadow-lg bg-success text-white';
                 actionBtns.style.display = 'flex';
                 currentMemberId = data.member.id;
@@ -174,7 +176,7 @@
 
             resMsg.innerText = data.message || (ok ? 'Đã check-in' : 'Lỗi');
 
-            if (ok && data.status === 'Success') {
+            if (ok && data.status === API_STATUS.SUCCESS) {
                 actionBtns.style.display = 'none';
                 audioSuccess.play().catch(() => {});
                 setTimeout(() => {
@@ -223,7 +225,7 @@
         })
         .then(res => Promise.all([res.ok, res.json()]))
         .then(([ok, data]) => {
-            if (ok && data.status === 'Success') {
+            if (ok && data.status === API_STATUS.SUCCESS) {
                 audioSuccess.play().catch(() => {});
                 if (hideResultBox) {
                     document.getElementById('result-box').style.display = 'none';
@@ -304,7 +306,7 @@
         fetch('/checkin/active', { headers: { 'X-CSRF-Token': csrfToken() } })
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'Success') {
+                if (data.status === API_STATUS.SUCCESS) {
                     renderActiveSessions(data.sessions || []);
                 }
             })

@@ -60,6 +60,14 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label text-white-50">Trạng thái</label>
+          <select name="status" class="form-select bg-dark text-white border-secondary">
+            <option value="<%= STATUS.TRAINER.ACTIVE %>" <%= (trainer.status || STATUS.TRAINER.ACTIVE) === STATUS.TRAINER.ACTIVE ? 'selected' : '' %>>Đang dạy</option>
+            <option value="<%= STATUS.TRAINER.INACTIVE %>" <%= trainer.status === STATUS.TRAINER.INACTIVE ? 'selected' : '' %>>Nghỉ</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
           <label class="form-label text-white-50">Ảnh hiện tại</label><br>
           <% if (trainer.image_url) { %>
             <img src="<%= trainer.image_url %>" alt="<%= trainer.fullname %>"

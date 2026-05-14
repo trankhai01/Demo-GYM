@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireStaff } = require('../middleware/auth');
+const { STATUS, normalizeDiscountStatus } = require('../lib/status');
 
 router.use(requireStaff);
 
@@ -19,28 +20,77 @@ router.get('/', (req, res) => {
 });
 
 router.get('/add', (req, res) => {
-    res.render('discounts/add');
+    res.render('discounts/add', { error: null, form: {} });
 });
 
-router.post('/add', (req, res) => {
+function isDateOnly(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+}
+
+function parseDiscountPayload(body, options = {}) {
     const {
         code, description, discount_type, discount_value,
         min_amount, max_discount, valid_from, valid_to,
         usage_limit, status
-    } = req.body;
+    } = body;
+
+    const cleanCode = String(code || '').trim().toUpperCase();
+    if (options.requireCode !== false) {
+        if (!cleanCode) return { error: 'Vui lòng nhập mã ưu đãi.' };
+        if (!/^[A-Z0-9_-]{3,40}$/.test(cleanCode)) {
+            return { error: 'Mã ưu đãi chỉ dùng chữ, số, gạch ngang/gạch dưới và dài 3-40 ký tự.' };
+        }
+    }
+
+    const type = discount_type === 'fixed' ? 'fixed' : 'percent';
+    const value = Number(discount_value);
+    const minAmount = Number(min_amount || 0);
+    const maxDiscount = max_discount === '' || max_discount == null ? null : Number(max_discount);
+    const usageLimit = usage_limit === '' || usage_limit == null ? null : Number(usage_limit);
+    const validFrom = valid_from || null;
+    const validTo = valid_to || null;
+
+    if (!Number.isFinite(value) || value <= 0) return { error: 'Giá trị giảm phải lớn hơn 0.' };
+    if (type === 'percent' && value > 100) return { error: 'Mã giảm theo phần trăm không được vượt quá 100%.' };
+    if (!Number.isFinite(minAmount) || minAmount < 0) return { error: 'Đơn tối thiểu không hợp lệ.' };
+    if (maxDiscount !== null && (!Number.isFinite(maxDiscount) || maxDiscount < 0)) return { error: 'Giảm tối đa không hợp lệ.' };
+    if (usageLimit !== null && (!Number.isInteger(usageLimit) || usageLimit <= 0)) return { error: 'Giới hạn số lần dùng không hợp lệ.' };
+    if (validFrom && !isDateOnly(validFrom)) return { error: 'Ngày bắt đầu không hợp lệ.' };
+    if (validTo && !isDateOnly(validTo)) return { error: 'Ngày kết thúc không hợp lệ.' };
+    if (validFrom && validTo && validFrom > validTo) return { error: 'Ngày kết thúc phải sau ngày bắt đầu.' };
+
+    return {
+        code: cleanCode,
+        description: String(description || '').trim() || null,
+        discountType: type,
+        discountValue: value,
+        minAmount,
+        maxDiscount: type === 'percent' ? maxDiscount : null,
+        validFrom,
+        validTo,
+        usageLimit,
+        status: normalizeDiscountStatus(status)
+    };
+}
+
+router.post('/add', (req, res) => {
+    const payload = parseDiscountPayload(req.body);
+    if (payload.error) {
+        return res.status(400).render('discounts/add', { error: payload.error, form: req.body });
+    }
+
     const params = [
-        String(code || '').trim().toUpperCase(),
-        description || null,
-        discount_type === 'fixed' ? 'fixed' : 'percent',
-        Number(discount_value) || 0,
-        Number(min_amount) || 0,
-        max_discount ? Number(max_discount) : null,
-        valid_from || null,
-        valid_to || null,
-        usage_limit ? Number(usage_limit) : null,
-        status === 'disabled' ? 'disabled' : 'active'
+        payload.code,
+        payload.description,
+        payload.discountType,
+        payload.discountValue,
+        payload.minAmount,
+        payload.maxDiscount,
+        payload.validFrom,
+        payload.validTo,
+        payload.usageLimit,
+        payload.status
     ];
-    if (!params[0]) return res.redirect('/discounts/add?error=missing_code');
     const sql = `INSERT INTO discount_codes
         (code, description, discount_type, discount_value, min_amount, max_discount, valid_from, valid_to, usage_limit, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -62,21 +112,24 @@ router.get('/edit/:id', (req, res) => {
 });
 
 router.post('/edit/:id', (req, res) => {
-    const {
-        description, discount_type, discount_value,
-        min_amount, max_discount, valid_from, valid_to,
-        usage_limit, status
-    } = req.body;
+    const payload = parseDiscountPayload(req.body, { requireCode: false });
+    if (payload.error) {
+        return db.query('SELECT * FROM discount_codes WHERE id = ?', [req.params.id], (err, rows) => {
+            const code = { ...(rows && rows[0] ? rows[0] : { id: req.params.id }), ...req.body };
+            res.status(400).render('discounts/edit', { code, error: payload.error });
+        });
+    }
+
     const params = [
-        description || null,
-        discount_type === 'fixed' ? 'fixed' : 'percent',
-        Number(discount_value) || 0,
-        Number(min_amount) || 0,
-        max_discount ? Number(max_discount) : null,
-        valid_from || null,
-        valid_to || null,
-        usage_limit ? Number(usage_limit) : null,
-        status === 'disabled' ? 'disabled' : 'active',
+        payload.description,
+        payload.discountType,
+        payload.discountValue,
+        payload.minAmount,
+        payload.maxDiscount,
+        payload.validFrom,
+        payload.validTo,
+        payload.usageLimit,
+        payload.status,
         req.params.id
     ];
     const sql = `UPDATE discount_codes SET
@@ -97,9 +150,9 @@ router.post('/delete/:id', (req, res) => {
     db.query('DELETE FROM discount_codes WHERE id = ?', [req.params.id], (err) => {
         if (err) {
             console.error('[discounts/delete]', err.message);
-            return res.status(500).render('error', { message: 'Lỗi xóa mã ưu đãi.' });
+            return res.redirect('/discounts?notice=delete_error');
         }
-        res.redirect('/discounts');
+        res.redirect('/discounts?notice=delete_success');
     });
 });
 
@@ -128,23 +181,28 @@ router.post('/api/validate', express.json(), (req, res) => {
 });
 
 function computeDiscount(dc, amount, memberId) {
-    if (dc.status !== 'active') return { ok: false, error: 'Mã đã ngừng hoạt động.' };
+    const invoiceAmount = Number(amount);
+    const discountValue = Number(dc.discount_value);
+    if (!Number.isFinite(invoiceAmount) || invoiceAmount <= 0) return { ok: false, error: 'Số tiền không hợp lệ.' };
+    if (!Number.isFinite(discountValue) || discountValue <= 0) return { ok: false, error: 'Giá trị mã ưu đãi không hợp lệ.' };
+    if (dc.discount_type === 'percent' && discountValue > 100) return { ok: false, error: 'Giá trị mã ưu đãi không hợp lệ.' };
+    if (dc.status !== STATUS.DISCOUNT.ACTIVE) return { ok: false, error: 'Mã đã ngừng hoạt động.' };
     const today = new Date().toISOString().slice(0, 10);
     if (dc.valid_from && today < String(dc.valid_from).slice(0, 10)) return { ok: false, error: 'Mã chưa tới hạn áp dụng.' };
     if (dc.valid_to && today > String(dc.valid_to).slice(0, 10)) return { ok: false, error: 'Mã đã hết hạn.' };
-    if (dc.usage_limit !== null && dc.used_count >= dc.usage_limit) return { ok: false, error: 'Mã đã hết lượt sử dụng.' };
-    if (Number(amount) < Number(dc.min_amount || 0)) return { ok: false, error: `Hóa đơn cần tối thiểu ${Number(dc.min_amount).toLocaleString('vi-VN')}đ.` };
+    if (dc.usage_limit !== null && Number(dc.used_count) >= Number(dc.usage_limit)) return { ok: false, error: 'Mã đã hết lượt sử dụng.' };
+    if (invoiceAmount < Number(dc.min_amount || 0)) return { ok: false, error: `Hóa đơn cần tối thiểu ${Number(dc.min_amount).toLocaleString('vi-VN')}đ.` };
     if (dc.member_id && memberId && Number(dc.member_id) !== Number(memberId)) return { ok: false, error: 'Mã chỉ dành riêng cho hội viên khác.' };
     if (dc.member_id && !memberId) return { ok: false, error: 'Mã yêu cầu chọn hội viên.' };
 
     let discount = 0;
     if (dc.discount_type === 'percent') {
-        discount = Math.floor((Number(amount) * Number(dc.discount_value)) / 100);
+        discount = Math.floor((invoiceAmount * discountValue) / 100);
         if (dc.max_discount) discount = Math.min(discount, Number(dc.max_discount));
     } else {
-        discount = Number(dc.discount_value);
+        discount = discountValue;
     }
-    discount = Math.min(discount, Number(amount));
+    discount = Math.max(0, Math.min(discount, invoiceAmount));
     return { ok: true, discount_amount: discount };
 }
 
@@ -196,8 +254,8 @@ router.post('/birthday/run', (req, res) => {
                 db.query(
                     `INSERT IGNORE INTO discount_codes
                      (code, description, discount_type, discount_value, min_amount, valid_from, valid_to, usage_limit, is_birthday, member_id, status)
-                     VALUES (?, ?, 'percent', 15, 0, ?, ?, 1, 1, ?, 'active')`,
-                    [code, `Quà sinh nhật tháng ${month} cho ${m.fullname}`, validFrom, validTo, m.id],
+                     VALUES (?, ?, 'percent', 15, 0, ?, ?, 1, 1, ?, ?)`,
+                    [code, `Quà sinh nhật tháng ${month} cho ${m.fullname}`, validFrom, validTo, m.id, STATUS.DISCOUNT.ACTIVE],
                     (insErr, result) => {
                         if (insErr) {
                             console.error('[discounts/birthday] insert', insErr.message);

@@ -101,7 +101,8 @@
                                             data-id="<%= prod.id %>"
                                             data-name="<%= prod.product_name %>"
                                             data-price="<%= prod.price %>"
-                                            onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price)">
+                                            data-stock="<%= prod.stock_quantity %>"
+                                            onclick="addToCartFromCard(this)">
                                             <span class="stock-badge">Còn: <%= prod.stock_quantity %></span>
                                             <div class="product-img d-flex align-items-center justify-content-center p-0 overflow-hidden">
                                                 <% if (prod.image_url && prod.image_url.trim() !== '') { %>
@@ -203,6 +204,10 @@
         calculateTotal();
     });
 
+    function addToCartFromCard(card) {
+        addToCart(card.dataset.id, card.dataset.name, card.dataset.price, card.dataset.stock);
+    }
+
     function addToCart(id, name, price, maxStock) {
         let existingItem = cart.find(item => String(item.id) === String(id));
         let stockLimit = Number(maxStock); 
@@ -221,6 +226,12 @@
             cart.push({ id: String(id), name: name, price: Number(price), qty: 1, maxStock: stockLimit });
         }
         renderCart(); 
+    }
+
+    function addExistingItem(id) {
+        const item = cart.find(cartItem => String(cartItem.id) === String(id));
+        if (!item) return;
+        addToCart(item.id, item.name, item.price, item.maxStock);
     }
 
     function removeOne(id) {
@@ -254,7 +265,7 @@
                         <div class="d-flex align-items-center w-25 justify-content-center">
                             <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="removeOne('${item.id}')">-</button>
                             <span class="text-white mx-2">${item.qty}</span>
-                            <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, ${item.maxStock})">+</button>
+                            <button class="btn btn-sm btn-outline-secondary px-2 py-0 rounded-circle" onclick="addExistingItem('${item.id}')">+</button>
                         </div>
                         <div class="text-info fw-bold small text-end w-25">${itemTotal.toLocaleString('vi-VN')}đ</div>
                     </div>
@@ -340,15 +351,12 @@
             return Toast.warning('Vui lòng chọn Hội viên khi đăng ký Gói tập!');
         }
 
-        let retailTotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
-        let baseTotal = currentPackagePrice + retailTotal;
         const discountCode = (document.getElementById('discountCodeInput').value || '').trim().toUpperCase() || null;
 
         const payload = {
             member_id: memberId || null,
             package_id: packageId || null,
             cart_items: cart,
-            total_price: baseTotal,
             discount_code: discountCode
         };
 
@@ -384,5 +392,18 @@
         });
     }
 </script>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            cancel_success: { type: 'success', text: 'Đã hủy hóa đơn chờ thanh toán.' },
+            cancel_not_found: { type: 'warning', text: 'Hóa đơn không tồn tại hoặc đã được xử lý.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/registrations");
+    });
+</script>
+<% } %>
 
 <%- include('../partials/footer') %>

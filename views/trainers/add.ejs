@@ -33,6 +33,14 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label text-white-50 small">Trạng thái</label>
+                    <select name="status" class="form-select bg-transparent text-white border-secondary">
+                        <option value="<%= STATUS.TRAINER.ACTIVE %>" class="text-dark">Đang dạy</option>
+                        <option value="<%= STATUS.TRAINER.INACTIVE %>" class="text-dark">Nghỉ</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label text-white-50 small">Upload ảnh HLV</label>
                     <input type="file" name="image_file" class="form-control bg-transparent text-white border-secondary" accept="image/jpeg,image/png,image/webp">
                     <div class="form-text text-white-50">Tối đa 2 MB. Chấp nhận JPG/PNG/WEBP.</div>

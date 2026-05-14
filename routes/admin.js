@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireAdmin } = require('../middleware/auth');
+const { STATUS } = require('../lib/status');
 
 /* Helper: chạy nhiều query song song và trả về object kết quả */
 function runQueries(jobs) {
@@ -27,40 +28,46 @@ router.get('/', requireAdmin, async (req, res) => {
             todayRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
-                 WHERE payment_status = 'Success' AND DATE(registration_date) = CURRENT_DATE()`
+                 WHERE payment_status = ? AND DATE(registration_date) = CURRENT_DATE()`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Doanh thu hôm qua (so sánh tăng giảm %) */
             yesterdayRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
-                 WHERE payment_status = 'Success'
-                   AND DATE(registration_date) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)`
+                 WHERE payment_status = ?
+                   AND DATE(registration_date) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Doanh thu tuần này */
             weekRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
-                 WHERE payment_status = 'Success'
-                   AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY)`
+                 WHERE payment_status = ?
+                   AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY)`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Doanh thu tháng này */
             monthRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
-                 WHERE payment_status = 'Success'
+                 WHERE payment_status = ?
                    AND MONTH(registration_date) = MONTH(CURRENT_DATE())
-                   AND YEAR(registration_date) = YEAR(CURRENT_DATE())`
+                   AND YEAR(registration_date) = YEAR(CURRENT_DATE())`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Check-in hôm nay (số phiên) */
             todayCheckins: [
                 `SELECT COUNT(*) AS cnt FROM checkin_history
-                 WHERE DATE(checkin_time) = CURRENT_DATE() AND status = 'Success'`
+                 WHERE DATE(checkin_time) = CURRENT_DATE() AND status = ?`,
+                [STATUS.CHECKIN.SUCCESS]
             ],
             /* Số người đang trong phòng (chưa checkout) */
             currentlyInside: [
                 `SELECT COUNT(*) AS cnt FROM checkin_history
-                 WHERE checkout_time IS NULL AND status = 'Success'
-                   AND DATE(checkin_time) = CURRENT_DATE()`
+                 WHERE checkout_time IS NULL AND status = ?
+                   AND DATE(checkin_time) = CURRENT_DATE()`,
+                [STATUS.CHECKIN.SUCCESS]
             ],
             /* Hội viên mới hôm nay */
             todayNewMembers: [
@@ -81,11 +88,12 @@ router.get('/', requireAdmin, async (req, res) => {
                         COALESCE(SUM(r.price - COALESCE(r.discount_amount,0)),0) AS revenue
                  FROM registrations r
                  JOIN packages p ON p.id = r.package_id
-                 WHERE r.payment_status = 'Success'
+                 WHERE r.payment_status = ?
                    AND MONTH(r.registration_date) = MONTH(CURRENT_DATE())
                    AND YEAR(r.registration_date) = YEAR(CURRENT_DATE())
                  GROUP BY p.id, p.package_name
-                 ORDER BY sold DESC LIMIT 5`
+                 ORDER BY sold DESC LIMIT 5`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Top 5 sản phẩm bán chạy tháng này */
             topProducts: [
@@ -95,20 +103,22 @@ router.get('/', requireAdmin, async (req, res) => {
                  FROM registration_details rd
                  JOIN products pr ON pr.id = rd.product_id
                  JOIN registrations r ON r.id = rd.registration_id
-                 WHERE r.payment_status = 'Success'
+                 WHERE r.payment_status = ?
                    AND MONTH(r.registration_date) = MONTH(CURRENT_DATE())
                    AND YEAR(r.registration_date) = YEAR(CURRENT_DATE())
                  GROUP BY pr.id, pr.product_name, pr.image_url
-                 ORDER BY qty_sold DESC LIMIT 5`
+                 ORDER BY qty_sold DESC LIMIT 5`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             chart7days: [
                 `SELECT DATE_FORMAT(registration_date, '%Y-%m-%d') AS d,
                         COALESCE(SUM(price - COALESCE(discount_amount,0)),0) AS revenue
                  FROM registrations
-                 WHERE payment_status = 'Success'
+                 WHERE payment_status = ?
                    AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY)
                  GROUP BY DATE_FORMAT(registration_date, '%Y-%m-%d')
-                 ORDER BY d ASC`
+                 ORDER BY d ASC`,
+                [STATUS.PAYMENT.SUCCESS]
             ],
             /* Booking hôm nay (lịch tập) */
             todayBookings: [
@@ -119,15 +129,17 @@ router.get('/', requireAdmin, async (req, res) => {
                  LEFT JOIN members m ON m.id = b.member_id
                  LEFT JOIN trainers t ON t.id = b.trainer_id
                  WHERE DATE(b.start_time) = CURRENT_DATE()
-                   AND b.status = 'booked'
-                 ORDER BY b.start_time ASC`
+                   AND b.status = ?
+                 ORDER BY b.start_time ASC`,
+                [STATUS.BOOKING.BOOKED]
             ],
             /* CẢNH BÁO 1: SP tồn kho ≤ 5 */
             lowStock: [
                 `SELECT id, product_name, stock_quantity, image_url
                  FROM products
-                 WHERE stock_quantity <= 5 AND status = 'Active'
-                 ORDER BY stock_quantity ASC LIMIT 6`
+                 WHERE stock_quantity <= 5 AND status = ?
+                 ORDER BY stock_quantity ASC LIMIT 6`,
+                [STATUS.INVENTORY.ACTIVE]
             ],
             /* CẢNH BÁO 2: Tin nhắn liên hệ chưa đọc */
             unreadMsgs: [
@@ -141,10 +153,11 @@ router.get('/', requireAdmin, async (req, res) => {
                  FROM registrations r
                  JOIN members m ON m.id = r.member_id
                  JOIN packages p ON p.id = r.package_id
-                 WHERE r.payment_status = 'Success' AND r.status = 'active'
+                 WHERE r.payment_status = ? AND r.status = ?
                    AND r.expiration_date IS NOT NULL
                    AND r.expiration_date BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)
-                 ORDER BY r.expiration_date ASC LIMIT 6`
+                 ORDER BY r.expiration_date ASC LIMIT 6`,
+                [STATUS.PAYMENT.SUCCESS, STATUS.REGISTRATION.ACTIVE]
             ],
             /* Recent registrations (5 đăng ký gần nhất) */
             recentRegs: [

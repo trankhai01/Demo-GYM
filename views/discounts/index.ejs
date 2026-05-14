@@ -50,7 +50,7 @@
                   </td>
                   <td><%= c.used_count %><%= c.usage_limit ? ' / ' + c.usage_limit : '' %></td>
                   <td>
-                    <% if (c.status === 'active') { %>
+                    <% if (c.status === STATUS.DISCOUNT.ACTIVE) { %>
                       <span class="badge bg-success">Hoạt động</span>
                     <% } else { %>
                       <span class="badge bg-secondary">Tắt</span>
@@ -58,7 +58,8 @@
                   </td>
                   <td class="text-end">
                     <a href="/discounts/edit/<%= c.id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                    <form action="/discounts/delete/<%= c.id %>" method="POST" class="d-inline" onsubmit="return confirm('Xóa mã <%= c.code %>?');">
+                    <form action="/discounts/delete/<%= c.id %>" method="POST" class="d-inline"
+                          data-confirm="Xóa mã <%= c.code %>?">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                     </form>
@@ -74,3 +75,16 @@
 </div>
 
 <%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            delete_success: { type: 'success', text: 'Đã xóa mã ưu đãi.' },
+            delete_error: { type: 'error', text: 'Không thể xóa mã ưu đãi. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/discounts");
+    });
+</script>
+<% } %>

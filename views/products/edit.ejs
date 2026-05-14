@@ -30,8 +30,8 @@
         <div class="col-md-6 mt-3 mt-md-0">
             <label class="form-label text-white-50">Trạng thái</label>
             <select name="status" class="form-select bg-dark text-white border-secondary">
-                <option value="Active" <%= product.status === 'Active' ? 'selected' : '' %>>Đang bán (Active)</option>
-                <option value="Inactive" <%= product.status === 'Inactive' ? 'selected' : '' %>>Ngừng bán (Inactive)</option>
+                <option value="<%= STATUS.INVENTORY.ACTIVE %>" <%= product.status === STATUS.INVENTORY.ACTIVE ? 'selected' : '' %>>Đang bán</option>
+                <option value="<%= STATUS.INVENTORY.INACTIVE %>" <%= product.status === STATUS.INVENTORY.INACTIVE ? 'selected' : '' %>>Ngừng bán</option>
             </select>
         </div>
     </div>

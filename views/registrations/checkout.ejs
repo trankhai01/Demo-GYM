@@ -12,12 +12,16 @@
                 <div class="bg-dark p-4 rounded border border-secondary h-100 shadow">
                     <h5 class="text-white-50 text-uppercase mb-4">Chi tiết giao dịch</h5>
                     
-                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Khách hàng:</span> <strong class="fs-5"><%= invoice.fullname %></strong></p>
-                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">SĐT:</span> <%= invoice.phone %></p>
+                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Khách hàng:</span> <strong class="fs-5"><%= invoice.member_name || 'Khách lẻ' %></strong></p>
+                    <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">SĐT:</span> <%= invoice.member_phone || '—' %></p>
                     <hr class="border-secondary">
                     <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Gói tập:</span> <%= invoice.package_name || 'Mua lẻ sản phẩm' %></p>
                     <p class="text-white mb-4"><span class="text-secondary d-inline-block" style="width: 100px;">Trạng thái:</span>
-                        <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-hourglass-split me-1"></i>Chờ thanh toán</span>
+                        <% if (invoice.payment_status === STATUS.PAYMENT.SUCCESS) { %>
+                            <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i>Đã thanh toán</span>
+                        <% } else { %>
+                            <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-hourglass-split me-1"></i>Chờ thanh toán</span>
+                        <% } %>
                     </p>
 
                     <% if (Number(invoice.discount_amount) > 0) { %>
@@ -46,7 +50,8 @@
                         </li>
                     </ul>
 
-                    <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm">
+                    <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm"
+                          data-confirm="Bạn xác nhận ĐÃ THU TIỀN thành công?">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="tab-content" id="pills-tabContent">
                             <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
@@ -65,10 +70,21 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold mt-4 shadow" onclick="return confirm('Bạn xác nhận ĐÃ THU TIỀN thành công?')">
+                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold mt-4 shadow" <%= invoice.payment_status === STATUS.PAYMENT.SUCCESS ? 'disabled' : '' %>>
                             <i class="bi bi-check-circle-fill me-2"></i>XÁC NHẬN ĐÃ THU TIỀN
                         </button>
                     </form>
+
+                    <% if (invoice.payment_status === STATUS.PAYMENT.PENDING) { %>
+                        <form action="/registrations/checkout/cancel/<%= invoice.id %>" method="POST" class="mt-2"
+                              data-confirm="Hủy hóa đơn này? Thao tác này sẽ xóa hóa đơn chờ thanh toán.">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <input type="hidden" name="return_to" value="/registrations">
+                            <button type="submit" class="btn btn-outline-secondary w-100 fw-bold">
+                                <i class="bi bi-x-circle me-2"></i>HỦY ĐƠN
+                            </button>
+                        </form>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -86,5 +102,18 @@
         });
     });
 </script>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            cancel_paid: { type: 'warning', text: 'Không thể hủy hóa đơn đã thanh toán.' },
+            cancel_error: { type: 'error', text: 'Không thể hủy hóa đơn. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/registrations/checkout/<%= invoice.id %>");
+    });
+</script>
+<% } %>
 
 <%- include('../partials/footer') %>

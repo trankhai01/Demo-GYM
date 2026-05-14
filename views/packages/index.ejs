@@ -98,7 +98,7 @@
                         <i class="bi bi-pencil-square me-1"></i>Sửa
                     </a>
                     <form action="/packages/delete/<%= pkg.id %>" method="POST" class="w-50"
-                          onsubmit="return confirm('Bạn chắc chắn muốn xóa gói này?')">
+                          data-confirm="Bạn chắc chắn muốn xóa gói này?">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="btn w-100 rounded-pill fw-bold" style="background:#dc2626;color:#fff;border:none;">
                             <i class="bi bi-trash me-1"></i>Xóa
@@ -112,3 +112,17 @@
 </div>
 
 <%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            delete_success: { type: 'success', text: 'Đã xóa gói tập thành công.' },
+            delete_in_use: { type: 'warning', text: 'Không thể xóa gói tập đang có hội viên hoặc hóa đơn sử dụng.' },
+            delete_error: { type: 'error', text: 'Không thể xóa gói tập. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/packages");
+    });
+</script>
+<% } %>

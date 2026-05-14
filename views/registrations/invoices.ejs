@@ -1,0 +1,231 @@
+<%- include('../partials/header') %>
+
+<style>
+    .inv-page-title { color:#0f172a; letter-spacing:1px; }
+    .inv-page-title .accent { color:#4f46e5; }
+    .inv-filter {
+        background:#fff;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        padding:16px;
+        box-shadow:0 4px 12px rgba(15,23,42,.05);
+    }
+    .inv-table-wrap {
+        background:#fff;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        overflow:hidden;
+        box-shadow:0 4px 12px rgba(15,23,42,.05);
+    }
+    .inv-table thead th {
+        background:#f8fafc;
+        color:#4f46e5;
+        text-transform:uppercase;
+        font-size:.78rem;
+        letter-spacing:.7px;
+        border-bottom:1px solid #e2e8f0;
+    }
+    .inv-table td { vertical-align:middle; color:#0f172a; }
+    .inv-status {
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:5px 10px;
+        border-radius:999px;
+        font-weight:700;
+        font-size:.78rem;
+    }
+    .inv-status.pending { background:#fef3c7; color:#a16207; }
+    .inv-status.success { background:#dcfce7; color:#15803d; }
+    .inv-kind {
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:5px 10px;
+        border-radius:999px;
+        font-weight:600;
+        font-size:.76rem;
+        background:#eef2ff;
+        color:#4f46e5;
+    }
+    .inv-kind.pos { background:#ecfeff; color:#0e7490; }
+    .inv-total { color:#4f46e5; font-weight:800; }
+    .inv-empty { color:#94a3b8; padding:48px 16px; text-align:center; }
+    .inv-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+</style>
+
+<%
+    function dateText(v) {
+        if (!v) return '—';
+        return v instanceof Date ? v.toLocaleDateString('vi-VN') : String(v).slice(0, 10);
+    }
+    function money(v) {
+        return Number(v || 0).toLocaleString('vi-VN') + 'đ';
+    }
+    function pageUrl(n) {
+        const p = new URLSearchParams();
+        if (filters.status) p.set('status', filters.status);
+        if (filters.q) p.set('q', filters.q);
+        if (filters.from) p.set('from', filters.from);
+        if (filters.to) p.set('to', filters.to);
+        p.set('page', String(n));
+        return '/registrations/invoices?' + p.toString();
+    }
+%>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-uppercase inv-page-title mb-1">QUẢN LÝ <span class="accent">HÓA ĐƠN</span></h3>
+        <div class="text-muted small">Tổng cộng <strong><%= totalRecords %></strong> hóa đơn theo bộ lọc hiện tại.</div>
+    </div>
+    <a href="/registrations" class="btn shadow-sm fw-bold" style="background:#4f46e5;color:#fff;">
+        <i class="bi bi-cart-plus"></i> Tạo hóa đơn
+    </a>
+</div>
+
+<form method="GET" action="/registrations/invoices" class="inv-filter mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small text-uppercase fw-bold text-muted">Tìm kiếm</label>
+            <input type="text" name="q" class="form-control" value="<%= filters.q || '' %>" placeholder="Mã HĐ, hội viên, SĐT, gói...">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-uppercase fw-bold text-muted">Trạng thái</label>
+            <select name="status" class="form-select">
+                <option value="" <%= !filters.status ? 'selected' : '' %>>Tất cả</option>
+                <option value="<%= STATUS.PAYMENT.PENDING %>" <%= filters.status === STATUS.PAYMENT.PENDING ? 'selected' : '' %>>Chờ thanh toán</option>
+                <option value="<%= STATUS.PAYMENT.SUCCESS %>" <%= filters.status === STATUS.PAYMENT.SUCCESS ? 'selected' : '' %>>Đã thanh toán</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-uppercase fw-bold text-muted">Từ ngày</label>
+            <input type="date" name="from" class="form-control" value="<%= filters.from || '' %>">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-uppercase fw-bold text-muted">Đến ngày</label>
+            <input type="date" name="to" class="form-control" value="<%= filters.to || '' %>">
+        </div>
+        <div class="col-lg-3 d-flex gap-2">
+            <button class="btn btn-primary flex-fill"><i class="bi bi-funnel-fill"></i> Lọc</button>
+            <a href="/registrations/invoices" class="btn btn-light flex-fill"><i class="bi bi-x-lg"></i> Xóa lọc</a>
+        </div>
+    </div>
+</form>
+
+<div class="inv-table-wrap">
+    <table class="table table-hover inv-table mb-0">
+        <thead>
+            <tr>
+                <th class="ps-4 py-3">Mã</th>
+                <th class="py-3">Ngày</th>
+                <th class="py-3">Khách hàng</th>
+                <th class="py-3">Loại</th>
+                <th class="py-3">Tổng tiền</th>
+                <th class="py-3">Thanh toán</th>
+                <th class="text-end pe-4 py-3">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (invoices.length > 0) { %>
+                <% invoices.forEach(inv => { %>
+                    <tr>
+                        <td class="ps-4 fw-bold">#<%= inv.id %></td>
+                        <td>
+                            <div class="fw-semibold"><%= dateText(inv.registration_date) %></div>
+                            <% if (inv.expiration_date) { %>
+                                <div class="text-muted small">Hết hạn: <%= dateText(inv.expiration_date) %></div>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="fw-bold"><%= inv.member_name || 'Khách lẻ' %></div>
+                            <div class="text-muted small"><i class="bi bi-telephone me-1"></i><%= inv.member_phone || '—' %></div>
+                        </td>
+                        <td>
+                            <% if (inv.package_id) { %>
+                                <span class="inv-kind"><i class="bi bi-ticket-perforated"></i><%= inv.package_name || 'Gói tập' %></span>
+                            <% } else { %>
+                                <span class="inv-kind pos"><i class="bi bi-bag-check"></i>POS <%= Number(inv.product_qty || 0) %> SP</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="inv-total"><%= money(inv.price) %></div>
+                            <% if (Number(inv.discount_amount) > 0) { %>
+                                <div class="text-success small">Đã giảm <%= money(inv.discount_amount) %></div>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (inv.payment_status === STATUS.PAYMENT.SUCCESS) { %>
+                                <span class="inv-status success"><i class="bi bi-check-circle-fill"></i>Đã thanh toán</span>
+                            <% } else { %>
+                                <span class="inv-status pending"><i class="bi bi-hourglass-split"></i>Chờ thanh toán</span>
+                            <% } %>
+                            <div class="text-muted small mt-1"><%= inv.payment_method || '—' %></div>
+                        </td>
+                        <td class="pe-4">
+                            <div class="inv-actions">
+                                <a href="/registrations/checkout/<%= inv.id %>" class="btn btn-sm <%= inv.payment_status === STATUS.PAYMENT.PENDING ? 'btn-primary' : 'btn-outline-primary' %>">
+                                    <i class="bi <%= inv.payment_status === STATUS.PAYMENT.PENDING ? 'bi-wallet2' : 'bi-eye' %>"></i>
+                                    <%= inv.payment_status === STATUS.PAYMENT.PENDING ? 'Thanh toán' : 'Xem' %>
+                                </a>
+                                <% if (inv.payment_status === STATUS.PAYMENT.PENDING) { %>
+                                    <form action="/registrations/checkout/cancel/<%= inv.id %>" method="POST"
+                                          data-confirm="Hủy hóa đơn #<%= inv.id %>? Thao tác này sẽ xóa hóa đơn chờ thanh toán.">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <input type="hidden" name="return_to" value="<%= returnTo %>">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">
+                                            <i class="bi bi-x-circle"></i> Hủy
+                                        </button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="7" class="inv-empty">
+                        <i class="bi bi-receipt fs-1 d-block mb-2"></i>
+                        Không tìm thấy hóa đơn nào theo bộ lọc hiện tại.
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<% if (totalPages > 1) { %>
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                <a class="page-link" href="<%= pageUrl(currentPage - 1) %>">Trước</a>
+            </li>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a>
+                </li>
+            <% } %>
+            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                <a class="page-link" href="<%= pageUrl(currentPage + 1) %>">Sau</a>
+            </li>
+        </ul>
+    </nav>
+<% } %>
+
+<%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            cancel_success: { type: 'success', text: 'Đã hủy hóa đơn chờ thanh toán.' },
+            cancel_paid: { type: 'warning', text: 'Không thể hủy hóa đơn đã thanh toán.' },
+            cancel_not_found: { type: 'warning', text: 'Hóa đơn không tồn tại hoặc đã được xử lý.' },
+            cancel_error: { type: 'error', text: 'Không thể hủy hóa đơn. Vui lòng thử lại sau.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('notice');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+    });
+</script>
+<% } %>

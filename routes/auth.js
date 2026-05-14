@@ -36,7 +36,8 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', loginLimiter, (req, res) => {
-    const { phone, password } = req.body;
+    const phone = String(req.body.phone || '').trim();
+    const password = String(req.body.password || '');
 
     if (!phone || !password) {
         return res.render('login', { 
@@ -80,16 +81,23 @@ router.post('/login', loginLimiter, (req, res) => {
             });
         }
 
-        req.session.user = { 
-            id: user.id, 
-            username: user.fullname, 
-            role: user.role 
-        };
+        req.session.regenerate((err) => {
+            if (err) {
+                console.error('Lỗi tạo lại session:', err);
+                return res.status(500).render('error', { message: 'Lỗi đăng nhập, vui lòng thử lại.' });
+            }
 
-        req.session.save((err) => {
-            if (err) console.error('Lỗi lưu session:', err);
-            const dest = user.role === 'member' ? '/dashboard' : '/';
-            res.redirect(dest);
+            req.session.user = {
+                id: user.id,
+                username: user.fullname,
+                role: user.role
+            };
+
+            req.session.save((saveErr) => {
+                if (saveErr) console.error('Lỗi lưu session:', saveErr);
+                const dest = user.role === 'member' ? '/dashboard' : '/';
+                res.redirect(dest);
+            });
         });
     });
 });
@@ -100,11 +108,21 @@ router.get('/register', (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-    const { fullname, phone, password, gender, email } = req.body;
+    const fullname = String(req.body.fullname || '').trim();
+    const phone = String(req.body.phone || '').trim();
+    const password = String(req.body.password || '');
+    const gender = req.body.gender;
+    const email = req.body.email;
 
     if (!fullname || !phone || !password) {
         return res.render('register', {
             error: 'Vui lòng điền đầy đủ thông tin!',
+            fullname, phone, gender, email
+        });
+    }
+    if (password.length < 6) {
+        return res.render('register', {
+            error: 'Mật khẩu cần tối thiểu 6 ký tự.',
             fullname, phone, gender, email
         });
     }

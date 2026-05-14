@@ -144,7 +144,7 @@
 
     <% 
         if (history && history.length > 0) {
-            let activePtPackages = history.filter(h => new Date(h.expiration_date) >= new Date() && h.total_sessions > 0 && h.payment_status === 'Success');
+            let activePtPackages = history.filter(h => new Date(h.expiration_date) >= new Date() && h.total_sessions > 0 && h.payment_status === STATUS.PAYMENT.SUCCESS);
             if (activePtPackages.length > 0) {
                 activePtPackages.forEach(pkg => {
                     let used = pkg.used_sessions || 0;
@@ -172,7 +172,8 @@
             </div>
         </div>
 
-        <form action="/members/deduct-session" method="POST" class="row g-2 align-items-end">
+        <form action="/members/deduct-session" method="POST" class="row g-2 align-items-end"
+              data-confirm="Xác nhận trừ 1 buổi tập PT?">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="registration_id" value="<%= pkg.id %>">
             <input type="hidden" name="member_id" value="<%= member.id %>">
@@ -191,7 +192,7 @@
                 <input type="text" name="note" class="form-control bg-transparent text-white border-secondary" placeholder="Tập ngực, chân..." autocomplete="off">
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-danger w-100 fw-bold" <%= isCompleted ? 'disabled' : '' %> onclick="return confirm('Xác nhận trừ 1 buổi tập PT?')">
+                <button type="submit" class="btn btn-danger w-100 fw-bold" <%= isCompleted ? 'disabled' : '' %>>
                     <i class="bi bi-check2-square me-2"></i> ĐIỂM DANH
                 </button>
             </div>
@@ -297,3 +298,15 @@
 </div>
 
 <%- include('../partials/footer') %>
+<% if (locals.notice) { %>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = {
+            active_package_exists: { type: 'warning', text: 'Hội viên đang ở trong gói tập còn hiệu lực nên không thể đăng ký gói tập khác.' }
+        };
+        const item = messages[<%- JSON.stringify(notice) %>];
+        if (item && window.Toast) Toast[item.type](item.text);
+        window.history.replaceState({}, document.title, "/members/view/<%= member.id %>");
+    });
+</script>
+<% } %>

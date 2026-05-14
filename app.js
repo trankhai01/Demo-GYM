@@ -5,6 +5,7 @@ const path = require("path");
 const session = require("express-session");
 const helmet = require("helmet");
 const db = require("./config/db");
+const { STATUS } = require("./lib/status");
 
 const app = express();
 
@@ -64,6 +65,8 @@ app.use((req, res, next) => {
   res.locals.csrfToken = generateToken(req);
   res.locals.unreadContactCount = 0;
   res.locals.currentPath = req.path;
+  res.locals.notice = req.query.notice || null;
+  res.locals.STATUS = STATUS;
 
   const u = req.session.user;
   const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');
@@ -123,9 +126,9 @@ const homeUrlForRole = (role) => {
 app.get('/', (req, res) => {
     const queries = {
         packages: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6",
-        trainers: "SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = 'Active' OR status IS NULL ORDER BY id ASC LIMIT 6",
+        trainers: `SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = '${STATUS.TRAINER.ACTIVE}' OR status IS NULL ORDER BY id ASC LIMIT 6`,
         statsMembers: "SELECT COUNT(*) AS c FROM members",
-        statsTrainers: "SELECT COUNT(*) AS c FROM trainers WHERE status = 'Active' OR status IS NULL",
+        statsTrainers: `SELECT COUNT(*) AS c FROM trainers WHERE status = '${STATUS.TRAINER.ACTIVE}' OR status IS NULL`,
         statsPackages: "SELECT COUNT(*) AS c FROM packages",
         statsCheckins: "SELECT COUNT(*) AS c FROM checkin_history"
     };

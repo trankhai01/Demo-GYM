@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const { requireLogin, requireMember } = require('../middleware/auth');
+const { STATUS } = require('../lib/status');
 const {
     uploadAvatar,
     withFriendlyErrors,
@@ -129,11 +130,11 @@ router.post('/change-password', requireLogin, (req, res) => {
     const userId = req.session.user.id; 
 
     if (new_password !== confirm_password) {
-        return res.send('<script>alert("Mật khẩu mới không khớp!"); window.history.back();</script>');
+        return res.redirect('/profile/change-password?notice=password_mismatch');
     }
     db.query("SELECT password FROM members WHERE id = ?", [userId], async (err, results) => {
         if (err || results.length === 0) {
-            return res.send('<script>alert("Lỗi hệ thống!"); window.history.back();</script>');
+            return res.redirect('/profile/change-password?notice=password_error');
         }
         const dbPassword = results[0].password;
         let isMatch = false;
@@ -144,14 +145,14 @@ router.post('/change-password', requireLogin, (req, res) => {
         }
         
         if (!isMatch) {
-            return res.send('<script>alert("Mật khẩu hiện tại không đúng!"); window.history.back();</script>');
+            return res.redirect('/profile/change-password?notice=password_wrong');
         }
         const hashedNewPassword = await bcrypt.hash(new_password, 10);
 
         db.query("UPDATE members SET password = ? WHERE id = ?", [hashedNewPassword, userId], (err) => {
-            if (err) return res.send('<script>alert("Lỗi cập nhật!"); window.history.back();</script>');
+            if (err) return res.redirect('/profile/change-password?notice=password_error');
             
-            res.send('<script>alert("Đổi mật khẩu thành công!"); window.location.href="/";</script>');
+            res.redirect('/profile/change-password?notice=password_success');
         });
     });
 });
@@ -167,7 +168,7 @@ router.get('/schedule', (req, res) => {
         SELECT p.package_name, r.expiration_date
         FROM registrations r
         LEFT JOIN packages p ON r.package_id = p.id
-        WHERE r.member_id = ? AND (r.status = 'Active' OR r.status = 'active') AND r.payment_status = 'Success'
+        WHERE r.member_id = ? AND r.status = ? AND r.payment_status = ?
         ORDER BY r.expiration_date DESC LIMIT 1
     `;
 
@@ -175,15 +176,15 @@ router.get('/schedule', (req, res) => {
         SELECT checkin_time, checkout_time, status, note,
                TIMESTAMPDIFF(MINUTE, checkin_time, COALESCE(checkout_time, NOW())) AS duration_min
         FROM checkin_history
-        WHERE member_id = ? AND status = 'Success'
+        WHERE member_id = ? AND status = ?
         ORDER BY checkin_time DESC LIMIT 10
     `;
 
-    db.query(sqlPackage, [userId], (err, packageResults) => {
-        if (err) return res.send('<script>alert("Lỗi hệ thống"); window.history.back();</script>');
+    db.query(sqlPackage, [userId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.SUCCESS], (err, packageResults) => {
+        if (err) return res.status(500).render('error', { message: 'Lỗi tải gói tập.' });
         
-        db.query(sqlHistory, [userId], (err, historyResults) => {
-            if (err) return res.send('<script>alert("Lỗi hệ thống"); window.history.back();</script>');
+        db.query(sqlHistory, [userId, STATUS.CHECKIN.SUCCESS], (err, historyResults) => {
+            if (err) return res.status(500).render('error', { message: 'Lỗi tải lịch sử tập.' });
             
             res.render('profile/schedule', { 
                 regInfo: packageResults.length > 0 ? packageResults[0] : null,

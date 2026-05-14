@@ -108,6 +108,11 @@
         flex-direction: column;
         gap: 10px;
     }
+    .gymbro-contact-fab-group.with-sidebar {
+        left: auto;
+        right: 24px;
+        bottom: 96px;
+    }
     .gymbro-contact-fab {
         width: 52px;
         height: 52px;
@@ -192,11 +197,12 @@
         .gymbro-chat-panel { right: 8px; left: 8px; width: auto; bottom: 88px; }
         .gymbro-chat-bubble { right: 16px; bottom: 16px; }
         .gymbro-contact-fab-group { left: 16px; bottom: 16px; }
+        .gymbro-contact-fab-group.with-sidebar { left: 16px; right: auto; bottom: 84px; }
         .gymbro-phone-label { display: none; }
     }
 </style>
 
-<div class="gymbro-contact-fab-group" aria-label="<%= t('chatbot.contact_actions_aria') %>">
+<div class="gymbro-contact-fab-group <%= (typeof user !== 'undefined' && user && (user.role === 'admin' || user.role === 'staff')) ? 'with-sidebar' : '' %>" aria-label="<%= t('chatbot.contact_actions_aria') %>">
     <a class="gymbro-contact-fab zalo" href="https://zalo.me/0900000000" target="_blank" rel="noopener" aria-label="<%= t('chatbot.zalo_aria') %>">
         <span class="gymbro-zalo-mark">Zalo</span>
     </a>

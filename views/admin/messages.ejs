@@ -64,7 +64,7 @@
                                         </form>
                                     <% } %>
                                     <form method="POST" action="/admin/messages/<%= m.id %>/delete" class="d-inline"
-                                          onsubmit="return confirm('Xóa tin nhắn này?');">
+                                          data-confirm="Xóa tin nhắn này?">
                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                         <input type="hidden" name="filter" value="<%= filter %>">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -89,5 +89,4 @@
     <% } %>
 </div>
 
-</body>
-</html>
+<%- include('../partials/footer') %>
