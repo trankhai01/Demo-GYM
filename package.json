@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "dev": "nodemon app.js",
     "check": "for f in $(find . -name '*.js' -not -path './node_modules/*'); do node --check \"$f\" || exit 1; done",
     "test": "npm run check"
   },

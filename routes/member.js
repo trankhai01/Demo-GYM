@@ -4,6 +4,8 @@ const db = require("../config/db");
 const bcrypt = require("bcrypt"); 
 const { requireStaff } = require('../middleware/auth');
 const { STATUS } = require('../lib/status');
+const { memberPayload } = require('../lib/formValidation');
+const auditLog = require('../lib/auditLog');
 
 router.get('/',requireStaff, (req, res) => {
     const page = parseInt(req.query.page) || 1; 
@@ -42,19 +44,26 @@ router.get("/add",requireStaff, (req, res) => {
 });
 
 router.post("/add",requireStaff, (req, res) => {
-    const { fullname, phone, gender, email } = req.body;
+    const payload = memberPayload(req.body);
+    if (payload.error) {
+        return res.redirect('/members?error=invalid_member');
+    }
     const join_date = new Date().toISOString().split('T')[0];
-    const cleanEmail = email && email.trim() ? email.trim() : null;
     const checkSql = "SELECT id FROM members WHERE phone = ?";
-    db.query(checkSql, [phone], async (err, results) => {
+    db.query(checkSql, [payload.phone], async (err, results) => {
         if (err) return res.status(500).send("Lỗi DB");
         if (results.length > 0) {
             return res.redirect('/members?error=duplicate_phone');
         }
         try {
-            const defaultPassword = await bcrypt.hash(phone, 10);
+            const defaultPassword = await bcrypt.hash(payload.phone, 10);
             const insertSql = "INSERT INTO members (fullname, phone, email, gender, join_date, password, role) VALUES (?, ?, ?, ?, ?, ?, 'member')";
-            db.query(insertSql, [fullname, phone, cleanEmail, gender, join_date, defaultPassword], () => {
+            db.query(insertSql, [payload.fullname, payload.phone, payload.email, payload.gender, join_date, defaultPassword], (errInsert) => {
+                if (errInsert) {
+                    if (errInsert.code === 'ER_DUP_ENTRY') return res.redirect('/members?error=duplicate_phone');
+                    console.error('[members/add]', errInsert.message);
+                    return res.redirect('/members?error=invalid_member');
+                }
                 res.redirect("/members");
             });
         } catch (error) {
@@ -77,11 +86,27 @@ router.get('/view/:id', requireStaff, (req, res) => {
                     ORDER BY r.id DESC
                 `;
                 db.query(historySql, [id], (err, history) => {
-                    res.render('members/view', { 
-                        member: memberResult[0], 
-                        packages: packages || [], 
-                        trainers: trainers || [], 
-                        history: history || [] 
+                    const ptLogSql = `
+                        SELECT l.id, l.registration_id, l.note, l.created_at,
+                               p.package_name,
+                               t.fullname AS trainer_name
+                        FROM pt_sessions_log l
+                        JOIN registrations r ON r.id = l.registration_id
+                        LEFT JOIN packages p ON p.id = r.package_id
+                        LEFT JOIN trainers t ON t.id = l.trainer_id
+                        WHERE l.member_id = ?
+                        ORDER BY l.created_at DESC, l.id DESC
+                        LIMIT 20
+                    `;
+                    db.query(ptLogSql, [id], (errLog, ptLogs) => {
+                        if (errLog) console.error('[members/view ptLogs]', errLog.message);
+                        res.render('members/view', {
+                            member: memberResult[0],
+                            packages: packages || [],
+                            trainers: trainers || [],
+                            history: history || [],
+                            ptLogs: ptLogs || []
+                        });
                     });
                 });
             });
@@ -114,7 +139,7 @@ router.post('/view/:id/register', requireStaff, (req, res) => {
                 return res.status(500).send('Lỗi mở transaction');
             }
 
-            // Guard bao gồm cả Pending để staff submit hai lần không tạo registration trùng.
+            // Chặn đăng ký gói trùng.
             conn.query(
                 `SELECT id FROM registrations
                  WHERE member_id = ?
@@ -175,8 +200,7 @@ router.post('/view/:id/register', requireStaff, (req, res) => {
     });
 });
 
-// Xóa tuần tự các bảng tham chiếu trong transaction để atomic, không dựa vào FK CASCADE
-// (XAMPP/MariaDB cũ có thể tắt enforcement, để lại dữ liệu rác).
+// Xóa hội viên và dữ liệu liên quan.
 router.post("/delete/:id", requireStaff, (req, res) => {
     const id = req.params.id;
 
@@ -213,6 +237,7 @@ router.post("/delete/:id", requireStaff, (req, res) => {
                     return conn.commit((err) => {
                         if (err) return fail("Lỗi commit: " + err.message);
                         conn.release();
+                        auditLog.record(req, 'member.delete', 'member', id);
                         res.redirect("/members?notice=delete_success");
                     });
                 }
@@ -237,18 +262,13 @@ router.get("/edit/:id",requireStaff, (req, res) => {
 
 router.post("/edit/:id",requireStaff, (req, res) => {
     const id = req.params.id;
-    const {
-        fullname, phone, email, gender,
-        cccd, birth_year, birth_date, height, weight, hometown, address
-    } = req.body;
-    let resolvedBirthYear = birth_year || null;
-    if (birth_date) {
-        const y = Number(String(birth_date).slice(0, 4));
-        if (Number.isFinite(y) && y > 1900) resolvedBirthYear = y;
+    const payload = memberPayload(req.body);
+    if (payload.error) {
+        return res.redirect(`/members/edit/${id}?notice=invalid_member`);
     }
 
     const checkSql = "SELECT id FROM members WHERE phone = ? AND id != ?";
-    db.query(checkSql, [phone, id], (err, results) => {
+    db.query(checkSql, [payload.phone, id], (err, results) => {
         if (err) return res.status(500).send("Lỗi hệ thống");
 
         if (results.length > 0) return res.redirect(`/members/edit/${id}?notice=duplicate_phone`);
@@ -262,16 +282,16 @@ router.post("/edit/:id",requireStaff, (req, res) => {
         `;
 
         const values = [
-            fullname, phone, (email && email.trim()) ? email.trim() : null, gender,
-            cccd || null, resolvedBirthYear, birth_date || null, height || null, weight || null,
-            hometown || null, address || null,
+            payload.fullname, payload.phone, payload.email, payload.gender,
+            payload.cccd, payload.birth_year, payload.birth_date, payload.height, payload.weight,
+            payload.hometown, payload.address,
             id
         ];
 
         db.query(updateSql, values, (err) => {
             if (err) return res.status(500).send("Lỗi cập nhật: " + err.message);
 
-            if (birth_date) {
+            if (payload.birth_date) {
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
                 require('../lib/birthdayJob').runForMember(id, { baseUrl })
                     .catch(e => console.error('[member/edit -> birthdayJob]', e.message));
@@ -282,28 +302,109 @@ router.post("/edit/:id",requireStaff, (req, res) => {
     });
 });
 
-// trainer_id null → "tự tập". Yêu cầu hóa đơn đã thanh toán mới cho điểm danh.
+// Trừ buổi PT cho hóa đơn đã thanh toán.
 router.post('/deduct-session', requireStaff, (req, res) => {
-    const { registration_id, member_id, trainer_id, note } = req.body;
-    const tid = trainer_id && String(trainer_id).trim() !== '' ? Number(trainer_id) : null;
-    db.query("SELECT total_sessions, used_sessions, payment_status FROM registrations WHERE id = ?", [registration_id], (err, results) => {
-        if (err || results.length === 0) return res.status(500).send("Lỗi hệ thống");
+    const registrationId = Number(req.body.registration_id);
+    const memberId = Number(req.body.member_id);
+    const trainerId = req.body.trainer_id && String(req.body.trainer_id).trim() !== '' ? Number(req.body.trainer_id) : null;
+    const note = String(req.body.note || '').trim().slice(0, 255) || 'Hoàn thành buổi tập';
 
-        const reg = results[0];
-        if (reg.payment_status !== STATUS.PAYMENT.SUCCESS) {
-            return res.status(400).send("Gói tập chưa thanh toán — không thể điểm danh!");
-        }
-        if (reg.used_sessions >= reg.total_sessions) {
-            return res.status(400).send("Gói tập này đã hết số buổi!");
-        }
+    const redirectTo = Number.isInteger(memberId) && memberId > 0
+        ? `/members/view/${memberId}`
+        : '/members';
+    const withNotice = (notice) => `${redirectTo}?notice=${encodeURIComponent(notice)}`;
 
-        db.query("UPDATE registrations SET used_sessions = used_sessions + 1 WHERE id = ?", [registration_id], (err) => {
-            if (err) return res.status(500).send("Lỗi cập nhật số buổi");
-            db.query("INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)",
-                [registration_id, member_id, tid, note || 'Hoàn thành buổi tập'], (err) => {
-                    if (err) console.error('[deduct-session]', err.message);
-                    res.redirect('/members/view/' + member_id);
-                });
+    if (!Number.isInteger(registrationId) || registrationId <= 0 || !Number.isInteger(memberId) || memberId <= 0) {
+        return res.redirect(withNotice('deduct_invalid'));
+    }
+    if (trainerId !== null && (!Number.isInteger(trainerId) || trainerId <= 0)) {
+        return res.redirect(withNotice('deduct_invalid_trainer'));
+    }
+
+    db.getConnection((err, conn) => {
+        if (err) return res.redirect(withNotice('deduct_error'));
+
+        const fail = (notice, sqlErr) => {
+            if (sqlErr) console.error('[deduct-session]', sqlErr.message);
+            conn.rollback(() => {
+                conn.release();
+                res.redirect(withNotice(notice));
+            });
+        };
+
+        conn.beginTransaction((err) => {
+            if (err) {
+                conn.release();
+                return res.redirect(withNotice('deduct_error'));
+            }
+
+            conn.query(
+                `SELECT id, member_id, total_sessions, used_sessions, payment_status
+                 FROM registrations
+                 WHERE id = ? AND member_id = ?
+                 FOR UPDATE`,
+                [registrationId, memberId],
+                (err, rows) => {
+                    if (err) return fail('deduct_error', err);
+                    if (!rows || rows.length === 0) return fail('deduct_not_found');
+
+                    const reg = rows[0];
+                    if (reg.payment_status !== STATUS.PAYMENT.SUCCESS) return fail('deduct_unpaid');
+                    if (Number(reg.total_sessions || 0) <= 0) return fail('deduct_no_pt');
+                    if (Number(reg.used_sessions || 0) >= Number(reg.total_sessions || 0)) return fail('deduct_completed');
+
+                    const checkTrainer = (cb) => {
+                        if (trainerId === null) return cb();
+                        conn.query(
+                            'SELECT id FROM trainers WHERE id = ? AND status = ? LIMIT 1',
+                            [trainerId, STATUS.TRAINER.ACTIVE],
+                            (errTrainer, trainerRows) => {
+                                if (errTrainer) return cb(errTrainer);
+                                if (!trainerRows || trainerRows.length === 0) return cb(new Error('inactive_trainer'));
+                                cb();
+                            }
+                        );
+                    };
+
+                    checkTrainer((trainerErr) => {
+                        if (trainerErr) {
+                            return fail(trainerErr.message === 'inactive_trainer' ? 'deduct_invalid_trainer' : 'deduct_error', trainerErr.message === 'inactive_trainer' ? null : trainerErr);
+                        }
+
+                        conn.query(
+                            `UPDATE registrations
+                             SET used_sessions = used_sessions + 1
+                             WHERE id = ?
+                               AND member_id = ?
+                               AND payment_status = ?
+                               AND used_sessions < total_sessions`,
+                            [registrationId, memberId, STATUS.PAYMENT.SUCCESS],
+                            (errUpdate, result) => {
+                                if (errUpdate) return fail('deduct_error', errUpdate);
+                                if (result.affectedRows === 0) return fail('deduct_completed');
+
+                                conn.query(
+                                    "INSERT INTO pt_sessions_log (registration_id, member_id, trainer_id, note) VALUES (?, ?, ?, ?)",
+                                    [registrationId, memberId, trainerId, note],
+                                    (errLog) => {
+                                        if (errLog) return fail('deduct_error', errLog);
+                                        conn.commit((errCommit) => {
+                                            if (errCommit) return fail('deduct_error', errCommit);
+                                            conn.release();
+                                            auditLog.record(req, 'pt_session.deduct', 'registration', registrationId, {
+                                                member_id: memberId,
+                                                trainer_id: trainerId,
+                                                note
+                                            });
+                                            res.redirect(withNotice('deduct_success'));
+                                        });
+                                    }
+                                );
+                            }
+                        );
+                    });
+                }
+            );
         });
     });
 });

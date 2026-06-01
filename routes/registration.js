@@ -4,6 +4,7 @@ const db = require('../config/db');
 const { requireStaff } = require('../middleware/auth');
 const { applyDiscountTransactional } = require('./discount');
 const { STATUS } = require('../lib/status');
+const auditLog = require('../lib/auditLog');
 
 router.use(requireStaff);
 
@@ -136,7 +137,7 @@ router.get('/invoices', (req, res) => {
     });
 });
 
-// /add-complex — tạo hóa đơn POS (gói tập + sản phẩm + mã ưu đãi) trong transaction.
+// Tạo hóa đơn POS.
 router.post('/add-complex', (req, res) => {
     const { member_id, package_id, cart_items, discount_code } = req.body;
     const reg_date = new Date().toISOString().split('T')[0];
@@ -375,7 +376,7 @@ router.get('/checkout/:id', (req, res) => {
     });
 });
 
-// Hủy hóa đơn chờ thanh toán. Hóa đơn đã Success không được hủy ở bước này.
+// Hủy hóa đơn chờ thanh toán.
 router.post('/checkout/cancel/:id', (req, res) => {
     const registrationId = req.params.id;
     const returnTo = safeInvoiceReturnTo(req.body.return_to);
@@ -437,6 +438,9 @@ router.post('/checkout/cancel/:id', (req, res) => {
                                     conn.commit((errCommit) => {
                                         if (errCommit) return fail(appendNotice(returnTo, 'cancel_error'), null, errCommit);
                                         conn.release();
+                                        auditLog.record(req, 'invoice.cancel', 'registration', registrationId, {
+                                            discount_code_id: invoice.discount_code_id || null
+                                        });
                                         res.redirect(appendNotice(returnTo, 'cancel_success'));
                                     });
                                 }
@@ -449,7 +453,7 @@ router.post('/checkout/cancel/:id', (req, res) => {
     });
 });
 
-// Xác nhận thanh toán + trừ kho atomically.
+// Xác nhận thanh toán và trừ kho.
 router.post('/checkout/confirm/:id', (req, res) => {
     const registrationId = req.params.id;
     const { payment_method } = req.body;
@@ -504,6 +508,10 @@ router.post('/checkout/confirm/:id', (req, res) => {
                                             return conn.commit((err) => {
                                                 if (err) return fail(500, "Lỗi commit");
                                                 conn.release();
+                                                auditLog.record(req, 'invoice.confirm_payment', 'registration', registrationId, {
+                                                    payment_method,
+                                                    product_count: productItems.length
+                                                });
                                                 res.redirect('/reports');
                                             });
                                         }

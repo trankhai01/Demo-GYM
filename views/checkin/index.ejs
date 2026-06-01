@@ -8,7 +8,6 @@
     </h2>
 
     <div class="row justify-content-center">
-        <!-- Cột trái: máy check-in -->
         <div class="col-lg-5 mb-4">
             <div class="bg-dark p-3 rounded-4 border border-secondary shadow-lg mb-4">
                 <div id="reader" width="100%"></div>
@@ -39,7 +38,6 @@
             </div>
         </div>
 
-        <!-- Cột phải: danh sách hội viên đang trong phòng -->
         <div class="col-lg-5">
             <div class="bg-dark p-4 rounded-4 border border-secondary shadow-lg">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -231,7 +229,7 @@
                     document.getElementById('result-box').style.display = 'none';
                     document.getElementById('action-buttons').style.display = 'none';
                 }
-                // Reset trạng thái local để lần kế tiếp không bị kẹt ở 'checkout'.
+                // Reset trạng thái check-out.
                 currentMemberId = null;
                 currentSessionId = null;
                 currentMode = 'checkin';
@@ -313,11 +311,11 @@
             .catch(() => {});
     }
 
-    // Auto-refresh thời lượng + danh sách mỗi 30 giây.
+    // Tự cập nhật danh sách trong phòng.
     loadActiveSessions();
     setInterval(loadActiveSessions, 30000);
 
-    // Khởi tạo máy quét QR
+    // Máy quét QR.
     let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
     html5QrcodeScanner.render(onScanSuccess, () => {});
 </script>

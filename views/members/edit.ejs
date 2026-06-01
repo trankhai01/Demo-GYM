@@ -89,7 +89,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const messages = {
-            duplicate_phone: { type: 'warning', text: 'Số điện thoại này đã được sử dụng cho hội viên khác.' }
+            duplicate_phone: { type: 'warning', text: 'Số điện thoại này đã được sử dụng cho hội viên khác.' },
+            invalid_member: { type: 'warning', text: 'Thông tin hội viên không hợp lệ. Vui lòng kiểm tra lại.' }
         };
         const item = messages[<%- JSON.stringify(notice) %>];
         if (item && window.Toast) Toast[item.type](item.text);

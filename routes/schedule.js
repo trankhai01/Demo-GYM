@@ -35,15 +35,19 @@ router.get('/', requireLogin, (req, res) => {
 
 router.get('/admin', requireStaff, (req, res) => {
     db.query("SELECT id, fullname FROM trainers ORDER BY fullname", (err, trainers) => {
-        res.render('schedule/admin', { trainers: err ? [] : trainers });
+        db.query(
+            "SELECT id, fullname, phone FROM members WHERE role = 'member' ORDER BY fullname",
+            (memberErr, members) => {
+                res.render('schedule/admin', {
+                    trainers: err ? [] : trainers,
+                    members: memberErr ? [] : members
+                });
+            }
+        );
     });
 });
 
-/* ============================================================
- * GET /schedule/available-trainers?start=...&end=...
- * Trả về danh sách HLV chưa bị conflict trong khoảng thời gian.
- * Nếu trainer đã có booking khác overlap -> không trả về.
- * ============================================================ */
+/* Danh sách HLV theo khung giờ */
 router.get('/available-trainers', requireLogin, (req, res) => {
     const { start, end } = req.query;
     const range = parseDateRange(start, end);
@@ -51,30 +55,26 @@ router.get('/available-trainers', requireLogin, (req, res) => {
         return res.status(400).json({ error: 'Tham số start/end không hợp lệ' });
     }
 
-    /* HLV available = HLV không có booking nào overlap với khoảng [start, end) */
     const sql = `
-        SELECT t.id, t.fullname, t.specialty
+        SELECT t.id, t.fullname, t.specialty,
+               CASE WHEN EXISTS (
+                  SELECT 1 FROM bookings b
+                  WHERE b.trainer_id = t.id
+                    AND b.status = ?
+                    AND b.start_time < ?
+                    AND b.end_time > ?
+               ) THEN 0 ELSE 1 END AS is_available
         FROM trainers t
         WHERE t.status = ?
-          AND NOT EXISTS (
-              SELECT 1 FROM bookings b
-              WHERE b.trainer_id = t.id
-                AND b.status = ?
-                AND b.start_time < ?
-                AND b.end_time > ?
-          )
-        ORDER BY t.fullname
+        ORDER BY is_available DESC, t.fullname
     `;
-    db.query(sql, [STATUS.TRAINER.ACTIVE, STATUS.BOOKING.BOOKED, range.endSql, range.startSql], (err, rows) => {
+    db.query(sql, [STATUS.BOOKING.BOOKED, range.endSql, range.startSql, STATUS.TRAINER.ACTIVE], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Lỗi truy vấn' });
         res.json(rows || []);
     });
 });
 
-/* ============================================================
- * GET /schedule/trainer/:id  (admin/staff)
- * Xem lịch của 1 HLV cụ thể.
- * ============================================================ */
+/* Trang lịch của HLV */
 router.get('/trainer/:id', requireStaff, (req, res) => {
     const trainerId = Number(req.params.id);
     if (!Number.isFinite(trainerId) || trainerId <= 0) {
@@ -92,10 +92,7 @@ router.get('/trainer/:id', requireStaff, (req, res) => {
     );
 });
 
-/* ============================================================
- * GET /schedule/trainer-events/:id?start=...&end=...
- * JSON các booking của 1 HLV trong khoảng thời gian.
- * ============================================================ */
+/* Event lịch của HLV */
 router.get('/trainer-events/:id', requireStaff, (req, res) => {
     const trainerId = Number(req.params.id);
     const { start, end } = req.query;

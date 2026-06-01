@@ -1,4 +1,3 @@
-<%# Trợ lý ảo Gemini - bubble nổi góc phải dưới. Include trên mọi trang trừ login/register/forgot-password. %>
 <style>
     .gymbro-chat-bubble {
         position: fixed;
@@ -203,14 +202,14 @@
 </style>
 
 <div class="gymbro-contact-fab-group <%= (typeof user !== 'undefined' && user && (user.role === 'admin' || user.role === 'staff')) ? 'with-sidebar' : '' %>" aria-label="<%= t('chatbot.contact_actions_aria') %>">
-    <a class="gymbro-contact-fab zalo" href="https://zalo.me/0900000000" target="_blank" rel="noopener" aria-label="<%= t('chatbot.zalo_aria') %>">
+    <a class="gymbro-contact-fab zalo" href="<%= systemSettings.zalo_href %>" target="_blank" rel="noopener" aria-label="<%= t('chatbot.zalo_aria') %>">
         <span class="gymbro-zalo-mark">Zalo</span>
     </a>
     <div class="gymbro-phone-wrap">
-        <a class="gymbro-contact-fab" href="tel:0900000000" aria-label="<%= t('chatbot.hotline_aria') %>">
+        <a class="gymbro-contact-fab" href="tel:<%= systemSettings.hotline_tel %>" aria-label="<%= t('chatbot.hotline_aria') %>">
             <i class="bi bi-telephone-fill"></i>
         </a>
-        <span class="gymbro-phone-label"><%= t('chatbot.hotline_btn') %></span>
+        <span class="gymbro-phone-label"><%= systemSettings.hotline || t('chatbot.hotline_btn') %></span>
     </div>
 </div>
 
@@ -262,7 +261,7 @@
     try {
         const storedOwner = localStorage.getItem(OWNER_KEY);
         const storedLang = localStorage.getItem(LANG_KEY);
-        // Reset history khi đổi user hoặc đổi ngôn ngữ — bảo mật + tránh trộn VI/EN
+        // Reset lịch sử khi đổi user/ngôn ngữ.
         if (storedOwner !== currentOwner || storedLang !== currentLang) {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.setItem(OWNER_KEY, currentOwner);
@@ -291,9 +290,7 @@
         } catch (e) {}
     }
 
-    /* Markdown nhẹ: escape HTML trước, sau đó parse **bold**, *italic*,
-       `code`, link, bullet `*`/`-` đầu dòng, và xuống dòng. Tránh XSS bằng
-       cách KHÔNG cho phép tag thô từ server. */
+    /* Markdown đơn giản cho câu trả lời chatbot */
     function escapeHTML(s) {
         return String(s)
             .replace(/&/g, '&amp;')
@@ -304,17 +301,11 @@
     }
     function renderMarkdown(text) {
         let s = escapeHTML(text);
-        // Bullet đầu dòng: "* item" hoặc "- item" -> "• item"
         s = s.replace(/(^|\n)\s*[\*\-]\s+/g, '$1• ');
-        // Bold **text**
         s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        // Italic *text* (sau khi đã thay bullet và bold)
         s = s.replace(/(^|[^\*])\*(?!\s)([^\*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
-        // `inline code`
         s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-        // Link [text](url)
         s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        // Newline -> <br>
         s = s.replace(/\n/g, '<br>');
         return s;
     }

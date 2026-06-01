@@ -204,6 +204,37 @@
         } 
     %>
 
+    <% if (locals.ptLogs && ptLogs.length > 0) { %>
+    <div class="glass-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="section-title border-0 mb-0"><i class="bi bi-clipboard2-check-fill me-2"></i> Lịch sử trừ buổi PT</h5>
+            <span class="badge bg-secondary">20 buổi gần nhất</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark-gym table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Gói tập</th>
+                        <th>HLV</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% ptLogs.forEach(log => { %>
+                        <tr>
+                            <td><%= new Date(log.created_at).toLocaleString('vi-VN') %></td>
+                            <td><%= log.package_name || '---' %></td>
+                            <td><%= log.trainer_name || 'Tự tập' %></td>
+                            <td><%= log.note || '---' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <% } %>
+
     <div class="glass-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="section-title border-0 mb-0"><i class="bi bi-tags-fill me-2"></i> Lịch sử Gói tập</h5>
@@ -302,7 +333,15 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const messages = {
-            active_package_exists: { type: 'warning', text: 'Hội viên đang ở trong gói tập còn hiệu lực nên không thể đăng ký gói tập khác.' }
+            active_package_exists: { type: 'warning', text: 'Hội viên đang ở trong gói tập còn hiệu lực nên không thể đăng ký gói tập khác.' },
+            deduct_success: { type: 'success', text: 'Đã trừ 1 buổi PT thành công.' },
+            deduct_unpaid: { type: 'warning', text: 'Gói tập chưa thanh toán nên không thể trừ buổi.' },
+            deduct_completed: { type: 'warning', text: 'Gói tập này đã hết số buổi PT.' },
+            deduct_no_pt: { type: 'warning', text: 'Gói tập này không có buổi PT để trừ.' },
+            deduct_invalid_trainer: { type: 'warning', text: 'HLV không tồn tại hoặc đã ngừng dạy.' },
+            deduct_not_found: { type: 'warning', text: 'Không tìm thấy gói tập cần trừ buổi.' },
+            deduct_invalid: { type: 'warning', text: 'Dữ liệu điểm danh không hợp lệ.' },
+            deduct_error: { type: 'error', text: 'Không thể trừ buổi PT. Vui lòng thử lại sau.' }
         };
         const item = messages[<%- JSON.stringify(notice) %>];
         if (item && window.Toast) Toast[item.type](item.text);

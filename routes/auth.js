@@ -158,8 +158,7 @@ router.get('/forgot-password', (req, res) => {
     res.render('forgot-password', { message: null, error: null, phone: '', email: '' });
 });
 
-// Khi member quên MK: verify (phone, email) khớp với DB → sinh MK tạm + gửi mail tự động.
-// Trả message chung chung khi sai để tránh phishing dò email/SĐT.
+// Quên mật khẩu: xác thực thông tin và gửi mật khẩu tạm.
 router.post('/forgot-password', forgotLimiter, async (req, res) => {
     const phone = (req.body.phone || '').trim();
     const email = (req.body.email || '').trim().toLowerCase();

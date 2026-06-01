@@ -224,3 +224,41 @@ CREATE TABLE IF NOT EXISTS discount_codes (
     INDEX idx_dc_status_dates (status, valid_from, valid_to),
     INDEX idx_dc_member (member_id)
 ) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- audit_logs: nhật ký thao tác nhạy cảm của admin/staff
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    actor_id     INT NULL,
+    actor_name   VARCHAR(100) NULL,
+    actor_role   VARCHAR(20) NULL,
+    action       VARCHAR(80) NOT NULL,
+    entity_type  VARCHAR(80) NOT NULL,
+    entity_id    VARCHAR(80) NULL,
+    metadata     JSON NULL,
+    ip_address   VARCHAR(64) NULL,
+    user_agent   VARCHAR(255) NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_actor_time (actor_id, created_at),
+    INDEX idx_audit_entity_time (entity_type, entity_id, created_at),
+    INDEX idx_audit_action_time (action, created_at)
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- system_settings: cấu hình hiển thị của phòng gym
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS system_settings (
+    setting_key   VARCHAR(80) PRIMARY KEY,
+    setting_value TEXT NULL,
+    updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES
+('gym_name', 'GYM BRO'),
+('hotline', '0900 000 000'),
+('zalo_phone', '0900000000'),
+('email', 'hello@gymbro.vn'),
+('address', 'Quận 1, TP. Hồ Chí Minh'),
+('opening_hours', '05:00 - 22:00 mỗi ngày'),
+('map_embed_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.434088447635!2d106.6983107!3d10.776530892315796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4670702e9d%3A0xb8b7460491acdd84!2zUXXhuq1uIDEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaA!5e0!3m2!1svi!2s!4v1700000000000');

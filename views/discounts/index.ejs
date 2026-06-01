@@ -1,90 +1,110 @@
 <%- include('../partials/header') %>
 
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-ticket-perforated text-primary"></i> Quản lý mã ưu đãi</h2>
-    <a href="/discounts/add" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Thêm mã mới</a>
-  </div>
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="fw-bold text-uppercase inv-page-title mb-1">QUẢN LÝ <span style="color: #4f46e5;">MÃ GIẢM GIÁ</span>
+      </h3>
+      <a href="/discounts/add" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Thêm mã mới</a>
+    </div>
 
-  <div class="card">
-    <div class="card-body p-0">
-      <% if (codes.length === 0) { %>
-        <p class="text-center text-muted my-4 mb-0">Chưa có mã ưu đãi nào.</p>
-      <% } else { %>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Mã</th>
-                <th>Mô tả</th>
-                <th>Giảm</th>
-                <th>Tối thiểu</th>
-                <th>Hiệu lực</th>
-                <th>Đã dùng</th>
-                <th>Trạng thái</th>
-                <th class="text-end">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% codes.forEach(c => { %>
-                <tr>
-                  <td>
-                    <code class="fw-bold text-primary"><%= c.code %></code>
-                    <% if (c.is_birthday) { %><span class="badge bg-info ms-1">🎂 Sinh nhật</span><% } %>
-                    <% if (c.member_name) { %><div class="small text-muted">Riêng cho: <%= c.member_name %></div><% } %>
-                  </td>
-                  <td class="small text-muted"><%= c.description || '—' %></td>
-                  <td>
-                    <% if (c.discount_type === 'percent') { %>
-                      <strong><%= c.discount_value %>%</strong>
-                      <% if (c.max_discount) { %><div class="small text-muted">tối đa <%= Number(c.max_discount).toLocaleString('vi-VN') %>đ</div><% } %>
-                    <% } else { %>
-                      <strong><%= Number(c.discount_value).toLocaleString('vi-VN') %>đ</strong>
-                    <% } %>
-                  </td>
-                  <td><%= c.min_amount > 0 ? Number(c.min_amount).toLocaleString('vi-VN') + 'đ' : '—' %></td>
-                  <td class="small">
-                    <%= c.valid_from ? new Date(c.valid_from).toLocaleDateString('vi-VN') : '—' %>
-                    →
-                    <%= c.valid_to ? new Date(c.valid_to).toLocaleDateString('vi-VN') : '—' %>
-                  </td>
-                  <td><%= c.used_count %><%= c.usage_limit ? ' / ' + c.usage_limit : '' %></td>
-                  <td>
-                    <% if (c.status === STATUS.DISCOUNT.ACTIVE) { %>
-                      <span class="badge bg-success">Hoạt động</span>
-                    <% } else { %>
-                      <span class="badge bg-secondary">Tắt</span>
-                    <% } %>
-                  </td>
-                  <td class="text-end">
-                    <a href="/discounts/edit/<%= c.id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                    <form action="/discounts/delete/<%= c.id %>" method="POST" class="d-inline"
+    <div class="card">
+      <div class="card-body p-0">
+        <% if (codes.length===0) { %>
+          <p class="text-center text-muted my-4 mb-0">Chưa có mã ưu đãi nào.</p>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Mã</th>
+                    <th>Mô tả</th>
+                    <th>Giảm</th>
+                    <th>Tối thiểu</th>
+                    <th>Hiệu lực</th>
+                    <th>Đã dùng</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% codes.forEach(c=> { %>
+                    <tr>
+                      <td>
+                        <code class="fw-bold text-primary"><%= c.code %></code>
+                        <% if (c.is_birthday) { %><span class="badge bg-info ms-1">🎂 Sinh nhật</span>
+                          <% } %>
+                            <% if (c.member_name) { %>
+                              <div class="small text-muted">Riêng cho: <%= c.member_name %>
+                              </div>
+                              <% } %>
+                      </td>
+                      <td class="small text-muted">
+                        <%= c.description || '—' %>
+                      </td>
+                      <td>
+                        <% if (c.discount_type==='percent' ) { %>
+                          <strong>
+                            <%= c.discount_value %>%
+                          </strong>
+                          <% if (c.max_discount) { %>
+                            <div class="small text-muted">tối đa <%= Number(c.max_discount).toLocaleString('vi-VN') %>đ
+                            </div>
+                            <% } %>
+                              <% } else { %>
+                                <strong>
+                                  <%= Number(c.discount_value).toLocaleString('vi-VN') %>đ
+                                </strong>
+                                <% } %>
+                      </td>
+                      <td>
+                        <%= c.min_amount> 0 ? Number(c.min_amount).toLocaleString('vi-VN') + 'đ' : '—' %>
+                      </td>
+                      <td class="small">
+                        <%= c.valid_from ? new Date(c.valid_from).toLocaleDateString('vi-VN') : '—' %>
+                          →
+                          <%= c.valid_to ? new Date(c.valid_to).toLocaleDateString('vi-VN') : '—' %>
+                      </td>
+                      <td>
+                        <%= c.used_count %>
+                          <%= c.usage_limit ? ' / ' + c.usage_limit : '' %>
+                      </td>
+                      <td>
+                        <% if (c.status===STATUS.DISCOUNT.ACTIVE) { %>
+                          <span class="badge bg-success">Hoạt động</span>
+                          <% } else { %>
+                            <span class="badge bg-secondary">Tắt</span>
+                            <% } %>
+                      </td>
+                      <td class="text-end">
+                        <a href="/discounts/edit/<%= c.id %>" class="btn btn-sm btn-outline-primary"><i
+                            class="bi bi-pencil"></i></a>
+                        <form action="/discounts/delete/<%= c.id %>" method="POST" class="d-inline"
                           data-confirm="Xóa mã <%= c.code %>?">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                    </form>
-                  </td>
-                </tr>
-              <% }); %>
-            </tbody>
-          </table>
-        </div>
-      <% } %>
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+      </div>
     </div>
   </div>
-</div>
 
-<%- include('../partials/footer') %>
-<% if (locals.notice) { %>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const messages = {
+  <%- include('../partials/footer') %>
+    <% if (locals.notice) { %>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const messages = {
             delete_success: { type: 'success', text: 'Đã xóa mã ưu đãi.' },
             delete_error: { type: 'error', text: 'Không thể xóa mã ưu đãi. Vui lòng thử lại sau.' }
-        };
-        const item = messages[<%- JSON.stringify(notice) %>];
-        if (item && window.Toast) Toast[item.type](item.text);
-        window.history.replaceState({}, document.title, "/discounts");
-    });
-</script>
-<% } %>
+          };
+          const item = messages[<% - JSON.stringify(notice) %>];
+          if (item && window.Toast) Toast[item.type](item.text);
+          window.history.replaceState({}, document.title, "/discounts");
+        });
+      </script>
+      <% } %>

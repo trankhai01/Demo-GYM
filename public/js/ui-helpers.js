@@ -1,12 +1,7 @@
-/* GymBro UI helpers: Toast + Dark mode + Skeleton.
-   Tải kèm Bootstrap 5 (đã có CDN ở header). Không phụ thuộc thư viện ngoài. */
-
 (function () {
     'use strict';
 
-    /* ---------------------------------------------------------------- *
-     * 1. Toast — thay alert(): Toast.success / .error / .warning / .info
-     * ---------------------------------------------------------------- */
+    /* Toast helpers */
     const TOAST_CONTAINER_ID = 'gym-toast-container';
 
     function ensureContainer() {
@@ -41,9 +36,7 @@
         };
         t.querySelector('.gym-toast-close').addEventListener('click', close);
         container.appendChild(t);
-        // animate in
         requestAnimationFrame(() => t.classList.add('show'));
-        // auto dismiss
         const ms = (opts && opts.timeout) || 3500;
         if (ms > 0) setTimeout(close, ms);
         return t;
@@ -56,11 +49,7 @@
         info: (m, o) => showToast(m, 'info', o)
     };
 
-    /* ---------------------------------------------------------------- *
-     * 2. Confirm dialog (Promise-based, thay confirm() native)
-     *    Cách dùng: const ok = await Toast.confirm("Xóa?"); if (ok) {...}
-     *    Hoặc: <form data-confirm="Bạn có chắc?"> — auto intercept submit
-     * ---------------------------------------------------------------- */
+    /* Confirm dialog */
     function showConfirm(message, opts) {
         return new Promise((resolve) => {
             const o = opts || {};
@@ -93,12 +82,11 @@
     }
     window.Toast.confirm = showConfirm;
 
-    /* Auto-attach to forms with data-confirm. Nếu form đã có onsubmit cũ
-       (return confirm(...)) thì giữ nguyên — không can thiệp. */
+    /* Form confirm */
     document.addEventListener('submit', (e) => {
         const form = e.target.closest('form[data-confirm]');
         if (!form) return;
-        if (form.dataset._confirmed === '1') return; // pass-through sau khi user OK
+        if (form.dataset._confirmed === '1') return;
         e.preventDefault();
         showConfirm(form.dataset.confirm).then((ok) => {
             if (ok) {
@@ -108,12 +96,12 @@
         });
     });
 
-    /* ---------------------------------------------------------------- *
-     * 3. Dark mode toggle (lưu localStorage 'gym_theme')
-     * ---------------------------------------------------------------- */
+    /* Theme toggle */
     const THEME_KEY = 'gym_theme';
     function applyTheme(t) {
-        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+        const theme = t === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.colorScheme = theme;
     }
     function getTheme() {
         try {
@@ -123,7 +111,6 @@
     function setTheme(t) {
         try { localStorage.setItem(THEME_KEY, t); } catch (_) {}
         applyTheme(t);
-        // Notify any toggle button to update icon
         document.querySelectorAll('[data-gym-theme-btn]').forEach((b) => {
             const on = (t === 'dark');
             const icon = b.querySelector('i');
@@ -136,11 +123,9 @@
         set: setTheme,
         toggle: () => setTheme(getTheme() === 'dark' ? 'light' : 'dark')
     };
-    // Apply ASAP để tránh flash trắng/đen
     applyTheme(getTheme());
-    // Wire up toggle button (nếu có) khi DOM ready
     document.addEventListener('DOMContentLoaded', () => {
-        setTheme(getTheme()); // refresh icon
+        setTheme(getTheme());
         document.querySelectorAll('[data-gym-theme-btn]').forEach((b) => {
             b.addEventListener('click', (e) => {
                 e.preventDefault();

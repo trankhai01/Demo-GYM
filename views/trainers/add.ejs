@@ -13,30 +13,30 @@
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Họ và tên *</label>
-                    <input type="text" name="fullname" class="form-control bg-transparent text-white border-secondary" required>
+                    <input type="text" name="fullname" class="form-control bg-transparent text-white border-secondary" value="<%= (locals.form && form.fullname) || '' %>" required>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small">Số điện thoại *</label>
-                        <input type="text" name="phone" class="form-control bg-transparent text-white border-secondary" required>
+                        <input type="text" name="phone" class="form-control bg-transparent text-white border-secondary" value="<%= (locals.form && form.phone) || '' %>" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small">Kinh nghiệm (Năm)</label>
-                        <input type="number" name="experience_years" class="form-control bg-transparent text-white border-secondary" min="0" value="0">
+                        <input type="number" name="experience_years" class="form-control bg-transparent text-white border-secondary" min="0" value="<%= (locals.form && form.experience_years) || 0 %>">
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Thế mạnh / Chuyên môn</label>
-                    <input type="text" name="specialty" class="form-control bg-transparent text-white border-secondary" placeholder="VD: Giảm cân cấp tốc, Phục hồi chấn thương...">
+                    <input type="text" name="specialty" class="form-control bg-transparent text-white border-secondary" value="<%= (locals.form && form.specialty) || '' %>" placeholder="VD: Giảm cân cấp tốc, Phục hồi chấn thương...">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Trạng thái</label>
                     <select name="status" class="form-select bg-transparent text-white border-secondary">
-                        <option value="<%= STATUS.TRAINER.ACTIVE %>" class="text-dark">Đang dạy</option>
-                        <option value="<%= STATUS.TRAINER.INACTIVE %>" class="text-dark">Nghỉ</option>
+                        <option value="<%= STATUS.TRAINER.ACTIVE %>" class="text-dark" <%= !locals.form || form.status !== STATUS.TRAINER.INACTIVE ? 'selected' : '' %>>Đang dạy</option>
+                        <option value="<%= STATUS.TRAINER.INACTIVE %>" class="text-dark" <%= locals.form && form.status === STATUS.TRAINER.INACTIVE ? 'selected' : '' %>>Nghỉ</option>
                     </select>
                 </div>
 
@@ -48,12 +48,12 @@
 
                 <div class="mb-3">
                     <label class="form-label text-white-50 small">Hoặc dán URL ảnh</label>
-                    <input type="text" name="image_url" class="form-control bg-transparent text-white border-secondary" placeholder="https://...">
+                    <input type="text" name="image_url" class="form-control bg-transparent text-white border-secondary" value="<%= (locals.form && form.image_url) || '' %>" placeholder="https://...">
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label text-white-50 small">Giới thiệu ngắn</label>
-                    <textarea name="description" class="form-control bg-transparent text-white border-secondary" rows="3"></textarea>
+                    <textarea name="description" class="form-control bg-transparent text-white border-secondary" rows="3"><%= (locals.form && form.description) || '' %></textarea>
                 </div>
 
                 <div class="d-flex gap-2">

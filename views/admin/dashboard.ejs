@@ -16,7 +16,7 @@
         border-radius:999px;
     }
 
-    /* Stat card grid */
+    /* Stat cards */
     .ad-stats-grid {
         display:grid;
         grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
@@ -57,7 +57,7 @@
     .ad-growth-up { color:#10b981; font-weight:700; }
     .ad-growth-down { color:#ef4444; font-weight:700; }
 
-    /* Two-column main layout */
+    /* Main layout */
     .ad-main-grid {
         display:grid;
         grid-template-columns:2fr 1fr;
@@ -65,7 +65,7 @@
     }
     @media (max-width:991px) { .ad-main-grid { grid-template-columns:1fr; } }
 
-    /* Generic card */
+    /* Cards */
     .ad-card {
         background:#fff;
         border:1px solid #e2e8f0;
@@ -80,7 +80,7 @@
         display:flex; justify-content:space-between; align-items:center;
     }
 
-    /* Top list */
+    /* Top lists */
     .ad-top-list { list-style:none; padding:0; margin:0; }
     .ad-top-list li {
         display:flex; align-items:center; gap:12px;
@@ -103,7 +103,7 @@
     .ad-top-meta { text-align:right; }
     .ad-top-amount { color:#4f46e5; font-weight:700; font-size:.92rem; }
 
-    /* Booking timeline */
+    /* Bookings */
     .ad-booking {
         display:flex; gap:12px; align-items:flex-start;
         padding:10px 12px;
@@ -120,7 +120,7 @@
     .ad-booking-info .nm { font-weight:600; color:#0f172a; font-size:.92rem; }
     .ad-booking-info .sub { font-size:.78rem; color:#64748b; }
 
-    /* Alert list */
+    /* Alerts */
     .ad-alert {
         display:flex; gap:10px; align-items:center;
         padding:10px 12px;
@@ -146,7 +146,6 @@
     <span class="text-muted small"><i class="bi bi-clock me-1"></i>Cập nhật <span id="adNow"></span></span>
 </div>
 
-<!-- 4 STAT CARDS -->
 <div class="ad-stats-grid mb-3">
     <div class="ad-stat indigo">
         <div class="ad-stat-icon"><i class="bi bi-cash-stack"></i></div>
@@ -191,9 +190,7 @@
     </div>
 </div>
 
-<!-- CHART 7 NGÀY + ALERTS  -->
 <div class="ad-main-grid">
-    <!-- Cột trái: Chart 7 ngày + Top packages + Top products + Today bookings -->
     <div>
         <div class="ad-card mb-3">
             <h6>
@@ -288,7 +285,6 @@
         </div>
     </div>
 
-    <!-- Cột phải: Cảnh báo + Recent registrations -->
     <div>
         <div class="ad-card mb-3">
             <h6><span><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Cảnh báo</span></h6>
@@ -374,7 +370,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-    // Update "now"
     (function () {
         const now = new Date();
         const pad = (n) => String(n).padStart(2, '0');
@@ -383,10 +378,12 @@
             pad(now.getDate()) + '/' + pad(now.getMonth() + 1);
     })();
 
-    // Chart 7 ngày
     const chartCtx = document.getElementById('adChart7');
     const chartLabels = <%- JSON.stringify(chart7.map(x => x.label)) %>;
     const chartData = <%- JSON.stringify(chart7.map(x => x.revenue)) %>;
+    const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+    const chartTextColor = isDarkTheme ? '#b6c2d1' : '#64748b';
+    const chartGridColor = isDarkTheme ? 'rgba(182,194,209,0.16)' : 'rgba(15,23,42,0.06)';
     const grad = chartCtx.getContext('2d').createLinearGradient(0, 0, 0, 200);
     grad.addColorStop(0, 'rgba(79, 70, 229, 0.45)');
     grad.addColorStop(1, 'rgba(6, 182, 212, 0.05)');
@@ -421,15 +418,15 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(15,23,42,0.06)' },
+                    grid: { color: chartGridColor },
                     ticks: {
-                        color: '#64748b',
+                        color: chartTextColor,
                         callback: (v) => Number(v).toLocaleString('vi-VN')
                     }
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { color: '#64748b' }
+                    ticks: { color: chartTextColor }
                 }
             }
         }

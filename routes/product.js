@@ -10,6 +10,7 @@ const {
 } = require('../middleware/upload');
 const { csrfSynchronisedProtection } = require('../middleware/csrf');
 const { normalizeProductStatus } = require('../lib/status');
+const auditLog = require('../lib/auditLog');
 const productUpload = withFriendlyErrors(uploadProductImage, 'image_file');
 const productUploadChain = [productUpload, csrfSynchronisedProtection];
 
@@ -38,19 +39,16 @@ router.get('/', requireStaff, (req, res) => {
     const selectedCategory = (req.query.category || '').trim();
     const searchSql = `%${searchQuery}%`;
 
-    /* 1) Lấy list danh mục distinct (cho sidebar filter) */
     db.query(
         "SELECT category, COUNT(*) AS cnt FROM products WHERE category IS NOT NULL AND category <> '' GROUP BY category ORDER BY category ASC",
         (errCat, catRows) => {
             if (errCat) return res.status(500).send("Lỗi tải danh mục");
 
-            /* 2) Tổng số sản phẩm (cho badge "Tất cả") */
             db.query(
                 "SELECT COUNT(*) AS total FROM products",
                 (errTotal, totalRows) => {
                     if (errTotal) return res.status(500).send("Lỗi tổng sản phẩm");
 
-                    /* 3) Query data với filter */
                     let dataSql = "SELECT * FROM products WHERE (product_name LIKE ? OR category LIKE ?)";
                     const params = [searchSql, searchSql];
                     if (selectedCategory) {
@@ -153,13 +151,15 @@ router.post('/edit/:id', requireStaff, ...productUploadChain, (req, res) => {
 
 router.post('/delete/:id', requireStaff, (req, res) => {
     db.query("SELECT image_url FROM products WHERE id = ?", [req.params.id], (eFind, rowsFind) => {
-        const oldImage = rowsFind && rowsFind[0] ? rowsFind[0].image_url : null;
+        const product = rowsFind && rowsFind[0] ? rowsFind[0] : null;
+        const oldImage = product ? product.image_url : null;
         db.query("DELETE FROM products WHERE id = ?", [req.params.id], (err) => {
             if (err) {
                 console.error('[products/delete]', err.message);
                 return res.redirect('/products?notice=delete_in_use');
             }
             deleteUploadedFile(oldImage);
+            auditLog.record(req, 'product.delete', 'product', req.params.id, { image_url: oldImage });
             res.redirect('/products?notice=delete_success');
         });
     });

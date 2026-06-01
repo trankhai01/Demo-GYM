@@ -5,55 +5,85 @@
 
 <style>
     .ts-header {
-        background:#fff;
-        border:1px solid #e2e8f0;
+        background: var(--gb-surface-raised);
+        border: 1px solid var(--gb-border);
         border-radius:14px;
         padding:18px 20px;
         margin-bottom:18px;
         display:flex; align-items:center; gap:18px;
-        box-shadow:0 4px 12px rgba(15,23,42,.05);
+        box-shadow: var(--gb-shadow);
     }
     .ts-avatar {
         width:84px; height:84px;
         border-radius:50%;
-        background:linear-gradient(135deg,#4f46e5,#06b6d4);
+        background:linear-gradient(135deg,var(--gb-primary),var(--gb-accent));
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-size:2rem; font-weight:700;
         flex-shrink:0;
         overflow:hidden;
     }
     .ts-avatar img { width:100%; height:100%; object-fit:cover; }
-    .ts-name { font-weight:800; color:#0f172a; font-size:1.4rem; margin:0; }
-    .ts-spec { color:#64748b; font-size:.95rem; }
+    .ts-name { font-weight:800; color:var(--gb-heading); font-size:1.4rem; margin:0; }
+    .ts-spec { color:var(--gb-text-muted); font-size:.95rem; }
     .ts-spec .badge {
-        background:#eef2ff !important; color:#4f46e5 !important;
+        background:var(--gb-primary-100) !important; color:var(--gb-primary) !important;
         font-weight:600; padding:4px 10px;
     }
     .ts-stat-row { display:flex; gap:24px; margin-left:auto; }
     .ts-stat { text-align:center; }
-    .ts-stat-num { font-size:1.5rem; font-weight:800; color:#4f46e5; }
-    .ts-stat-lbl { font-size:.78rem; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
+    .ts-stat-num { font-size:1.5rem; font-weight:800; color:var(--gb-primary); }
+    .ts-stat-lbl { font-size:.78rem; color:var(--gb-text-muted); text-transform:uppercase; letter-spacing:.5px; }
 
     #trainerCal {
-        background:#fff;
-        border:1px solid #e2e8f0;
+        background:var(--gb-surface-raised);
+        color: var(--gb-text);
+        border:1px solid var(--gb-border);
         border-radius:14px;
         padding:14px;
-        box-shadow:0 4px 12px rgba(15,23,42,.05);
+        box-shadow:var(--gb-shadow);
     }
-    .fc-toolbar-title { color:#0f172a !important; }
+    .fc { color: var(--gb-text); }
+    .fc-toolbar-title { color:var(--gb-heading) !important; font-weight: 800; }
     .fc-button-primary {
-        background:#4f46e5 !important;
-        border-color:#4f46e5 !important;
+        background:var(--gb-primary) !important;
+        border-color:var(--gb-primary) !important;
+        color:#fff !important;
+        font-weight: 700 !important;
     }
-    .fc-button-primary:hover { background:#4338ca !important; border-color:#4338ca !important; }
+    .fc-button-primary:hover,
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background:var(--gb-primary-600) !important;
+        border-color:var(--gb-primary-600) !important;
+    }
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+        border-color: var(--gb-border) !important;
+    }
+    .fc-scrollgrid,
+    .fc .fc-timegrid-slot,
+    .fc .fc-timegrid-axis,
+    .fc .fc-col-header-cell,
+    .fc .fc-daygrid-day {
+        background: var(--gb-surface-raised);
+    }
+    .fc .fc-col-header-cell-cushion,
+    .fc .fc-timegrid-slot-label-cushion,
+    .fc .fc-daygrid-day-number {
+        color: var(--gb-text-muted) !important;
+    }
+    .fc-day-today { background: rgba(79, 70, 229, 0.09) !important; }
+    html[data-theme="dark"] .fc-day-today { background: rgba(129, 140, 248, 0.14) !important; }
+    .fc-event {
+        border: 0;
+        border-radius: 6px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+    }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold text-uppercase" style="color:#0f172a;">
-        LỊCH HLV <span style="color:#4f46e5;"><%= trainer.fullname %></span>
+    <h3 class="fw-bold text-uppercase" style="color:var(--gb-heading);">
+        LỊCH HLV <span style="color:var(--gb-primary);"><%= trainer.fullname %></span>
     </h3>
-    <a href="/trainers" class="btn btn-sm" style="background:#eef2ff;color:#4f46e5;">
+    <a href="/trainers" class="btn btn-sm" style="background:var(--gb-primary-100);color:var(--gb-primary);">
         <i class="bi bi-arrow-left me-1"></i> Quay lại
     </a>
 </div>
@@ -128,10 +158,10 @@
         });
         cal.render();
 
-        // Đếm số buổi tuần/tháng
+        // Thống kê buổi tập.
         function loadCounts() {
             const now = new Date();
-            const dow = (now.getDay() + 6) % 7; // Mon=0
+            const dow = (now.getDay() + 6) % 7;
             const monStart = new Date(now); monStart.setDate(now.getDate() - dow); monStart.setHours(0,0,0,0);
             const monEnd = new Date(monStart); monEnd.setDate(monStart.getDate() + 7);
             const mFirst = new Date(now.getFullYear(), now.getMonth(), 1);

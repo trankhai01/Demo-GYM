@@ -30,7 +30,7 @@ function makeStorage(subdir) {
 function fileFilter(req, file, cb) {
     if (!file.mimetype) return cb(null, false);
     if (!ALLOWED_MIME.has(file.mimetype)) {
-        // Đẩy lỗi để route handler hiển thị message thân thiện.
+        // Chuyển lỗi upload về route handler.
         return cb(new Error('INVALID_IMAGE_TYPE'), false);
     }
     cb(null, true);

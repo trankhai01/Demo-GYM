@@ -43,7 +43,7 @@
             text-transform: none;
         }
 
-        /* Scroll reveal animations */
+        /* Reveal effects */
         .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; will-change: opacity, transform; }
         .reveal.in-view { opacity: 1; transform: translateY(0); }
         .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity .7s ease, transform .7s ease; }
@@ -670,11 +670,10 @@
 </head>
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-fire"></i> GYM BRO
+                <i class="bi bi-fire"></i> <%= (systemSettings && systemSettings.gym_name) || 'GYM BRO' %>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -704,7 +703,6 @@
         </div>
     </nav>
 
-    <!-- Hero -->
     <section class="hero-section">
         <div class="container">
             <span class="hero-tag reveal" data-delay="100"><%= t('home.hero.tag') %></span>
@@ -733,7 +731,6 @@
         <a href="#stats" class="scroll-down"><i class="bi bi-chevron-double-down"></i></a>
     </section>
 
-    <!-- Stats -->
     <section id="stats" class="stats-section" style="padding: 50px 0;">
         <div class="container">
             <div class="row text-center g-4">
@@ -757,7 +754,6 @@
         </div>
     </section>
 
-    <!-- About / USP -->
     <section id="about">
         <div class="container">
             <div class="text-center">
@@ -799,7 +795,6 @@
         </div>
     </section>
 
-    <!-- Packages -->
     <section id="packages" class="packages-bg">
         <div class="container">
             <div class="text-center">
@@ -849,7 +844,6 @@
         </div>
     </section>
 
-    <!-- Trainers -->
     <section id="trainers" class="trainers-bg">
         <div class="container">
             <div class="text-center">
@@ -900,7 +894,6 @@
         </div>
     </section>
 
-    <!-- BMI Calculator -->
     <section class="bmi-section" id="bmi">
         <div class="container">
             <div class="text-center mb-5">
@@ -973,7 +966,6 @@
         </div>
     </section>
 
-    <!-- Contact form + map -->
     <section class="contact-section" id="contact">
         <div class="container">
             <div class="text-center mb-5">
@@ -982,7 +974,6 @@
             </div>
 
             <div class="row g-4">
-                <!-- Form -->
                 <div class="col-lg-7 reveal-left">
                     <div class="contact-card">
                         <h4 class="text-white mb-4"><i class="bi bi-pencil-square text-danger me-2"></i> <%= t('home.contact.form_title') %></h4>
@@ -1024,7 +1015,6 @@
                     </div>
                 </div>
 
-                <!-- Info + map -->
                 <div class="col-lg-5 reveal-right">
                     <div class="contact-card mb-4">
                         <h4 class="text-white mb-3"><i class="bi bi-info-circle text-danger me-2"></i> <%= t('home.contact.info_title') %></h4>
@@ -1032,34 +1022,34 @@
                             <i class="bi bi-geo-alt-fill"></i>
                             <div>
                                 <div class="title"><%= t('home.contact.info_address') %></div>
-                                <p class="desc"><%= t('home.contact.info_address_value') %></p>
+                                <p class="desc"><%= systemSettings.address || t('home.contact.info_address_value') %></p>
                             </div>
                         </div>
                         <div class="contact-info-item">
                             <i class="bi bi-telephone-fill"></i>
                             <div>
                                 <div class="title"><%= t('home.contact.info_phone') %></div>
-                                <p class="desc"><a href="tel:0900000000" class="text-white-50">0900 000 000</a></p>
+                                <p class="desc"><a href="tel:<%= systemSettings.hotline_tel %>" class="text-white-50"><%= systemSettings.hotline %></a></p>
                             </div>
                         </div>
                         <div class="contact-info-item">
                             <i class="bi bi-envelope-fill"></i>
                             <div>
                                 <div class="title"><%= t('home.contact.info_email') %></div>
-                                <p class="desc"><a href="mailto:hello@gymbro.vn" class="text-white-50">hello@gymbro.vn</a></p>
+                                <p class="desc"><a href="mailto:<%= systemSettings.email %>" class="text-white-50"><%= systemSettings.email %></a></p>
                             </div>
                         </div>
                         <div class="contact-info-item">
                             <i class="bi bi-clock-fill"></i>
                             <div>
                                 <div class="title"><%= t('home.contact.info_hours') %></div>
-                                <p class="desc"><%= t('home.contact.info_hours_value') %></p>
+                                <p class="desc"><%= systemSettings.opening_hours || t('home.contact.info_hours_value') %></p>
                             </div>
                         </div>
                     </div>
                     <div class="map-wrap">
                         <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.434088447635!2d106.6983107!3d10.776530892315796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4670702e9d%3A0xb8b7460491acdd84!2zUXXhuq1uIDEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaA!5e0!3m2!1svi!2s!4v1700000000000"
+                            src="<%= systemSettings.map_embed_url %>"
                             allowfullscreen="" loading="lazy"
                             referrerpolicy="no-referrer-when-downgrade" title="<%= t('home.contact.map_alt') %>">
                         </iframe>
@@ -1079,7 +1069,7 @@
         const $tip = document.getElementById('bmiTip');
         const $cta = document.getElementById('bmiCta');
 
-        // Lấy label + tip từ i18n dict (server inject) để đồng bộ ngôn ngữ
+        // Nội dung BMI theo ngôn ngữ hiện tại.
         const BMI_I18N = {
             under:  { label: <%- JSON.stringify(t('home.bmi.cat_under')) %>,  tip: <%- JSON.stringify(t('home.bmi.tip_under')) %>,  color: '#3b82f6' },
             normal: { label: <%- JSON.stringify(t('home.bmi.cat_normal')) %>, tip: <%- JSON.stringify(t('home.bmi.tip_normal')) %>, color: '#22c55e' },
@@ -1126,12 +1116,11 @@
     })();
     </script>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <h5><i class="bi bi-fire"></i> GYM BRO</h5>
+                    <h5><i class="bi bi-fire"></i> <%= (systemSettings && systemSettings.gym_name) || 'GYM BRO' %></h5>
                     <p class="text-white-50 small">
                         <%= t('home.footer.tagline') %>
                     </p>
@@ -1145,10 +1134,10 @@
                 <div class="col-md-4 col-6">
                     <h5><%= t('home.footer.contact') %></h5>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i><span class="text-white-50"><%= t('home.footer.addr_short') %></span></li>
-                        <li class="mb-2"><i class="bi bi-telephone-fill text-danger me-2"></i><a href="tel:0900000000">0900 000 000</a></li>
-                        <li class="mb-2"><i class="bi bi-envelope-fill text-danger me-2"></i><a href="mailto:hello@gymbro.vn">hello@gymbro.vn</a></li>
-                        <li class="mb-2"><i class="bi bi-clock-fill text-danger me-2"></i><span class="text-white-50"><%= t('home.footer.hours_short') %></span></li>
+                        <li class="mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i><span class="text-white-50"><%= systemSettings.address || t('home.footer.addr_short') %></span></li>
+                        <li class="mb-2"><i class="bi bi-telephone-fill text-danger me-2"></i><a href="tel:<%= systemSettings.hotline_tel %>"><%= systemSettings.hotline %></a></li>
+                        <li class="mb-2"><i class="bi bi-envelope-fill text-danger me-2"></i><a href="mailto:<%= systemSettings.email %>"><%= systemSettings.email %></a></li>
+                        <li class="mb-2"><i class="bi bi-clock-fill text-danger me-2"></i><span class="text-white-50"><%= systemSettings.opening_hours || t('home.footer.hours_short') %></span></li>
                     </ul>
                 </div>
                 <div class="col-md-4 col-6">
@@ -1175,7 +1164,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Navbar đổi nền khi cuộn xuống.
+        // Navbar khi cuộn.
         const nav = document.querySelector('.navbar');
         window.addEventListener('scroll', () => {
             if (window.scrollY > 50) nav.style.backgroundColor = 'rgba(15, 23, 42, 0.95)';
@@ -1198,7 +1187,7 @@
         bindSlider('trainerSlider', 'trainerPrev', 'trainerNext', '.trainer-slide', 24);
         bindSlider('pkgSlider', 'pkgPrev', 'pkgNext', '.pkg-slide', 24);
 
-        // Scroll reveal: thêm class .in-view khi element vào viewport
+        // Hiệu ứng reveal.
         (function() {
             if (!('IntersectionObserver' in window)) {
                 document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-zoom').forEach(el => el.classList.add('in-view'));

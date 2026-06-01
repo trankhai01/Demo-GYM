@@ -1,0 +1,149 @@
+<%- include('../partials/header') %>
+
+<%
+    function pageUrl(p) {
+        const q = new URLSearchParams();
+        if (filters.action) q.set('action', filters.action);
+        if (filters.entity) q.set('entity', filters.entity);
+        if (filters.actor) q.set('actor', filters.actor);
+        if (filters.from) q.set('from', filters.from);
+        if (filters.to) q.set('to', filters.to);
+        q.set('page', p);
+        return '/admin/audit?' + q.toString();
+    }
+    function roleLabel(role) {
+        if (role === 'admin') return 'Quản trị viên';
+        if (role === 'staff') return 'Nhân viên';
+        if (role === 'member') return 'Hội viên';
+        return role || '---';
+    }
+%>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="text-white mb-0"><i class="bi bi-shield-check text-danger me-2"></i> Nhật ký thao tác</h2>
+            <small class="text-white-50">Theo dõi thao tác quan trọng của admin/staff.</small>
+        </div>
+        <span class="badge bg-secondary fs-6"><%= totalRecords %> bản ghi</span>
+    </div>
+
+    <form method="GET" action="/admin/audit" class="card p-3 mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-xl-2 col-md-4">
+                <label class="form-label small text-uppercase text-white-50">Hành động</label>
+                <select name="action" class="form-select">
+                    <option value="">Tất cả</option>
+                    <% actions.forEach(a => { %>
+                        <option value="<%= a %>" <%= filters.action === a ? 'selected' : '' %>><%= actionLabels[a] || a %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="col-xl-2 col-md-4">
+                <label class="form-label small text-uppercase text-white-50">Đối tượng</label>
+                <select name="entity" class="form-select">
+                    <option value="">Tất cả</option>
+                    <% entities.forEach(e => { %>
+                        <option value="<%= e %>" <%= filters.entity === e ? 'selected' : '' %>><%= entityLabels[e] || e %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="col-xl-2 col-md-4">
+                <label class="form-label small text-uppercase text-white-50">Người thao tác</label>
+                <input type="text" name="actor" class="form-control" value="<%= filters.actor || '' %>" placeholder="Tên hoặc ID">
+            </div>
+            <div class="col-xl-2 col-md-4">
+                <label class="form-label small text-uppercase text-white-50">Từ ngày</label>
+                <input type="date" name="from" class="form-control" value="<%= filters.from || '' %>">
+            </div>
+            <div class="col-xl-2 col-md-4">
+                <label class="form-label small text-uppercase text-white-50">Đến ngày</label>
+                <input type="date" name="to" class="form-control" value="<%= filters.to || '' %>">
+            </div>
+            <div class="col-xl-2 col-md-4 d-flex gap-2">
+                <button class="btn btn-danger flex-fill"><i class="bi bi-funnel"></i> Lọc</button>
+                <a href="/admin/audit" class="btn btn-outline-light flex-fill"><i class="bi bi-x-lg"></i> Xóa</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Thời gian</th>
+                        <th>Người thao tác</th>
+                        <th>Hành động</th>
+                        <th>Đối tượng</th>
+                        <th>IP</th>
+                        <th class="pe-4">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (!logs || logs.length === 0) { %>
+                        <tr>
+                            <td colspan="6" class="text-center text-white-50 py-5">Chưa có nhật ký thao tác.</td>
+                        </tr>
+                    <% } else { %>
+                        <% logs.forEach(log => { %>
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-semibold"><%= new Date(log.created_at).toLocaleString('vi-VN') %></div>
+                                    <div class="small text-white-50">#<%= log.id %></div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold"><%= log.actor_name || '---' %></div>
+                                    <div class="small text-white-50"><%= roleLabel(log.actor_role) %> · ID <%= log.actor_id || '---' %></div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger"><%= log.action_label %></span>
+                                    <div class="small text-white-50 mt-1"><%= log.action %></div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold"><%= log.entity_label %></div>
+                                    <div class="small text-white-50">Mã: <%= log.entity_id || '---' %></div>
+                                </td>
+                                <td><%= log.ip_address || '---' %></td>
+                                <td class="pe-4">
+                                    <% if (!log.detail_rows || log.detail_rows.length === 0) { %>
+                                        <span class="text-white-50">Không có chi tiết thêm.</span>
+                                    <% } else { %>
+                                        <div class="d-flex flex-column gap-1 small">
+                                            <% log.detail_rows.forEach(row => { %>
+                                                <div>
+                                                    <span class="text-white-50"><%= row.label %>:</span>
+                                                    <span class="fw-semibold"><%= row.value %></span>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <% if (totalPages > 1) { %>
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= pageUrl(currentPage - 1) %>">Trước</a>
+                </li>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                        <a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a>
+                    </li>
+                <% } %>
+                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= pageUrl(currentPage + 1) %>">Sau</a>
+                </li>
+            </ul>
+        </nav>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

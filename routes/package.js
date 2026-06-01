@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireStaff} = require('../middleware/auth');
+const auditLog = require('../lib/auditLog');
 
 function parsePackagePayload(body) {
     const packageName = String(body.package_name || '').trim();
@@ -66,6 +67,7 @@ router.post('/delete/:id', requireStaff, (req, res) => {
             console.error('[packages/delete]', err.message);
             return res.redirect('/packages?notice=delete_error');
         }
+        auditLog.record(req, 'package.delete', 'package', req.params.id);
         res.redirect('/packages?notice=delete_success');
     });
 });

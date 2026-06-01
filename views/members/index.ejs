@@ -139,13 +139,17 @@
                     <div class="mb-3">
                         <label class="form-label small text-uppercase" style="color:#64748b;">Số điện thoại</label>
                         <input type="tel" name="phone" 
-                               class="form-control <%= locals.error === 'duplicate_phone' ? 'border-danger' : '' %>"
-                               style="background:#fff;color:#0f172a;<%= locals.error === 'duplicate_phone' ? '' : 'border:1px solid #e2e8f0;' %>"
+                               class="form-control <%= locals.error === 'duplicate_phone' || locals.error === 'invalid_member' ? 'border-danger' : '' %>"
+                               style="background:#fff;color:#0f172a;<%= locals.error === 'duplicate_phone' || locals.error === 'invalid_member' ? '' : 'border:1px solid #e2e8f0;' %>"
                                placeholder="SĐT dùng để đăng nhập..." required>
                         
                         <% if (locals.error === 'duplicate_phone') { %>
                             <div class="text-danger mt-2 fw-bold" style="font-size: 0.9rem;">
                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Số điện thoại này đã được đăng ký!
+                            </div>
+                        <% } else if (locals.error === 'invalid_member') { %>
+                            <div class="text-danger mt-2 fw-bold" style="font-size: 0.9rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Thông tin hội viên không hợp lệ. Kiểm tra họ tên, SĐT và email.
                             </div>
                         <% } %>
                     </div>
@@ -173,7 +177,7 @@
 </div>
 
 <%- include('../partials/footer') %>
-<% if (locals.error === 'duplicate_phone') { %>
+<% if (locals.error === 'duplicate_phone' || locals.error === 'invalid_member') { %>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var myModal = new bootstrap.Modal(document.getElementById('addMemberModal'));

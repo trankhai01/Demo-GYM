@@ -109,11 +109,16 @@
     <div class="gym-card">
         <div class="card-content text-center">
             
-            <h2 class="fw-bold mb-4" style="color: #4f46e5; font-family: 'Oswald', sans-serif; letter-spacing: 2px;">GYM BRO</h2>
+            <h2 class="fw-bold mb-4" style="color: #4f46e5; font-family: 'Oswald', sans-serif; letter-spacing: 2px;"><%= (systemSettings && systemSettings.gym_name) || 'GYM BRO' %></h2>
 
             <% if (locals.success) { %>
                 <div class="alert alert-success py-2 text-center border-0" style="font-size: 0.9rem; background-color: rgba(25, 135, 84, 0.2); color: #47cf73;">
                     <i class="bi bi-check-circle-fill me-1"></i> Cập nhật hồ sơ thành công!
+                </div>
+            <% } %>
+            <% if (locals.error === 'invalid_profile') { %>
+                <div class="alert alert-danger py-2 text-center border-0" style="font-size: 0.9rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Thông tin hồ sơ không hợp lệ. Vui lòng kiểm tra lại.
                 </div>
             <% } %>
             
@@ -301,7 +306,7 @@
     </div>
 </div>
 
-<% if (locals.error === 'duplicate_phone') { %>
+<% if (locals.error === 'duplicate_phone' || locals.error === 'invalid_profile') { %>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var myModal = new bootstrap.Modal(document.getElementById('editProfileModal'));

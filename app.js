@@ -38,6 +38,10 @@ app.use(
   })
 );
 
+require('./lib/auditLog').ensure();
+const systemSettings = require('./lib/systemSettings');
+systemSettings.ensure();
+
 const i18n = require('./lib/i18n');
 app.use(i18n.middleware);
 app.get('/lang/:code', i18n.setLangRoute);
@@ -67,29 +71,35 @@ app.use((req, res, next) => {
   res.locals.currentPath = req.path;
   res.locals.notice = req.query.notice || null;
   res.locals.STATUS = STATUS;
+  res.locals.systemSettings = systemSettings.viewModel();
 
   const u = req.session.user;
   const isStaffGet = u && (u.role === 'staff' || u.role === 'admin') && req.method === 'GET' && req.accepts('html');
 
-  if (!isStaffGet) return next();
+  systemSettings.load((settingsErr, settings) => {
+    if (settingsErr) console.error('[middleware] systemSettings:', settingsErr.message);
+    res.locals.systemSettings = settings;
 
-  const tasks = [];
-  tasks.push((cb) => {
-    db.query(
-      "SELECT COUNT(*) AS c FROM contact_messages WHERE is_read = 0",
-      (err, rows) => {
-        if (err) console.error('[middleware] unreadContactCount:', err.message);
-        else if (rows && rows[0]) res.locals.unreadContactCount = rows[0].c;
-        cb();
-      }
-    );
+    if (!isStaffGet) return next();
+
+    const tasks = [];
+    tasks.push((cb) => {
+      db.query(
+        "SELECT COUNT(*) AS c FROM contact_messages WHERE is_read = 0",
+        (err, rows) => {
+          if (err) console.error('[middleware] unreadContactCount:', err.message);
+          else if (rows && rows[0]) res.locals.unreadContactCount = rows[0].c;
+          cb();
+        }
+      );
+    });
+
+    let done = 0;
+    tasks.forEach((t) => t(() => {
+      done += 1;
+      if (done === tasks.length) next();
+    }));
   });
-
-  let done = 0;
-  tasks.forEach((t) => t(() => {
-    done += 1;
-    if (done === tasks.length) next();
-  }));
 });
 
 const authRoutes = require("./routes/auth");

@@ -3,8 +3,40 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireAdmin } = require('../middleware/auth');
 const { STATUS } = require('../lib/status');
+const auditLog = require('../lib/auditLog');
+const systemSettings = require('../lib/systemSettings');
 
-/* Helper: chạy nhiều query song song và trả về object kết quả */
+const ACTION_LABELS = {
+    'product.delete': 'Xóa sản phẩm',
+    'trainer.delete': 'Xóa huấn luyện viên',
+    'package.delete': 'Xóa gói tập',
+    'member.delete': 'Xóa hội viên',
+    'pt_session.deduct': 'Trừ buổi PT',
+    'invoice.cancel': 'Hủy hóa đơn',
+    'invoice.confirm_payment': 'Xác nhận thanh toán',
+    'settings.update': 'Cập nhật cấu hình'
+};
+
+const ENTITY_LABELS = {
+    product: 'Sản phẩm',
+    trainer: 'Huấn luyện viên',
+    package: 'Gói tập',
+    member: 'Hội viên',
+    registration: 'Hóa đơn/đăng ký',
+    system_settings: 'Cấu hình hệ thống'
+};
+
+const META_LABELS = {
+    image_url: 'Ảnh',
+    member_id: 'Hội viên ID',
+    trainer_id: 'HLV ID',
+    note: 'Ghi chú',
+    discount_code_id: 'Mã ưu đãi ID',
+    payment_method: 'Phương thức thanh toán',
+    product_count: 'Số dòng sản phẩm',
+    changed_fields: 'Trường đã đổi'
+};
+
 function runQueries(jobs) {
     return Promise.all(
         Object.entries(jobs).map(([key, [sql, params]]) =>
@@ -18,20 +50,50 @@ function runQueries(jobs) {
     ).then(entries => Object.fromEntries(entries));
 }
 
-/* ============================================================
- * Dashboard tổng quan dành cho admin
- * ============================================================ */
+function isDateOnly(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+}
+
+function parseMetadata(value) {
+    if (!value) return null;
+    if (typeof value === 'object') return value;
+    try {
+        return JSON.parse(value);
+    } catch (e) {
+        return { raw: String(value) };
+    }
+}
+
+function describeMetadata(value) {
+    const data = parseMetadata(value);
+    if (!data || Object.keys(data).length === 0) return [];
+    return Object.entries(data).map(([key, val]) => ({
+        label: META_LABELS[key] || key,
+        value: Array.isArray(val)
+            ? (val.length ? val.join(', ') : 'Không thay đổi')
+            : (val == null || val === '' ? '---' : String(val))
+    }));
+}
+
+function enrichAuditLog(log) {
+    return {
+        ...log,
+        action_label: ACTION_LABELS[log.action] || log.action,
+        entity_label: ENTITY_LABELS[log.entity_type] || log.entity_type,
+        detail_rows: describeMetadata(log.metadata)
+    };
+}
+
+/* Dashboard admin */
 router.get('/', requireAdmin, async (req, res) => {
     try {
         const queries = {
-            /* Doanh thu hôm nay (registrations đã Success) */
             todayRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
                  WHERE payment_status = ? AND DATE(registration_date) = CURRENT_DATE()`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Doanh thu hôm qua (so sánh tăng giảm %) */
             yesterdayRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
@@ -39,7 +101,6 @@ router.get('/', requireAdmin, async (req, res) => {
                    AND DATE(registration_date) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Doanh thu tuần này */
             weekRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
@@ -47,7 +108,6 @@ router.get('/', requireAdmin, async (req, res) => {
                    AND registration_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY)`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Doanh thu tháng này */
             monthRevenue: [
                 `SELECT COALESCE(SUM(price - COALESCE(discount_amount,0)), 0) AS total
                  FROM registrations
@@ -56,33 +116,27 @@ router.get('/', requireAdmin, async (req, res) => {
                    AND YEAR(registration_date) = YEAR(CURRENT_DATE())`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Check-in hôm nay (số phiên) */
             todayCheckins: [
                 `SELECT COUNT(*) AS cnt FROM checkin_history
                  WHERE DATE(checkin_time) = CURRENT_DATE() AND status = ?`,
                 [STATUS.CHECKIN.SUCCESS]
             ],
-            /* Số người đang trong phòng (chưa checkout) */
             currentlyInside: [
                 `SELECT COUNT(*) AS cnt FROM checkin_history
                  WHERE checkout_time IS NULL AND status = ?
                    AND DATE(checkin_time) = CURRENT_DATE()`,
                 [STATUS.CHECKIN.SUCCESS]
             ],
-            /* Hội viên mới hôm nay */
             todayNewMembers: [
                 `SELECT COUNT(*) AS cnt FROM members WHERE DATE(join_date) = CURRENT_DATE()`
             ],
-            /* Tổng hội viên */
             totalMembers: [
                 `SELECT COUNT(*) AS cnt FROM members WHERE role = 'member'`
             ],
-            /* Đơn (registrations) hôm nay */
             todayOrders: [
                 `SELECT COUNT(*) AS cnt FROM registrations
                  WHERE DATE(registration_date) = CURRENT_DATE()`
             ],
-            /* Top 5 gói tập bán chạy tháng này */
             topPackages: [
                 `SELECT p.id, p.package_name, COUNT(r.id) AS sold,
                         COALESCE(SUM(r.price - COALESCE(r.discount_amount,0)),0) AS revenue
@@ -95,7 +149,6 @@ router.get('/', requireAdmin, async (req, res) => {
                  ORDER BY sold DESC LIMIT 5`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Top 5 sản phẩm bán chạy tháng này */
             topProducts: [
                 `SELECT pr.id, pr.product_name, pr.image_url,
                         COALESCE(SUM(rd.quantity), 0) AS qty_sold,
@@ -120,7 +173,6 @@ router.get('/', requireAdmin, async (req, res) => {
                  ORDER BY d ASC`,
                 [STATUS.PAYMENT.SUCCESS]
             ],
-            /* Booking hôm nay (lịch tập) */
             todayBookings: [
                 `SELECT b.id, b.start_time, b.end_time, b.title, b.status,
                         m.fullname AS member_name,
@@ -133,7 +185,6 @@ router.get('/', requireAdmin, async (req, res) => {
                  ORDER BY b.start_time ASC`,
                 [STATUS.BOOKING.BOOKED]
             ],
-            /* CẢNH BÁO 1: SP tồn kho ≤ 5 */
             lowStock: [
                 `SELECT id, product_name, stock_quantity, image_url
                  FROM products
@@ -141,11 +192,9 @@ router.get('/', requireAdmin, async (req, res) => {
                  ORDER BY stock_quantity ASC LIMIT 6`,
                 [STATUS.INVENTORY.ACTIVE]
             ],
-            /* CẢNH BÁO 2: Tin nhắn liên hệ chưa đọc */
             unreadMsgs: [
                 `SELECT COUNT(*) AS cnt FROM contact_messages WHERE is_read = 0`
             ],
-            /* CẢNH BÁO 3: Gói sắp hết hạn (≤ 7 ngày) */
             expiringPackages: [
                 `SELECT r.id, m.id AS member_id, m.fullname, p.package_name,
                         r.expiration_date,
@@ -159,7 +208,6 @@ router.get('/', requireAdmin, async (req, res) => {
                  ORDER BY r.expiration_date ASC LIMIT 6`,
                 [STATUS.PAYMENT.SUCCESS, STATUS.REGISTRATION.ACTIVE]
             ],
-            /* Recent registrations (5 đăng ký gần nhất) */
             recentRegs: [
                 `SELECT r.id, r.registration_date, r.price, r.payment_status,
                         m.fullname AS member_name, p.package_name
@@ -173,7 +221,6 @@ router.get('/', requireAdmin, async (req, res) => {
 
         const r = await runQueries(queries);
 
-        /* Tính tăng trưởng % so với hôm qua */
         const todayRev = Number(r.todayRevenue[0].total) || 0;
         const yesterdayRev = Number(r.yesterdayRevenue[0].total) || 0;
         let revGrowth = 0;
@@ -220,6 +267,145 @@ router.get('/', requireAdmin, async (req, res) => {
         console.error('[admin/dashboard]', err.message);
         res.status(500).render('error', { message: 'Lỗi tải dashboard quản trị.' });
     }
+});
+
+router.get('/audit', requireAdmin, (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = 25;
+    const offset = (page - 1) * limit;
+    const action = String(req.query.action || '').trim();
+    const entity = String(req.query.entity || '').trim();
+    const actor = String(req.query.actor || '').trim();
+    const from = isDateOnly(req.query.from) ? String(req.query.from) : '';
+    const to = isDateOnly(req.query.to) ? String(req.query.to) : '';
+
+    const where = [];
+    const params = [];
+
+    if (action) {
+        where.push('action = ?');
+        params.push(action);
+    }
+    if (entity) {
+        where.push('entity_type = ?');
+        params.push(entity);
+    }
+    if (actor) {
+        where.push('(actor_name LIKE ? OR CAST(actor_id AS CHAR) = ?)');
+        params.push(`%${actor}%`, actor);
+    }
+    if (from) {
+        where.push('created_at >= ?');
+        params.push(`${from} 00:00:00`);
+    }
+    if (to) {
+        where.push('created_at <= ?');
+        params.push(`${to} 23:59:59`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countSql = `SELECT COUNT(*) AS total FROM audit_logs ${whereSql}`;
+    const dataSql = `
+        SELECT id, actor_id, actor_name, actor_role, action, entity_type, entity_id,
+               metadata, ip_address, created_at
+        FROM audit_logs
+        ${whereSql}
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+    `;
+    const actionOptionsSql = 'SELECT DISTINCT action FROM audit_logs ORDER BY action ASC';
+    const entityOptionsSql = 'SELECT DISTINCT entity_type FROM audit_logs ORDER BY entity_type ASC';
+
+    db.query(countSql, params, (errCount, countRows) => {
+        if (errCount) {
+            console.error('[admin/audit count]', errCount.message);
+            return res.status(500).render('error', { message: 'Lỗi tải nhật ký thao tác.' });
+        }
+
+        db.query(dataSql, [...params, limit, offset], (errData, logs) => {
+            if (errData) {
+                console.error('[admin/audit data]', errData.message);
+                return res.status(500).render('error', { message: 'Lỗi tải nhật ký thao tác.' });
+            }
+
+            db.query(actionOptionsSql, (errActions, actionRows) => {
+                if (errActions) console.error('[admin/audit action options]', errActions.message);
+                db.query(entityOptionsSql, (errEntities, entityRows) => {
+                    if (errEntities) console.error('[admin/audit entity options]', errEntities.message);
+                    const totalRecords = Number(countRows[0]?.total) || 0;
+                    res.render('admin/audit', {
+                        logs: (logs || []).map(enrichAuditLog),
+                        filters: { action, entity, actor, from, to },
+                        actions: actionRows ? actionRows.map(r => r.action) : [],
+                        entities: entityRows ? entityRows.map(r => r.entity_type) : [],
+                        actionLabels: ACTION_LABELS,
+                        entityLabels: ENTITY_LABELS,
+                        currentPage: page,
+                        totalPages: Math.max(1, Math.ceil(totalRecords / limit)),
+                        totalRecords
+                    });
+                });
+            });
+        });
+    });
+});
+
+router.get('/settings', requireAdmin, (req, res) => {
+    systemSettings.load((err, settings) => {
+        if (err) console.error('[admin/settings load]', err.message);
+        res.render('admin/settings', {
+            settings,
+            success: req.query.success === '1',
+            error: null
+        });
+    });
+});
+
+router.post('/settings', requireAdmin, (req, res) => {
+    const values = {
+        gym_name: String(req.body.gym_name || '').trim(),
+        hotline: String(req.body.hotline || '').trim(),
+        zalo_phone: String(req.body.zalo_phone || '').trim(),
+        email: String(req.body.email || '').trim(),
+        address: String(req.body.address || '').trim(),
+        opening_hours: String(req.body.opening_hours || '').trim(),
+        map_embed_url: String(req.body.map_embed_url || '').trim()
+    };
+
+    if (!values.gym_name || !values.hotline || !values.email) {
+        return res.status(400).render('admin/settings', {
+            settings: systemSettings.viewModel(values),
+            success: false,
+            error: 'Vui lòng nhập tên phòng gym, hotline và email.'
+        });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+        return res.status(400).render('admin/settings', {
+            settings: systemSettings.viewModel(values),
+            success: false,
+            error: 'Email không hợp lệ.'
+        });
+    }
+
+    const changedFields = Object.keys(values).filter(key => {
+        return String(res.locals.systemSettings[key] || '') !== String(values[key] || '');
+    });
+
+    systemSettings.updateMany(values, (err) => {
+        if (err) {
+            console.error('[admin/settings update]', err.message);
+            return res.status(500).render('admin/settings', {
+                settings: systemSettings.viewModel(values),
+                success: false,
+                error: 'Lỗi lưu cấu hình hệ thống.'
+            });
+        }
+        auditLog.record(req, 'settings.update', 'system_settings', 'global', {
+            changed_fields: changedFields
+        });
+        res.redirect('/admin/settings?success=1');
+    });
 });
 
 module.exports = router;

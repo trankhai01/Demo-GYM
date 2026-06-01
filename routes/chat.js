@@ -6,7 +6,7 @@ const { STATUS } = require('../lib/status');
 
 const router = express.Router();
 
-// 20 msg/giờ/user — bảo vệ quota Gemini free tier; ipKeyGenerator để IPv6 không bị bypass.
+// Giới hạn request chatbot theo người dùng.
 const chatLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 20,
@@ -19,7 +19,7 @@ const chatLimiter = rateLimit({
 const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEN_CONFIG = { temperature: 0.4, maxOutputTokens: 600 };
 
-// Snapshot data công khai cho system prompt; build mỗi request để luôn mới.
+// Snapshot dữ liệu cho chatbot.
 function fetchPublicContext() {
     return new Promise((resolve) => {
         const out = { packages: [], trainers: [] };

@@ -319,6 +319,12 @@
     slate: '#64748b'
   };
   const palArr = [palette.indigo, palette.cyan, palette.green, palette.amber, palette.rose, palette.violet, palette.slate];
+  const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+  const chartTextColor = isDarkTheme ? '#b6c2d1' : '#64748b';
+  const chartGridColor = isDarkTheme ? 'rgba(182,194,209,0.16)' : 'rgba(15,23,42,0.08)';
+
+  Chart.defaults.color = chartTextColor;
+  Chart.defaults.borderColor = chartGridColor;
 
   function mkLineChart(id, points, color, fmtY) {
     const el = document.getElementById(id);
@@ -349,7 +355,12 @@
         scales: {
           y: {
             beginAtZero: true,
-            ticks: { callback: v => fmtY ? fmtY(v) : v }
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor, callback: v => fmtY ? fmtY(v) : v }
+          },
+          x: {
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor }
           }
         }
       }
@@ -380,7 +391,17 @@
       options: {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'k' } } }
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor, callback: v => (v/1000).toFixed(0)+'k' }
+          },
+          x: {
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor }
+          }
+        }
       }
     });
   })();
@@ -407,7 +428,7 @@
         maintainAspectRatio: false,
         cutout: '65%',
         plugins: {
-          legend: { position: 'bottom' }
+          legend: { position: 'bottom', labels: { color: chartTextColor } }
         }
       }
     });
@@ -434,7 +455,17 @@
         maintainAspectRatio: false,
         indexAxis: 'y',
         plugins: { legend: { display: false } },
-        scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor, precision: 0 }
+          },
+          y: {
+            grid: { color: chartGridColor },
+            ticks: { color: chartTextColor }
+          }
+        }
       }
     });
   })();

@@ -4,29 +4,55 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
 <style>
-    /* FullCalendar override để hợp với dark theme */
     #calendar {
-        background: #ffffff;
-        color: #fff;
+        background: var(--gb-surface-raised);
+        color: var(--gb-text);
         border-radius: 12px;
         padding: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--gb-border);
+        box-shadow: var(--gb-shadow);
     }
-    .fc { color: #fff; }
-    .fc .fc-toolbar-title { color: #fff; }
+    .fc { color: var(--gb-text); }
+    .fc .fc-toolbar-title { color: var(--gb-heading); font-weight: 800; }
     .fc .fc-button {
-        background-color: #dc3545;
-        border-color: #dc3545;
+        background-color: var(--gb-primary);
+        border-color: var(--gb-primary);
+        color: #fff;
         text-transform: uppercase;
-        font-weight: 600;
+        font-weight: 700;
+        box-shadow: none;
     }
     .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button:hover { background-color: #b02a37; border-color: #b02a37; }
-    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
-        border-color: #e2e8f0;
+    .fc .fc-button:hover {
+        background-color: var(--gb-primary-600);
+        border-color: var(--gb-primary-600);
     }
-    .fc-day-today { background: rgba(220,53,69,0.15) !important; }
-    .fc-event { cursor: pointer; }
+    .fc .fc-button:focus { box-shadow: 0 0 0 .2rem var(--gb-focus-ring); }
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+        border-color: var(--gb-border) !important;
+    }
+    .fc-scrollgrid,
+    .fc .fc-timegrid-slot,
+    .fc .fc-timegrid-axis,
+    .fc .fc-col-header-cell,
+    .fc .fc-daygrid-day {
+        background: var(--gb-surface-raised);
+    }
+    .fc .fc-col-header-cell-cushion,
+    .fc .fc-timegrid-slot-label-cushion,
+    .fc .fc-daygrid-day-number {
+        color: var(--gb-text-muted) !important;
+    }
+    .fc-day-today { background: rgba(79, 70, 229, 0.09) !important; }
+    html[data-theme="dark"] .fc-day-today { background: rgba(129, 140, 248, 0.14) !important; }
+    .fc .fc-now-indicator-line { border-color: var(--gb-danger); }
+    .fc .fc-now-indicator-arrow { border-color: var(--gb-danger); }
+    .fc-event {
+        cursor: pointer;
+        border: 0;
+        border-radius: 6px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+    }
     .booking-cancelled { opacity: 0.4; text-decoration: line-through; }
 </style>
 
@@ -45,7 +71,6 @@
     <div id="calendar"></div>
 </div>
 
-<!-- Modal đặt buổi -->
 <div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border border-secondary">
@@ -101,7 +126,6 @@
     </div>
 </div>
 
-<!-- Modal xem chi tiết booking -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border border-secondary">
@@ -144,6 +168,37 @@
     let detailModal;
     let currentBookingId = null;
 
+    function syncCalendarGuides() {
+        window.setTimeout(() => {
+            const body = document.querySelector('#calendar .fc-timegrid-body');
+            const nativeLine = document.querySelector('#calendar .fc-timegrid-now-indicator-line');
+            if (!body) return;
+
+            body.querySelectorAll('.gym-calendar-vline').forEach(el => el.remove());
+            const bodyRect = body.getBoundingClientRect();
+            document.querySelectorAll('#calendar .fc-col-header-cell').forEach((cell) => {
+                const rect = cell.getBoundingClientRect();
+                if (!rect.width) return;
+                const line = document.createElement('div');
+                line.className = 'gym-calendar-vline';
+                line.style.left = `${Math.round(rect.left - bodyRect.left)}px`;
+                body.appendChild(line);
+            });
+
+            if (nativeLine) {
+                let line = body.querySelector('.gym-full-now-line');
+                if (!line) {
+                    line = document.createElement('div');
+                    line.className = 'gym-full-now-line';
+                    body.appendChild(line);
+                }
+
+                const nativeRect = nativeLine.getBoundingClientRect();
+                line.style.top = `${nativeRect.top - bodyRect.top}px`;
+            }
+        }, 50);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
         detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
@@ -166,6 +221,7 @@
             selectable: true,
             selectMirror: true,
             events: '/schedule/events',
+            datesSet: syncCalendarGuides,
             select: function(info) {
                 const now = new Date();
                 if (info.start < now) {
@@ -187,17 +243,19 @@
             }
         });
         calendar.render();
+        syncCalendarGuides();
+        window.addEventListener('resize', syncCalendarGuides);
 
         document.getElementById('book-submit').addEventListener('click', submitBooking);
         document.getElementById('detail-cancel-btn').addEventListener('click', cancelBooking);
 
-        // Re-filter HLV available khi đổi giờ
+        // Cập nhật HLV trống khi đổi giờ.
         ['book-start', 'book-end'].forEach(id => {
             document.getElementById(id).addEventListener('change', refreshAvailableTrainers);
         });
     });
 
-    /* Lấy danh sách HLV available cho khung giờ đang chọn */
+    /* HLV trống theo khung giờ */
     function refreshAvailableTrainers() {
         const startVal = document.getElementById('book-start').value;
         const endVal = document.getElementById('book-end').value;
@@ -215,17 +273,24 @@
             .then(r => r.json())
             .then(list => {
                 sel.innerHTML = '<option value="">-- Tự tập, không cần HLV --</option>';
+                let availableCount = 0;
                 (list || []).forEach(t => {
+                    const available = Number(t.is_available) === 1;
+                    if (available) availableCount += 1;
                     const opt = document.createElement('option');
                     opt.value = t.id;
-                    opt.textContent = t.fullname + (t.specialty ? ' • ' + t.specialty : '');
+                    opt.disabled = !available;
+                    opt.textContent = t.fullname
+                        + (t.specialty ? ' • ' + t.specialty : '')
+                        + (available ? '' : ' — đã có lịch');
                     sel.appendChild(opt);
                 });
-                /* Giữ giá trị cũ nếu vẫn còn trong danh sách */
-                if (prevValue && Array.from(sel.options).some(o => o.value === String(prevValue))) {
+                if (prevValue && Array.from(sel.options).some(o => o.value === String(prevValue) && !o.disabled)) {
                     sel.value = prevValue;
                 }
-                hint.textContent = list.length > 0 ? `✓ ${list.length} HLV trống` : '— không HLV nào trống —';
+                hint.textContent = list.length > 0
+                    ? `✓ ${availableCount}/${list.length} HLV trống`
+                    : '— không có HLV đang dạy —';
             })
             .catch(() => { hint.textContent = '✗ lỗi tải HLV'; });
     }

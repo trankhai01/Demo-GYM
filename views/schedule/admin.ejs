@@ -5,20 +5,54 @@
 
 <style>
     #calendar {
-        background: #ffffff;
-        color: #fff;
+        background: var(--gb-surface-raised);
+        color: var(--gb-text);
         border-radius: 12px;
         padding: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--gb-border);
+        box-shadow: var(--gb-shadow);
     }
-    .fc { color: #fff; }
-    .fc .fc-toolbar-title { color: #fff; }
-    .fc .fc-button { background-color: #dc3545; border-color: #dc3545; text-transform: uppercase; font-weight: 600; }
+    .fc { color: var(--gb-text); }
+    .fc .fc-toolbar-title { color: var(--gb-heading); font-weight: 800; }
+    .fc .fc-button {
+        background-color: var(--gb-primary);
+        border-color: var(--gb-primary);
+        color: #fff;
+        text-transform: uppercase;
+        font-weight: 700;
+        box-shadow: none;
+    }
     .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button:hover { background-color: #b02a37; border-color: #b02a37; }
-    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid { border-color: #e2e8f0; }
-    .fc-day-today { background: rgba(220,53,69,0.15) !important; }
-    .fc-event { cursor: pointer; }
+    .fc .fc-button:hover {
+        background-color: var(--gb-primary-600);
+        border-color: var(--gb-primary-600);
+    }
+    .fc .fc-button:focus { box-shadow: 0 0 0 .2rem var(--gb-focus-ring); }
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+        border-color: var(--gb-border) !important;
+    }
+    .fc-scrollgrid,
+    .fc .fc-timegrid-slot,
+    .fc .fc-timegrid-axis,
+    .fc .fc-col-header-cell,
+    .fc .fc-daygrid-day {
+        background: var(--gb-surface-raised);
+    }
+    .fc .fc-col-header-cell-cushion,
+    .fc .fc-timegrid-slot-label-cushion,
+    .fc .fc-daygrid-day-number {
+        color: var(--gb-text-muted) !important;
+    }
+    .fc-day-today { background: rgba(79, 70, 229, 0.09) !important; }
+    html[data-theme="dark"] .fc-day-today { background: rgba(129, 140, 248, 0.14) !important; }
+    .fc .fc-now-indicator-line { border-color: var(--gb-danger); }
+    .fc .fc-now-indicator-arrow { border-color: var(--gb-danger); }
+    .fc-event {
+        cursor: pointer;
+        border: 0;
+        border-radius: 6px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+    }
 </style>
 
 <div class="container mt-4 mb-5">
@@ -36,7 +70,67 @@
     <div id="calendar"></div>
 </div>
 
-<!-- Modal chi tiết booking -->
+<div class="modal fade" id="staffBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-calendar-plus text-warning me-2"></i>Đặt lịch cho hội viên
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Hội viên *</label>
+                    <select id="staff-book-member" class="form-select bg-dark text-white border-secondary">
+                        <option value="">-- Chọn hội viên --</option>
+                        <% (members || []).forEach(m => { %>
+                            <option value="<%= m.id %>">#<%= m.id %> - <%= m.fullname %><%= m.phone ? ' (' + m.phone + ')' : '' %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Tiêu đề</label>
+                    <input type="text" id="staff-book-title" class="form-control bg-dark text-white border-secondary" value="Buổi tập" maxlength="120">
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label small text-white-50">Bắt đầu</label>
+                        <input type="datetime-local" id="staff-book-start" class="form-control bg-dark text-white border-secondary">
+                    </div>
+                    <div class="col">
+                        <label class="form-label small text-white-50">Kết thúc</label>
+                        <input type="datetime-local" id="staff-book-end" class="form-control bg-dark text-white border-secondary">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">
+                        Huấn luyện viên
+                        <span id="staff-book-trainer-hint" class="text-info ms-1" style="font-size:.78rem;"></span>
+                    </label>
+                    <select id="staff-book-trainer" class="form-select bg-dark text-white border-secondary">
+                        <option value="">-- Tự tập, không cần HLV --</option>
+                    </select>
+                    <div class="form-text text-white-50" style="font-size:.75rem;">
+                        HLV bận trong khung giờ đã chọn vẫn hiển thị nhưng không thể chọn.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Ghi chú</label>
+                    <textarea id="staff-book-note" class="form-control bg-dark text-white border-secondary" rows="2" maxlength="255" placeholder="VD: PT buổi đầu, lưu ý chấn thương..."></textarea>
+                </div>
+                <div id="staff-book-error" class="text-danger small fw-bold" style="display:none;"></div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger fw-bold" id="staff-book-submit">
+                    <i class="bi bi-check-circle-fill me-2"></i>Đặt lịch
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border border-secondary">
@@ -70,9 +164,42 @@
 
     let calendar;
     let detailModal;
+    let staffBookModal;
     let currentBookingId = null;
 
+    function syncCalendarGuides() {
+        window.setTimeout(() => {
+            const body = document.querySelector('#calendar .fc-timegrid-body');
+            const nativeLine = document.querySelector('#calendar .fc-timegrid-now-indicator-line');
+            if (!body) return;
+
+            body.querySelectorAll('.gym-calendar-vline').forEach(el => el.remove());
+            const bodyRect = body.getBoundingClientRect();
+            document.querySelectorAll('#calendar .fc-col-header-cell').forEach((cell) => {
+                const rect = cell.getBoundingClientRect();
+                if (!rect.width) return;
+                const line = document.createElement('div');
+                line.className = 'gym-calendar-vline';
+                line.style.left = `${Math.round(rect.left - bodyRect.left)}px`;
+                body.appendChild(line);
+            });
+
+            if (nativeLine) {
+                let line = body.querySelector('.gym-full-now-line');
+                if (!line) {
+                    line = document.createElement('div');
+                    line.className = 'gym-full-now-line';
+                    body.appendChild(line);
+                }
+
+                const nativeRect = nativeLine.getBoundingClientRect();
+                line.style.top = `${nativeRect.top - bodyRect.top}px`;
+            }
+        }, 50);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        staffBookModal = new bootstrap.Modal(document.getElementById('staffBookModal'));
         detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'timeGridWeek',
@@ -89,13 +216,136 @@
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
             buttonText: { today: 'Hôm nay', month: 'Tháng', week: 'Tuần', day: 'Ngày' },
+            selectable: true,
+            selectMirror: true,
             events: '/schedule/events',
+            datesSet: syncCalendarGuides,
+            select: function(info) {
+                const now = new Date();
+                if (info.start < now) {
+                    calendar.unselect();
+                    Toast.warning('Không thể đặt lịch trong quá khứ.');
+                    return;
+                }
+                document.getElementById('staff-book-member').value = '';
+                document.getElementById('staff-book-title').value = 'Buổi tập';
+                document.getElementById('staff-book-start').value = toLocalInputValue(info.start);
+                document.getElementById('staff-book-end').value = toLocalInputValue(info.end);
+                document.getElementById('staff-book-trainer').value = '';
+                document.getElementById('staff-book-note').value = '';
+                document.getElementById('staff-book-error').style.display = 'none';
+                staffBookModal.show();
+                refreshStaffAvailableTrainers();
+            },
             eventClick: function(info) { showDetail(info.event); }
         });
         calendar.render();
+        syncCalendarGuides();
+        window.addEventListener('resize', syncCalendarGuides);
 
         document.getElementById('detail-cancel-btn').addEventListener('click', cancelBooking);
+        document.getElementById('staff-book-submit').addEventListener('click', submitStaffBooking);
+        ['staff-book-start', 'staff-book-end'].forEach(id => {
+            document.getElementById(id).addEventListener('change', refreshStaffAvailableTrainers);
+        });
     });
+
+    function toLocalInputValue(d) {
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function refreshStaffAvailableTrainers() {
+        const startVal = document.getElementById('staff-book-start').value;
+        const endVal = document.getElementById('staff-book-end').value;
+        const sel = document.getElementById('staff-book-trainer');
+        const hint = document.getElementById('staff-book-trainer-hint');
+        if (!startVal || !endVal) return;
+        if (new Date(startVal) >= new Date(endVal)) return;
+
+        const prevValue = sel.value;
+        const startIso = new Date(startVal).toISOString();
+        const endIso = new Date(endVal).toISOString();
+        hint.textContent = 'đang kiểm tra HLV trống lịch...';
+
+        fetch('/schedule/available-trainers?start=' + encodeURIComponent(startIso) + '&end=' + encodeURIComponent(endIso))
+            .then(r => r.json())
+            .then(list => {
+                sel.innerHTML = '<option value="">-- Tự tập, không cần HLV --</option>';
+                let availableCount = 0;
+                (list || []).forEach(t => {
+                    const available = Number(t.is_available) === 1;
+                    if (available) availableCount += 1;
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.disabled = !available;
+                    opt.textContent = t.fullname
+                        + (t.specialty ? ' • ' + t.specialty : '')
+                        + (available ? '' : ' — đã có lịch');
+                    sel.appendChild(opt);
+                });
+                if (prevValue && Array.from(sel.options).some(o => o.value === String(prevValue) && !o.disabled)) {
+                    sel.value = prevValue;
+                }
+                hint.textContent = list.length > 0
+                    ? `${availableCount}/${list.length} HLV trống`
+                    : 'không có HLV đang dạy';
+            })
+            .catch(() => { hint.textContent = 'lỗi tải HLV'; });
+    }
+
+    function submitStaffBooking() {
+        const memberId = document.getElementById('staff-book-member').value;
+        const startVal = document.getElementById('staff-book-start').value;
+        const endVal = document.getElementById('staff-book-end').value;
+        const errBox = document.getElementById('staff-book-error');
+        errBox.style.display = 'none';
+
+        if (!memberId) {
+            errBox.innerText = 'Vui lòng chọn hội viên.';
+            errBox.style.display = 'block';
+            return;
+        }
+        if (!startVal || !endVal || new Date(startVal) >= new Date(endVal)) {
+            errBox.innerText = 'Vui lòng chọn thời gian hợp lệ.';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        const payload = {
+            member_id: memberId,
+            title: document.getElementById('staff-book-title').value,
+            start_time: new Date(startVal).toISOString(),
+            end_time: new Date(endVal).toISOString(),
+            trainer_id: document.getElementById('staff-book-trainer').value || null,
+            note: document.getElementById('staff-book-note').value
+        };
+
+        fetch('/schedule/book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken()
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => Promise.all([res.ok, res.json()]))
+        .then(([ok, data]) => {
+            if (ok && data.status === API_STATUS.SUCCESS) {
+                staffBookModal.hide();
+                calendar.unselect();
+                calendar.refetchEvents();
+                Toast.success(data.message || 'Đã đặt lịch thành công.');
+            } else {
+                errBox.innerText = data.message || 'Không thể đặt lịch.';
+                errBox.style.display = 'block';
+            }
+        })
+        .catch(() => {
+            errBox.innerText = 'Lỗi kết nối.';
+            errBox.style.display = 'block';
+        });
+    }
 
     function showDetail(event) {
         const p = event.extendedProps;

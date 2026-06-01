@@ -32,7 +32,7 @@ router.post('/process', requireStaff, (req, res) => {
             WHERE member_id = ? AND status = ? AND checkout_time IS NULL
             ORDER BY checkin_time DESC LIMIT 1
         `;
-        // Chỉ cho check-in gói đã thanh toán.
+        // Chỉ check-in gói đã thanh toán.
         const sqlCheckPackage = `
             SELECT expiration_date, package_id FROM registrations
             WHERE member_id = ? AND status = ? AND payment_status = ?

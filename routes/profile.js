@@ -11,6 +11,7 @@ const {
     deleteUploadedFile
 } = require('../middleware/upload');
 const { csrfSynchronisedProtection } = require('../middleware/csrf');
+const { memberPayload } = require('../lib/formValidation');
 
 const avatarUpload = withFriendlyErrors(uploadAvatar, 'avatar_file');
 const avatarUploadChain = [avatarUpload, csrfSynchronisedProtection];
@@ -43,23 +44,17 @@ router.get('/my-profile', requireMember, (req, res) => {
 
 router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) => {
     const memberId = req.session.user.id;
-    const {
-        fullname, phone, gender,
-        address, cccd, hometown,
-        height, weight, birth_year, birth_date
-    } = req.body;
-    let resolvedBirthYear = birth_year || null;
-    if (birth_date) {
-        const y = Number(String(birth_date).slice(0, 4));
-        if (Number.isFinite(y) && y > 1900) resolvedBirthYear = y;
-    }
-
     if (req.uploadError) {
         return res.redirect('/my-profile?error=' + encodeURIComponent(req.uploadError));
     }
+    const payload = memberPayload(req.body);
+    if (payload.error) {
+        deleteUploadedFile(persistedFilePath(req, 'avatars'));
+        return res.redirect('/my-profile?error=invalid_profile');
+    }
 
     const checkSql = "SELECT id FROM members WHERE phone = ? AND id != ?";
-    db.query(checkSql, [phone, memberId], (err, results) => {
+    db.query(checkSql, [payload.phone, memberId], (err, results) => {
         if (err) {
             deleteUploadedFile(persistedFilePath(req, 'avatars'));
             return res.status(500).send("Lỗi hệ thống");
@@ -85,9 +80,9 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
             `;
 
             const values = [
-                fullname, phone, gender,
-                address || null, cccd || null, hometown || null,
-                height || null, weight || null, resolvedBirthYear, birth_date || null,
+                payload.fullname, payload.phone, payload.gender,
+                payload.address, payload.cccd, payload.hometown,
+                payload.height, payload.weight, payload.birth_year, payload.birth_date,
                 finalAvatar,
                 memberId
             ];
@@ -100,10 +95,10 @@ router.post('/my-profile/edit', requireMember, ...avatarUploadChain, (req, res) 
                 if (uploaded && oldAvatar && oldAvatar !== uploaded) {
                     deleteUploadedFile(oldAvatar);
                 }
-                req.session.user.username = fullname;
+                req.session.user.username = payload.fullname;
                 if (uploaded) req.session.user.avatar_url = uploaded;
 
-                if (birth_date) {
+                if (payload.birth_date) {
                     const baseUrl = `${req.protocol}://${req.get('host')}`;
                     require('../lib/birthdayJob').runForMember(memberId, { baseUrl })
                         .catch(e => console.error('[profile/edit -> birthdayJob]', e.message));
@@ -163,7 +158,7 @@ router.get('/schedule', (req, res) => {
     }
     const userId = req.session.user.id;
     
-    // Chỉ hiện gói đã thanh toán; lịch chi tiết xem qua /schedule (bookings).
+    // Chỉ hiện gói đã thanh toán.
     const sqlPackage = `
         SELECT p.package_name, r.expiration_date
         FROM registrations r
