@@ -15,6 +15,7 @@ if (isProduction && !process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET must be set in production");
 }
 
+app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -41,6 +42,7 @@ app.use(
 require('./lib/auditLog').ensure();
 const systemSettings = require('./lib/systemSettings');
 systemSettings.ensure();
+require('./lib/payosPayment').ensure();
 
 const i18n = require('./lib/i18n');
 app.use(i18n.middleware);
@@ -57,6 +59,7 @@ const CSRF_UPLOAD_SKIP_PATHS = [
 ];
 
 app.use((req, res, next) => {
+  if (/^\/payments\/payos\/webhook\/?$/.test(req.path)) return next();
   const ctype = req.headers["content-type"] || "";
   const isMultipart = ctype.toLowerCase().startsWith("multipart/form-data");
   const isUploadPath = CSRF_UPLOAD_SKIP_PATHS.some((rx) => rx.test(req.path));
@@ -106,6 +109,7 @@ const authRoutes = require("./routes/auth");
 const memberRoutes = require("./routes/member");
 const packageRoutes = require("./routes/package");
 const registrationRoutes = require("./routes/registration");
+const membershipRoutes = require("./routes/membership");
 const profileRoutes = require("./routes/profile");
 const reportRoutes = require("./routes/report");
 
@@ -113,6 +117,8 @@ app.use("/", authRoutes);
 app.use("/members", memberRoutes);
 app.use("/packages", packageRoutes);
 app.use("/registrations", registrationRoutes);
+app.use("/membership", membershipRoutes);
+app.use("/payments", require("./routes/payment"));
 app.use('/schedule', require('./routes/schedule'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use("/", profileRoutes);

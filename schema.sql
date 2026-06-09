@@ -110,6 +110,24 @@ CREATE TABLE IF NOT EXISTS registration_details (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
+-- payos_payments: lưu payment link/QR payOS cho hóa đơn tự đăng ký
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS payos_payments (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    registration_id INT NOT NULL,
+    order_code      BIGINT NOT NULL UNIQUE,
+    payment_link_id VARCHAR(80) NULL,
+    checkout_url    TEXT NULL,
+    qr_code         TEXT NULL,
+    status          VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    raw_response    LONGTEXT NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_payos_registration (registration_id),
+    CONSTRAINT fk_payos_registration FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
 -- checkin_history: lịch sử check-in của hội viên
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS checkin_history (
@@ -261,4 +279,7 @@ INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES
 ('email', 'hello@gymbro.vn'),
 ('address', 'Quận 1, TP. Hồ Chí Minh'),
 ('opening_hours', '05:00 - 22:00 mỗi ngày'),
+('bank_bin', 'mbbank'),
+('bank_account', '0866108697'),
+('bank_account_name', 'GYM BRO'),
 ('map_embed_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.434088447635!2d106.6983107!3d10.776530892315796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4670702e9d%3A0xb8b7460491acdd84!2zUXXhuq1uIDEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaA!5e0!3m2!1svi!2s!4v1700000000000');

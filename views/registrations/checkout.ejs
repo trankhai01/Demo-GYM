@@ -40,42 +40,91 @@
 
             <div class="col-md-6">
                 <div class="bg-dark p-4 rounded border border-secondary h-100 shadow text-center">
-                    
-                    <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#qr-tab" type="button">Quét mã QR</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#cash-tab" type="button">Tiền mặt</button>
-                        </li>
-                    </ul>
+                    <% if (invoice.payment_status === STATUS.PAYMENT.SUCCESS) { %>
+                        <div class="py-4 d-flex flex-column align-items-center justify-content-center h-100">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center mb-4 shadow"
+                                 style="width: 96px; height: 96px;">
+                                <i class="bi bi-check-lg text-white" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <p class="text-success fw-bold text-uppercase mb-2">Thanh toán hoàn tất</p>
+                            <h3 class="text-white fw-bold mb-3">Giao dịch thành công</h3>
+                            <p class="text-white-50 mb-4">
+                                Hóa đơn #<%= invoice.id %> đã được xác nhận thanh toán.
+                            </p>
 
-                    <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm"
-                          data-confirm="Bạn xác nhận ĐÃ THU TIỀN thành công?">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <div class="tab-content" id="pills-tabContent">
-                            <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
-                                <div class="bg-white p-3 rounded d-inline-block mb-3 shadow">
-                                    <img src="https://img.vietqr.io/image/mbbank-0123456789-compact2.png?amount=<%= invoice.price %>&addInfo=GYMBRO%20<%= invoice.id %>&accountName=GYM%20BRO" 
-                                         alt="Mã QR Thanh Toán" width="200" class="img-fluid rounded">
-                                </div>
-                                <p class="text-info small"><i class="bi bi-info-circle me-1"></i>Khách hàng dùng App Ngân hàng hoặc MoMo quét mã trên để thanh toán.</p>
-                                <input type="hidden" name="payment_method" value="Chuyển khoản" id="methodInput">
+                            <div class="bg-black p-3 rounded border border-success w-100 mb-4">
+                                <p class="text-secondary mb-1 text-uppercase small">Đã thu</p>
+                                <h2 class="text-success fw-bold m-0" style="font-family: 'Oswald', sans-serif;">
+                                    <%= Number(invoice.price).toLocaleString('vi-VN') %>đ
+                                </h2>
                             </div>
 
-                            <div class="tab-pane fade" id="cash-tab" role="tabpanel">
-                                <i class="bi bi-cash-stack text-success" style="font-size: 5rem;"></i>
-                                <p class="text-white mt-3 fs-5">Nhận tiền mặt tại quầy</p>
-                                <p class="text-white-50 small">Vui lòng kiểm đếm đủ <strong class="text-white"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</strong> trước khi bấm xác nhận.</p>
+                            <div class="d-grid gap-2 w-100">
+                                <a href="/registrations/invoices" class="btn btn-success btn-lg fw-bold">
+                                    <i class="bi bi-receipt me-2"></i>Về danh sách hóa đơn
+                                </a>
+                                <a href="/registrations" class="btn btn-outline-light fw-bold">
+                                    <i class="bi bi-plus-circle me-2"></i>Tạo hóa đơn mới
+                                </a>
                             </div>
                         </div>
+                    <% } else { %>
+                        <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#qr-tab" type="button">Quét mã QR</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#cash-tab" type="button">Tiền mặt</button>
+                            </li>
+                        </ul>
 
-                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold mt-4 shadow" <%= invoice.payment_status === STATUS.PAYMENT.SUCCESS ? 'disabled' : '' %>>
-                            <i class="bi bi-check-circle-fill me-2"></i>XÁC NHẬN ĐÃ THU TIỀN
-                        </button>
-                    </form>
+                        <form action="/registrations/checkout/confirm/<%= invoice.id %>" method="POST" id="checkoutForm"
+                              data-confirm="Bạn xác nhận ĐÃ THU TIỀN thành công?">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="qr-tab" role="tabpanel">
+                                    <% if (payosPayment && payosPayment.qr_code) { %>
+                                        <div class="bg-white p-3 rounded d-inline-block mb-3 shadow">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<%= encodeURIComponent(payosPayment.qr_code) %>"
+                                                 alt="Mã QR payOS" width="220" class="img-fluid rounded">
+                                        </div>
+                                        <% if (payosPayment.checkout_url) { %>
+                                            <a href="<%= payosPayment.checkout_url %>" target="_blank" rel="noopener" class="btn btn-primary w-100 fw-bold mb-3">
+                                                <i class="bi bi-box-arrow-up-right"></i> Mở trang thanh toán payOS
+                                            </a>
+                                        <% } %>
+                                        <div class="alert alert-info text-start mb-0">
+                                            <i class="bi bi-arrow-repeat me-1"></i> Đang chờ payOS xác nhận. Trang sẽ tự cập nhật khi thanh toán thành công.
+                                        </div>
+                                    <% } else { %>
+                                        <div class="bg-white p-4 rounded d-inline-block mb-3 shadow text-secondary">
+                                            <i class="bi bi-qr-code" style="font-size:5rem;"></i>
+                                        </div>
+                                        <% if (!payosConfigured) { %>
+                                            <div class="alert alert-warning text-start">
+                                                Chưa cấu hình payOS trong file .env.
+                                            </div>
+                                        <% } else if (payosCreateError) { %>
+                                            <div class="alert alert-warning text-start">
+                                                Không thể tạo thanh toán payOS: <%= payosCreateError.message %>
+                                            </div>
+                                        <% } %>
+                                    <% } %>
+                                </div>
 
-                    <% if (invoice.payment_status === STATUS.PAYMENT.PENDING) { %>
+                                <div class="tab-pane fade" id="cash-tab" role="tabpanel">
+                                    <i class="bi bi-cash-stack text-success" style="font-size: 5rem;"></i>
+                                    <p class="text-white mt-3 fs-5">Nhận tiền mặt tại quầy</p>
+                                    <p class="text-white-50 small">Vui lòng kiểm đếm đủ <strong class="text-white"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</strong> trước khi bấm xác nhận.</p>
+                                    <input type="hidden" name="payment_method" value="Tiền mặt" id="methodInput">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold mt-4 shadow d-none" id="cashConfirmBtn">
+                                <i class="bi bi-check-circle-fill me-2"></i>XÁC NHẬN ĐÃ NHẬN TIỀN MẶT
+                            </button>
+                        </form>
+
                         <form action="/registrations/checkout/cancel/<%= invoice.id %>" method="POST" class="mt-2"
                               data-confirm="Hủy hóa đơn này? Thao tác này sẽ xóa hóa đơn chờ thanh toán.">
                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -92,15 +141,31 @@
 </div>
 
 <script>
-    document.querySelectorAll('.nav-link').forEach(tab => {
-        tab.addEventListener('click', function() {
-            if(this.dataset.bsTarget === '#cash-tab') {
-                document.getElementById('methodInput').value = 'Tiền mặt';
-            } else {
-                document.getElementById('methodInput').value = 'Chuyển khoản';
-            }
+    <% if (invoice.payment_status !== STATUS.PAYMENT.SUCCESS) { %>
+        const cashConfirmBtn = document.getElementById('cashConfirmBtn');
+        document.querySelectorAll('.nav-link').forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.dataset.bsTarget === '#cash-tab') {
+                    document.getElementById('methodInput').value = 'Tiền mặt';
+                    cashConfirmBtn.classList.remove('d-none');
+                } else {
+                    cashConfirmBtn.classList.add('d-none');
+                }
+            });
         });
-    });
+
+        const statusUrl = "/registrations/checkout/status/<%= invoice.id %>";
+        setInterval(async () => {
+            try {
+                const res = await fetch(statusUrl, { headers: { "Accept": "application/json" } });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.payment_status === "<%= STATUS.PAYMENT.SUCCESS %>") {
+                    window.location.reload();
+                }
+            } catch (err) {}
+        }, 3000);
+    <% } %>
 </script>
 <% if (locals.notice) { %>
 <script>

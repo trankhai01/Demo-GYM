@@ -266,6 +266,31 @@ router.post('/book', requireLogin, (req, res) => {
                 );
             };
 
+            const checkActivePackage = (cb) => {
+                conn.query(
+                    `SELECT id
+                     FROM registrations
+                     WHERE member_id = ?
+                       AND package_id IS NOT NULL
+                       AND status = ?
+                       AND payment_status = ?
+                       AND (expiration_date IS NULL OR expiration_date >= CURRENT_DATE())
+                     ORDER BY expiration_date DESC, id DESC
+                     LIMIT 1`,
+                    [targetMemberId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.SUCCESS],
+                    (errPackage, packageRows) => {
+                        if (errPackage) return cb({ http: 500, message: 'Lỗi kiểm tra gói tập', sqlErr: errPackage });
+                        if (!packageRows || packageRows.length === 0) {
+                            return cb({
+                                http: 409,
+                                message: 'Hội viên chưa có gói tập đã thanh toán nên không thể đặt lịch.'
+                            });
+                        }
+                        cb(null);
+                    }
+                );
+            };
+
             const checkOverlap = () => {
                 const sqlOverlapMember = `
                 SELECT id FROM bookings
@@ -342,7 +367,12 @@ router.post('/book', requireLogin, (req, res) => {
                     if (trainerErr) {
                         return fail(trainerErr.http, { status: 'Error', message: trainerErr.message }, trainerErr.sqlErr);
                     }
-                    checkOverlap();
+                    checkActivePackage((packageErr) => {
+                        if (packageErr) {
+                            return fail(packageErr.http, { status: 'Error', message: packageErr.message }, packageErr.sqlErr);
+                        }
+                        checkOverlap();
+                    });
                 });
             });
         });

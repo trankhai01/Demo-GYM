@@ -5,6 +5,7 @@ const { requireStaff } = require('../middleware/auth');
 const { applyDiscountTransactional } = require('./discount');
 const { STATUS } = require('../lib/status');
 const auditLog = require('../lib/auditLog');
+const payosPayment = require('../lib/payosPayment');
 
 router.use(requireStaff);
 
@@ -368,12 +369,61 @@ router.get('/checkout/:id', (req, res) => {
                 console.error("Lỗi lấy chi tiết sản phẩm:", err);
                 return res.status(500).send("Lỗi lấy chi tiết sản phẩm");
             }
-            res.render('registrations/checkout', {
-                invoice: invoice,
-                details: detailsResult
+            const render = (payment, paymentError) => {
+                res.render('registrations/checkout', {
+                    invoice,
+                    details: detailsResult,
+                    payosPayment: payment,
+                    payosConfigured: payosPayment.isConfigured(),
+                    payosCreateError: paymentError
+                });
+            };
+
+            if (invoice.payment_status === STATUS.PAYMENT.SUCCESS) return render(null, null);
+
+            payosPayment.syncPayment(invoice.id, (syncErr, syncResult) => {
+                if (syncErr) console.error('[registrations/checkout payos sync]', syncErr.message);
+                if (syncResult && syncResult.paid) {
+                    invoice.payment_status = STATUS.PAYMENT.SUCCESS;
+                    invoice.payment_method = 'payOS';
+                    return render(syncResult.payment, null);
+                }
+
+                payosPayment.createPayment(invoice, req, (paymentErr, payment) => {
+                    if (paymentErr) {
+                        console.error('[registrations/checkout payos]', paymentErr.message);
+                        return render(syncResult && syncResult.payment ? syncResult.payment : null, paymentErr);
+                    }
+                    render(payment, null);
+                }, {
+                    returnPath: `/registrations/checkout/${invoice.id}`,
+                    cancelPath: `/registrations/checkout/${invoice.id}?notice=payos_cancelled`
+                });
             });
         });
     });
+});
+
+router.get('/checkout/status/:id', (req, res) => {
+    const invoiceId = Number(req.params.id);
+    db.query(
+        'SELECT id, payment_status FROM registrations WHERE id = ? LIMIT 1',
+        [invoiceId],
+        (err, rows) => {
+            if (err || !rows || rows.length === 0) return res.status(404).json({ ok: false });
+            if (rows[0].payment_status === STATUS.PAYMENT.SUCCESS) {
+                return res.json({ ok: true, payment_status: STATUS.PAYMENT.SUCCESS });
+            }
+
+            payosPayment.syncPayment(invoiceId, (syncErr, syncResult) => {
+                if (syncErr) console.error('[registrations/status payos sync]', syncErr.message);
+                res.json({
+                    ok: true,
+                    payment_status: syncResult && syncResult.paid ? STATUS.PAYMENT.SUCCESS : rows[0].payment_status
+                });
+            });
+        }
+    );
 });
 
 // Hủy hóa đơn chờ thanh toán.

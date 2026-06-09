@@ -369,14 +369,17 @@ router.post('/settings', requireAdmin, (req, res) => {
         email: String(req.body.email || '').trim(),
         address: String(req.body.address || '').trim(),
         opening_hours: String(req.body.opening_hours || '').trim(),
+        bank_bin: String(req.body.bank_bin || '').trim().toLowerCase(),
+        bank_account: String(req.body.bank_account || '').trim(),
+        bank_account_name: String(req.body.bank_account_name || '').trim(),
         map_embed_url: String(req.body.map_embed_url || '').trim()
     };
 
-    if (!values.gym_name || !values.hotline || !values.email) {
+    if (!values.gym_name || !values.hotline || !values.email || !values.bank_bin || !values.bank_account || !values.bank_account_name) {
         return res.status(400).render('admin/settings', {
             settings: systemSettings.viewModel(values),
             success: false,
-            error: 'Vui lòng nhập tên phòng gym, hotline và email.'
+            error: 'Vui lòng nhập đủ thông tin liên hệ và tài khoản nhận chuyển khoản.'
         });
     }
 

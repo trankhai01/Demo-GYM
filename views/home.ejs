@@ -826,10 +826,20 @@
                                         <% } %>
                                         <li><i class="bi bi-check-circle-fill"></i> <%= t('home.packages.feat_facility') %></li>
                                     </ul>
-                                    <a href="<%= user ? '#contact' : '/register' %>" class="btn pkg-cta w-100 rounded-pill">
-                                        <i class="bi bi-lightning-charge-fill me-1"></i>
-                                        <%= user ? t('nav.contact') : t('home.hero.cta_register') %>
-                                    </a>
+                                    <% if (user && user.role === 'member') { %>
+                                        <form action="/membership/register/<%= pkg.id %>" method="POST">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <button type="submit" class="btn pkg-cta w-100 rounded-pill">
+                                                <i class="bi bi-lightning-charge-fill me-1"></i>
+                                                Đăng ký gói này
+                                            </button>
+                                        </form>
+                                    <% } else { %>
+                                        <a href="<%= user ? homePath : '/register' %>" class="btn pkg-cta w-100 rounded-pill">
+                                            <i class="bi bi-lightning-charge-fill me-1"></i>
+                                            <%= user ? 'Vào hệ thống' : t('home.hero.cta_register') %>
+                                        </a>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>

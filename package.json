@@ -15,6 +15,7 @@
   "type": "commonjs",
   "dependencies": {
     "@google/genai": "^1.52.0",
+    "@payos/node": "^2.0.5",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
     "csrf-sync": "^4.2.1",
@@ -28,6 +29,7 @@
     "multer": "^2.1.1",
     "mysql2": "^3.20.0",
     "nodemailer": "^8.0.7",
+    "nodemon": "^3.1.14",
     "pdfkit": "^0.18.0",
     "prettier-plugin-ejs": "^1.0.3"
   }
