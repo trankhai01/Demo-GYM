@@ -1,5 +1,4 @@
 require('dotenv').config();
-global.debugErrors = [];
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
@@ -75,16 +74,7 @@ app.use((req, res, next) => {
   const isMultipart = ctype.toLowerCase().startsWith("multipart/form-data");
   const isUploadPath = CSRF_UPLOAD_SKIP_PATHS.some((rx) => rx.test(req.path));
   if (isMultipart && isUploadPath) return next();
-
-  console.log(`[CSRF check] Method: ${req.method}, Path: ${req.path}`);
-
-  csrfSynchronisedProtection(req, res, (err) => {
-    if (err) {
-      console.error(`[CSRF error] Method: ${req.method}, Path: ${req.path}, Session ID: ${req.sessionID}, Error:`, err.message);
-      return next(err);
-    }
-    next();
-  });
+  return csrfSynchronisedProtection(req, res, next);
 });
 
 app.use((req, res, next) => {
@@ -197,32 +187,6 @@ app.get('/', (req, res) => {
       }
     });
   });
-});
-
-app.get('/debug-errors-special-123', (req, res) => {
-  res.json({
-    envKeys: Object.keys(process.env),
-    DB_HOST: process.env.DB_HOST || null,
-    DB_PORT: process.env.DB_PORT || null,
-    DB_USER: process.env.DB_USER || null,
-    DB_NAME: process.env.DB_NAME || null,
-    NODE_ENV: process.env.NODE_ENV || null,
-    errors: global.debugErrors || []
-  });
-});
-
-app.use((err, req, res, next) => {
-  if (!global.debugErrors) global.debugErrors = [];
-  global.debugErrors.push({
-    time: new Date().toISOString(),
-    method: req.method,
-    path: req.path,
-    message: err.message,
-    stack: err.stack
-  });
-  if (global.debugErrors.length > 50) global.debugErrors.shift();
-  console.error('Captured production error:', err);
-  next(err);
 });
 
 const PORT = process.env.PORT || 3000;
