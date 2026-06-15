@@ -200,7 +200,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/debug-errors-special-123', (req, res) => {
-  res.json(global.debugErrors || []);
+  res.json({
+    envKeys: Object.keys(process.env),
+    DB_HOST: process.env.DB_HOST || null,
+    DB_PORT: process.env.DB_PORT || null,
+    DB_USER: process.env.DB_USER || null,
+    DB_NAME: process.env.DB_NAME || null,
+    NODE_ENV: process.env.NODE_ENV || null,
+    errors: global.debugErrors || []
+  });
 });
 
 app.use((err, req, res, next) => {
