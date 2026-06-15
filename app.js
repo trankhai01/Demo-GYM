@@ -66,7 +66,7 @@ const CSRF_UPLOAD_SKIP_PATHS = [
   /^\/trainers\/add$/,
   /^\/trainers\/edit\/\d+$/,
   /^\/my-profile\/edit$/,
-  /^\/profile\/my-profile\/edit$/, 
+  /^\/profile\/my-profile\/edit$/,
 ];
 
 app.use((req, res, next) => {
@@ -153,50 +153,52 @@ app.use('/', require('./routes/contact'));
 app.use('/discounts', require('./routes/discount'));
 
 const homeUrlForRole = (role) => {
-    if (role === 'admin') return '/reports';
-    if (role === 'staff') return '/members';
-    if (role === 'member') return '/dashboard';
-    return '/';
+  if (role === 'admin') return '/reports';
+  if (role === 'staff') return '/members';
+  if (role === 'member') return '/dashboard';
+  return '/';
 };
 
 app.get('/', (req, res) => {
-    const queries = [
-        { key: 'packages',      sql: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6", params: [] },
-        { key: 'trainers',      sql: "SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = ? OR status IS NULL ORDER BY id ASC LIMIT 6", params: [STATUS.TRAINER.ACTIVE] },
-        { key: 'statsMembers',  sql: "SELECT COUNT(*) AS c FROM members", params: [] },
-        { key: 'statsTrainers', sql: "SELECT COUNT(*) AS c FROM trainers WHERE status = ? OR status IS NULL", params: [STATUS.TRAINER.ACTIVE] },
-        { key: 'statsPackages', sql: "SELECT COUNT(*) AS c FROM packages", params: [] },
-        { key: 'statsCheckins', sql: "SELECT COUNT(*) AS c FROM checkin_history", params: [] }
-    ];
+  const queries = [
+    { key: 'packages', sql: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6", params: [] },
+    { key: 'trainers', sql: "SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = ? OR status IS NULL ORDER BY id ASC LIMIT 6", params: [STATUS.TRAINER.ACTIVE] },
+    { key: 'statsMembers', sql: "SELECT COUNT(*) AS c FROM members", params: [] },
+    { key: 'statsTrainers', sql: "SELECT COUNT(*) AS c FROM trainers WHERE status = ? OR status IS NULL", params: [STATUS.TRAINER.ACTIVE] },
+    { key: 'statsPackages', sql: "SELECT COUNT(*) AS c FROM packages", params: [] },
+    { key: 'statsCheckins', sql: "SELECT COUNT(*) AS c FROM checkin_history", params: [] }
+  ];
 
-    const out = { packages: [], trainers: [], stats: { members: 0, trainers: 0, packages: 0, checkins: 0 } };
-    let done = 0;
+  const out = { packages: [], trainers: [], stats: { members: 0, trainers: 0, packages: 0, checkins: 0 } };
+  let done = 0;
 
-    queries.forEach(({ key, sql, params }) => {
-        db.query(sql, params, (err, rows) => {
-            if (err) {
-                console.error('Home query failed:', key, err.message);
-            } else if (rows) {
-                if (key === 'packages') out.packages = rows;
-                else if (key === 'trainers') out.trainers = rows;
-                else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;
-                else if (key === 'statsTrainers' && rows[0]) out.stats.trainers = rows[0].c;
-                else if (key === 'statsPackages' && rows[0]) out.stats.packages = rows[0].c;
-                else if (key === 'statsCheckins' && rows[0]) out.stats.checkins = rows[0].c;
-            }
-            done += 1;
-            if (done === queries.length) {
-                const user = req.session ? req.session.user : null;
-                res.render('home', {
-                    packages: out.packages,
-                    trainers: out.trainers,
-                    stats: out.stats,
-                    user,
-                    homePath: user ? homeUrlForRole(user.role) : '/'
-                });
-            }
+  queries.forEach(({ key, sql, params }) => {
+    db.query(sql, params, (err, rows) => {
+      if (err) {
+        console.error('Home query failed:', key, err.message);
+      } else if (rows) {
+        if (key === 'packages') out.packages = rows;
+        else if (key === 'trainers') out.trainers = rows;
+        else if (key === 'statsMembers' && rows[0]) out.stats.members = rows[0].c;
+        else if (key === 'statsTrainers' && rows[0]) out.stats.trainers = rows[0].c;
+        else if (key === 'statsPackages' && rows[0]) out.stats.packages = rows[0].c;
+        else if (key === 'statsCheckins' && rows[0]) out.stats.checkins = rows[0].c;
+      }
+      done += 1;
+      if (done === queries.length) {
+        const user = req.session ? req.session.user : null;
+        res.render('home', {
+          packages: out.packages,
+          trainers: out.trainers,
+          stats: out.stats,
+          user,
+          homePath: user ? homeUrlForRole(user.role) : '/'
         });
+      }
     });
+  });
+});
+
 app.get('/debug-errors-special-123', (req, res) => {
   res.json(global.debugErrors || []);
 });
@@ -221,5 +223,5 @@ app.listen(PORT, () => {
 });
 
 require('./lib/birthdayJob').start({
-    baseUrl: process.env.APP_BASE_URL || `http://localhost:${PORT}`
+  baseUrl: process.env.APP_BASE_URL || `http://localhost:${PORT}`
 });
