@@ -6,16 +6,20 @@ const { STATUS } = require('../lib/status');
 const systemSettings = require('../lib/systemSettings');
 const payosPayment = require('../lib/payosPayment');
 const auditLog = require('../lib/auditLog');
+const registrationUpgrade = require('../lib/registrationUpgrade');
 
 router.use(requireMember);
 
 function invoiceForMemberSql() {
     return `
         SELECT r.*, m.fullname AS member_name, m.phone AS member_phone,
-               p.package_name, p.duration_months, p.pt_sessions
+               p.package_name, p.duration_months, p.pt_sessions, p.price AS package_price,
+               oldp.package_name AS upgrade_from_package_name
         FROM registrations r
         JOIN members m ON m.id = r.member_id
         JOIN packages p ON p.id = r.package_id
+        LEFT JOIN registrations oldr ON oldr.id = r.upgrade_from_registration_id
+        LEFT JOIN packages oldp ON oldp.id = oldr.package_id
         WHERE r.id = ? AND r.member_id = ?
         LIMIT 1
     `;
@@ -72,102 +76,172 @@ router.post('/register/:packageId', (req, res) => {
         return res.status(400).render('error', { message: 'Gói tập không hợp lệ.' });
     }
 
-    db.getConnection((err, conn) => {
-        if (err) return res.status(500).render('error', { message: 'Không lấy được kết nối DB.' });
+    registrationUpgrade.ensure((ensureErr) => {
+        if (ensureErr) return res.status(500).render('error', { message: 'Lỗi chuẩn bị dữ liệu nâng cấp gói.' });
 
-        const fail = (status, message, sqlErr) => {
-            if (sqlErr) console.error('[membership/register]', sqlErr.message);
-            conn.rollback(() => {
-                conn.release();
-                res.status(status).render('error', { message });
-            });
-        };
+        db.getConnection((err, conn) => {
+            if (err) return res.status(500).render('error', { message: 'Không lấy được kết nối DB.' });
 
-        conn.beginTransaction((err) => {
-            if (err) {
-                conn.release();
-                return res.status(500).render('error', { message: 'Lỗi mở giao dịch đăng ký.' });
-            }
+            const fail = (status, message, sqlErr) => {
+                if (sqlErr) console.error('[membership/register]', sqlErr.message);
+                conn.rollback(() => {
+                    conn.release();
+                    res.status(status).render('error', { message });
+                });
+            };
 
-            conn.query(
-                `SELECT r.id, r.payment_status, r.expiration_date, p.package_name
-                 FROM registrations r
-                 JOIN packages p ON p.id = r.package_id
-                 WHERE r.member_id = ?
-                   AND r.status = ?
-                   AND r.package_id IS NOT NULL
-                   AND r.payment_status IN (?, ?)
-                   AND (r.expiration_date IS NULL OR r.expiration_date >= CURRENT_DATE())
-                 ORDER BY r.id DESC
-                 LIMIT 1
-                 FOR UPDATE`,
-                [memberId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.PENDING, STATUS.PAYMENT.SUCCESS],
-                (err, activeRows) => {
-                    if (err) return fail(500, 'Lỗi kiểm tra gói tập hiện tại.', err);
-
-                    if (activeRows && activeRows.length > 0) {
-                        const active = activeRows[0];
-                        conn.rollback(() => {
-                            conn.release();
-                            if (active.payment_status === STATUS.PAYMENT.PENDING) {
-                                return res.redirect(`/membership/checkout/${active.id}?notice=existing_pending`);
-                            }
-                            res.status(409).render('error', {
-                                message: `Hội viên đang ở trong gói tập "${active.package_name}" nên không thể đăng ký gói tập khác.`
-                            });
-                        });
-                        return;
-                    }
-
-                    conn.query(
-                        'SELECT id, package_name, duration_months, price, pt_sessions FROM packages WHERE id = ? FOR UPDATE',
-                        [packageId],
-                        (err, packageRows) => {
-                            if (err) return fail(500, 'Lỗi tải thông tin gói tập.', err);
-                            if (!packageRows || packageRows.length === 0) return fail(404, 'Không tìm thấy gói tập.');
-
-                            const pkg = packageRows[0];
-                            const expDate = new Date();
-                            expDate.setMonth(expDate.getMonth() + Number(pkg.duration_months || 0));
-                            const expirationDate = expDate.toISOString().slice(0, 10);
-
-                            conn.query(
-                                `INSERT INTO registrations
-                                 (member_id, package_id, price, registration_date, expiration_date, total_sessions,
-                                  payment_status, payment_method, status)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                [
-                                    memberId,
-                                    packageId,
-                                    Number(pkg.price) || 0,
-                                    today,
-                                    expirationDate,
-                                    Number(pkg.pt_sessions) || 0,
-                                    STATUS.PAYMENT.PENDING,
-                                    'payOS',
-                                    STATUS.REGISTRATION.ACTIVE
-                                ],
-                                (err, result) => {
-                                    if (err) return fail(500, 'Lỗi tạo hóa đơn gói tập.', err);
-                                    const invoiceId = result.insertId;
-
-                                    conn.commit((err) => {
-                                        if (err) return fail(500, 'Lỗi lưu hóa đơn.', err);
-                                        conn.release();
-                                        auditLog.record(req, 'membership.self_register', 'registration', invoiceId, {
-                                            package_id: packageId
-                                        });
-                                        res.redirect(`/membership/checkout/${invoiceId}`);
-                                    });
-                                }
-                            );
-                        }
-                    );
+            conn.beginTransaction((err) => {
+                if (err) {
+                    conn.release();
+                    return res.status(500).render('error', { message: 'Lỗi mở giao dịch đăng ký.' });
                 }
-            );
+
+                conn.query(
+                    `SELECT r.id, r.package_id, r.price, r.registration_date, r.expiration_date,
+                            r.total_sessions, r.used_sessions, r.payment_status,
+                            r.upgrade_from_registration_id, r.upgrade_credit_amount,
+                            p.package_name, p.duration_months, p.price AS package_price, p.pt_sessions
+                     FROM registrations r
+                     JOIN packages p ON p.id = r.package_id
+                     WHERE r.member_id = ?
+                       AND r.status = ?
+                       AND r.package_id IS NOT NULL
+                       AND r.payment_status IN (?, ?)
+                       AND (r.expiration_date IS NULL OR r.expiration_date >= CURRENT_DATE())
+                     ORDER BY r.id DESC
+                     LIMIT 1
+                     FOR UPDATE`,
+                    [memberId, STATUS.REGISTRATION.ACTIVE, STATUS.PAYMENT.PENDING, STATUS.PAYMENT.SUCCESS],
+                    (err, activeRows) => {
+                        if (err) return fail(500, 'Lỗi kiểm tra gói tập hiện tại.', err);
+
+                        const active = activeRows && activeRows[0];
+                        if (active && active.payment_status === STATUS.PAYMENT.PENDING) {
+                            conn.rollback(() => {
+                                conn.release();
+                                return res.redirect(`/membership/checkout/${active.id}?notice=existing_pending`);
+                            });
+                            return;
+                        }
+
+                        if (active && active.payment_status === STATUS.PAYMENT.SUCCESS) {
+                            return createUpgradeInvoice(conn, req, res, memberId, packageId, active, fail);
+                        }
+
+                        createNewInvoice(conn, req, res, memberId, packageId, today, fail);
+                    }
+                );
+            });
         });
     });
 });
+
+function createNewInvoice(conn, req, res, memberId, packageId, today, fail) {
+    conn.query(
+        'SELECT id, package_name, duration_months, price, pt_sessions FROM packages WHERE id = ? FOR UPDATE',
+        [packageId],
+        (err, packageRows) => {
+            if (err) return fail(500, 'Lỗi tải thông tin gói tập.', err);
+            if (!packageRows || packageRows.length === 0) return fail(404, 'Không tìm thấy gói tập.');
+
+            const pkg = packageRows[0];
+            const expDate = new Date();
+            expDate.setMonth(expDate.getMonth() + Number(pkg.duration_months || 0));
+            const expirationDate = expDate.toISOString().slice(0, 10);
+
+            conn.query(
+                `INSERT INTO registrations
+                 (member_id, package_id, price, registration_date, expiration_date, total_sessions,
+                  payment_status, payment_method, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    memberId,
+                    packageId,
+                    Number(pkg.price) || 0,
+                    today,
+                    expirationDate,
+                    Number(pkg.pt_sessions) || 0,
+                    STATUS.PAYMENT.PENDING,
+                    'payOS',
+                    STATUS.REGISTRATION.ACTIVE
+                ],
+                (err, result) => {
+                    if (err) return fail(500, 'Lỗi tạo hóa đơn gói tập.', err);
+                    const invoiceId = result.insertId;
+
+                    conn.commit((err) => {
+                        if (err) return fail(500, 'Lỗi lưu hóa đơn.', err);
+                        conn.release();
+                        auditLog.record(req, 'membership.self_register', 'registration', invoiceId, {
+                            package_id: packageId
+                        });
+                        res.redirect(`/membership/checkout/${invoiceId}`);
+                    });
+                }
+            );
+        }
+    );
+}
+
+function createUpgradeInvoice(conn, req, res, memberId, packageId, activePackage, fail) {
+    conn.query(
+        'SELECT id, package_name, duration_months, price, pt_sessions FROM packages WHERE id = ? FOR UPDATE',
+        [packageId],
+        (err, packageRows) => {
+            if (err) return fail(500, 'Lỗi tải thông tin gói tập.', err);
+            if (!packageRows || packageRows.length === 0) return fail(404, 'Không tìm thấy gói tập.');
+
+            const targetPackage = packageRows[0];
+            let upgrade;
+            try {
+                upgrade = registrationUpgrade.calculateUpgrade(activePackage, targetPackage);
+            } catch (calcErr) {
+                return fail(409, calcErr.message);
+            }
+
+            conn.query(
+                `INSERT INTO registrations
+                 (member_id, package_id, price, registration_date, expiration_date,
+                  total_sessions, used_sessions, payment_status, payment_method, status,
+                  upgrade_from_registration_id, upgrade_credit_amount, upgrade_total_days, upgrade_days_remaining)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    memberId,
+                    packageId,
+                    upgrade.amountDue,
+                    upgrade.registrationDate,
+                    upgrade.expirationDate,
+                    upgrade.totalSessions,
+                    upgrade.usedSessions,
+                    STATUS.PAYMENT.PENDING,
+                    'payOS',
+                    STATUS.REGISTRATION.ACTIVE,
+                    activePackage.id,
+                    upgrade.creditAmount,
+                    upgrade.totalDays,
+                    upgrade.daysRemaining
+                ],
+                (err, result) => {
+                    if (err) return fail(500, 'Lỗi tạo hóa đơn nâng cấp gói tập.', err);
+                    const invoiceId = result.insertId;
+
+                    conn.commit((err) => {
+                        if (err) return fail(500, 'Lỗi lưu hóa đơn nâng cấp.', err);
+                        conn.release();
+                        auditLog.record(req, 'membership.upgrade_register', 'registration', invoiceId, {
+                            from_registration_id: activePackage.id,
+                            from_package_id: activePackage.package_id,
+                            to_package_id: packageId,
+                            credit_amount: upgrade.creditAmount,
+                            amount_due: upgrade.amountDue
+                        });
+                        res.redirect(`/membership/checkout/${invoiceId}`);
+                    });
+                }
+            );
+        }
+    );
+}
 
 router.get('/checkout/:id', (req, res) => {
     const invoiceId = Number(req.params.id);

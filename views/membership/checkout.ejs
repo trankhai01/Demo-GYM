@@ -159,7 +159,10 @@
                         <h1 class="fw-black mb-4">Hóa đơn #<%= invoice.id %></h1>
 
                         <div class="selected-package mb-4">
-                            <div class="text-secondary fw-bold text-uppercase small mb-2"><i class="bi bi-ticket-perforated"></i> Gói tập đã chọn</div>
+                            <div class="text-secondary fw-bold text-uppercase small mb-2">
+                                <i class="bi bi-ticket-perforated"></i>
+                                <%= invoice.upgrade_from_registration_id ? 'Gói tập nâng cấp' : 'Gói tập đã chọn' %>
+                            </div>
                             <h4 class="fw-bold mb-1"><%= invoice.package_name %></h4>
                             <div class="text-secondary">
                                 <%= invoice.duration_months %> tháng
@@ -168,6 +171,26 @@
                                 <% } %>
                             </div>
                         </div>
+
+                        <% if (invoice.upgrade_from_registration_id) { %>
+                            <div class="info-row">
+                                <span>Gói hiện tại</span>
+                                <strong><%= invoice.upgrade_from_package_name || 'Gói cũ' %></strong>
+                            </div>
+                            <div class="info-row">
+                                <span>Giá gói mới</span>
+                                <strong><%= Number(invoice.package_price || 0).toLocaleString('vi-VN') %>đ</strong>
+                            </div>
+                            <div class="info-row">
+                                <span>Khấu trừ còn lại</span>
+                                <strong class="text-success">-<%= Number(invoice.upgrade_credit_amount || 0).toLocaleString('vi-VN') %>đ</strong>
+                            </div>
+                            <% if (invoice.upgrade_days_remaining && invoice.upgrade_total_days) { %>
+                                <div class="text-secondary small mb-3">
+                                    Tính theo <%= invoice.upgrade_days_remaining %>/<%= invoice.upgrade_total_days %> ngày còn lại của gói hiện tại.
+                                </div>
+                            <% } %>
+                        <% } %>
 
                         <div class="info-row">
                             <span>Hội viên</span>
@@ -199,7 +222,11 @@
                             <div>
                                 <div class="success-icon"><i class="bi bi-check-lg"></i></div>
                                 <h2 class="fw-bold mb-3">Thanh toán thành công</h2>
-                                <p class="text-secondary fs-5 mb-4">Gói tập đã được kích hoạt. Bạn có thể bắt đầu đặt lịch tập ngay bây giờ.</p>
+                                <p class="text-secondary fs-5 mb-4">
+                                    <%= invoice.upgrade_from_registration_id
+                                        ? 'Gói tập đã được nâng cấp. Bạn có thể tiếp tục đặt lịch theo gói mới.'
+                                        : 'Gói tập đã được kích hoạt. Bạn có thể bắt đầu đặt lịch tập ngay bây giờ.' %>
+                                </p>
                                 <a href="/dashboard" class="btn btn-primary btn-lg px-5 fw-bold">
                                     <i class="bi bi-arrow-right-circle"></i> Về trang tổng quan
                                 </a>
@@ -207,8 +234,16 @@
                         <% } else { %>
                             <div class="w-100" style="max-width: 480px;">
                                 <div class="eyebrow mb-2">Thanh toán qua payOS</div>
-                                <h2 class="fw-bold mb-3">Quét mã QR để hoàn tất đăng ký</h2>
-                                <p class="text-secondary mb-4">Gói tập sẽ được kích hoạt tự động sau khi payOS xác nhận giao dịch.</p>
+                                <h2 class="fw-bold mb-3">
+                                    <%= invoice.upgrade_from_registration_id
+                                        ? 'Quét mã QR để hoàn tất nâng cấp'
+                                        : 'Quét mã QR để hoàn tất đăng ký' %>
+                                </h2>
+                                <p class="text-secondary mb-4">
+                                    <%= invoice.upgrade_from_registration_id
+                                        ? 'Gói mới sẽ được áp dụng tự động sau khi payOS xác nhận giao dịch.'
+                                        : 'Gói tập sẽ được kích hoạt tự động sau khi payOS xác nhận giao dịch.' %>
+                                </p>
 
                                 <% if (payosPayment && payosPayment.qr_code) { %>
                                     <div class="qr-box mb-4">

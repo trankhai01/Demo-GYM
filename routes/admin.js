@@ -14,6 +14,9 @@ const ACTION_LABELS = {
     'pt_session.deduct': 'Trừ buổi PT',
     'invoice.cancel': 'Hủy hóa đơn',
     'invoice.confirm_payment': 'Xác nhận thanh toán',
+    'membership.self_register': 'Hội viên tự đăng ký gói',
+    'membership.upgrade_register': 'Hội viên tạo yêu cầu nâng cấp gói',
+    'membership.cancel_checkout': 'Hội viên hủy đơn gói tập',
     'settings.update': 'Cập nhật cấu hình'
 };
 
@@ -34,6 +37,11 @@ const META_LABELS = {
     discount_code_id: 'Mã ưu đãi ID',
     payment_method: 'Phương thức thanh toán',
     product_count: 'Số dòng sản phẩm',
+    from_registration_id: 'Hóa đơn gói cũ',
+    from_package_id: 'Gói cũ ID',
+    to_package_id: 'Gói mới ID',
+    credit_amount: 'Số tiền khấu trừ',
+    amount_due: 'Số tiền cần trả',
     changed_fields: 'Trường đã đổi'
 };
 

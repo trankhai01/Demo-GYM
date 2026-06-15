@@ -25,9 +25,18 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+const MySQLStore = require('express-mysql-session')(session);
+
+const sessionStore = new MySQLStore({
+  clearExpired: true,
+  checkExpirationInterval: 15 * 60 * 1000,
+  expiration: 1000 * 60 * 60 * 8
+}, db);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback_secret_dev_only",
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -43,6 +52,7 @@ require('./lib/auditLog').ensure();
 const systemSettings = require('./lib/systemSettings');
 systemSettings.ensure();
 require('./lib/payosPayment').ensure();
+require('./lib/registrationUpgrade').ensure();
 
 const i18n = require('./lib/i18n');
 app.use(i18n.middleware);
@@ -140,21 +150,20 @@ const homeUrlForRole = (role) => {
 };
 
 app.get('/', (req, res) => {
-    const queries = {
-        packages: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6",
-        trainers: `SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = '${STATUS.TRAINER.ACTIVE}' OR status IS NULL ORDER BY id ASC LIMIT 6`,
-        statsMembers: "SELECT COUNT(*) AS c FROM members",
-        statsTrainers: `SELECT COUNT(*) AS c FROM trainers WHERE status = '${STATUS.TRAINER.ACTIVE}' OR status IS NULL`,
-        statsPackages: "SELECT COUNT(*) AS c FROM packages",
-        statsCheckins: "SELECT COUNT(*) AS c FROM checkin_history"
-    };
+    const queries = [
+        { key: 'packages',      sql: "SELECT id, package_name, price, duration_months, description, pt_sessions FROM packages ORDER BY price ASC LIMIT 6", params: [] },
+        { key: 'trainers',      sql: "SELECT id, fullname, specialty, experience_years, image_url, description FROM trainers WHERE status = ? OR status IS NULL ORDER BY id ASC LIMIT 6", params: [STATUS.TRAINER.ACTIVE] },
+        { key: 'statsMembers',  sql: "SELECT COUNT(*) AS c FROM members", params: [] },
+        { key: 'statsTrainers', sql: "SELECT COUNT(*) AS c FROM trainers WHERE status = ? OR status IS NULL", params: [STATUS.TRAINER.ACTIVE] },
+        { key: 'statsPackages', sql: "SELECT COUNT(*) AS c FROM packages", params: [] },
+        { key: 'statsCheckins', sql: "SELECT COUNT(*) AS c FROM checkin_history", params: [] }
+    ];
 
     const out = { packages: [], trainers: [], stats: { members: 0, trainers: 0, packages: 0, checkins: 0 } };
-    const keys = Object.keys(queries);
     let done = 0;
 
-    keys.forEach((key) => {
-        db.query(queries[key], (err, rows) => {
+    queries.forEach(({ key, sql, params }) => {
+        db.query(sql, params, (err, rows) => {
             if (err) {
                 console.error('Home query failed:', key, err.message);
             } else if (rows) {
@@ -166,7 +175,7 @@ app.get('/', (req, res) => {
                 else if (key === 'statsCheckins' && rows[0]) out.stats.checkins = rows[0].c;
             }
             done += 1;
-            if (done === keys.length) {
+            if (done === queries.length) {
                 const user = req.session ? req.session.user : null;
                 res.render('home', {
                     packages: out.packages,

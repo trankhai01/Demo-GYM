@@ -90,8 +90,13 @@ CREATE TABLE IF NOT EXISTS registrations (
     payment_status     ENUM('Pending', 'Success') DEFAULT 'Pending',
     payment_method     VARCHAR(50)  DEFAULT 'Tiền mặt',
     status             VARCHAR(20)  DEFAULT 'active',
+    upgrade_from_registration_id INT NULL,
+    upgrade_credit_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    upgrade_total_days INT NULL,
+    upgrade_days_remaining INT NULL,
     CONSTRAINT fk_reg_member  FOREIGN KEY (member_id)  REFERENCES members(id)  ON DELETE SET NULL,
     CONSTRAINT fk_reg_package FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_reg_upgrade_from FOREIGN KEY (upgrade_from_registration_id) REFERENCES registrations(id) ON DELETE SET NULL,
     INDEX idx_reg_member_status (member_id, status, expiration_date),
     INDEX idx_reg_payment_date  (payment_status, registration_date)
 ) ENGINE=InnoDB;
