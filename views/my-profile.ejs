@@ -1,261 +1,315 @@
 <%- include('partials/header') %>
 
-<style>
-    .profile-container {
-        min-height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8fafc;
-        padding: 20px;
-    }
-    .gym-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        width: 100%;
-        max-width: 520px;
-        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.10);
-        position: relative;
-        overflow: hidden;
-    }
-    .gym-card::before {
-        content: '';
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 150px;
-        height: 150px;
-        background: linear-gradient(135deg, #4f46e5, #06b6d4);
-        transform: rotate(45deg);
-        z-index: 0;
-        opacity: 0.85;
-    }
-    .card-content {
-        position: relative;
-        z-index: 1;
-        padding: 40px 30px;
-    }
-    .qr-box {
-        background: #f8fafc;
-        padding: 12px;
-        border-radius: 12px;
-        display: inline-block;
-        margin-bottom: 20px;
-        border: 1px solid #e2e8f0;
-    }
-    .info-label {
-        color: #64748b;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 3px;
-    }
-    .info-value {
-        color: #0f172a;
-        font-size: 1.1rem;
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-    .info-value-sub {
-        color: #64748b;
-        font-size: 0.95rem;
-    }
-    .stat-box {
-        text-align: center;
-        padding: 12px 0;
-    }
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #4f46e5;
-        font-family: 'Oswald', sans-serif;
-    }
-    .stat-value .unit {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        font-weight: 400;
-        font-family: 'Inter', sans-serif;
-        margin-left: 2px;
-    }
-    .stats-row {
-        background: #f8fafc;
-        border-radius: 12px;
-        margin: 16px 8px 0 8px !important;
-        padding: 4px 0;
-        border: 1px solid #e2e8f0;
-    }
-    .stats-row .border-divider { border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
-    .gender-badge {
-        background: #eef2ff;
-        color: #4f46e5;
-        border: 1px solid #c7d2fe;
-        font-weight: 600;
-        padding: 8px 14px;
-        border-radius: 999px;
-    }
-    .btn-edit-profile {
-        background: linear-gradient(135deg, #4f46e5, #06b6d4);
-        color: #fff;
-        border: 0;
-        font-weight: 600;
-        padding: 8px 16px;
-        border-radius: 8px;
-    }
-    .btn-edit-profile:hover { color: #fff; opacity: 0.92; }
-</style>
+    <style>
+        .profile-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+            padding: 20px;
+        }
 
-<div class="profile-container">
-    <div class="gym-card">
-        <div class="card-content text-center">
-            
-            <h2 class="fw-bold mb-4" style="color: #4f46e5; font-family: 'Oswald', sans-serif; letter-spacing: 2px;"><%= (systemSettings && systemSettings.gym_name) || 'GYM BRO' %></h2>
+        .gym-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.10);
+            position: relative;
+            overflow: hidden;
+        }
 
-            <% if (locals.success) { %>
-                <div class="alert alert-success py-2 text-center border-0" style="font-size: 0.9rem; background-color: rgba(25, 135, 84, 0.2); color: #47cf73;">
-                    <i class="bi bi-check-circle-fill me-1"></i> Cập nhật hồ sơ thành công!
-                </div>
-            <% } %>
-            <% if (locals.error === 'invalid_profile') { %>
-                <div class="alert alert-danger py-2 text-center border-0" style="font-size: 0.9rem;">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Thông tin hồ sơ không hợp lệ. Vui lòng kiểm tra lại.
-                </div>
-            <% } %>
-            
-            <% if (member.avatar_url) { %>
-                <div class="text-center mb-3">
-                    <img src="<%= member.avatar_url %>" alt="<%= member.fullname %>"
-                         class="rounded-circle shadow"
-                         style="width:120px; height:120px; object-fit:cover; background:#f1f5f9; border:3px solid #4f46e5;">
-                </div>
-            <% } %>
+        .gym-card::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            transform: rotate(45deg);
+            z-index: 0;
+            opacity: 0.85;
+        }
 
-            <div class="qr-box shadow-lg">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= member.phone %>" alt="QR Code">
+        .card-content {
+            position: relative;
+            z-index: 1;
+            padding: 40px 30px;
+        }
+
+        .qr-box {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .info-value-sub {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 12px 0;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4f46e5;
+            font-family: 'Oswald', sans-serif;
+        }
+
+        .stat-value .unit {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+            margin-left: 2px;
+        }
+
+        .stats-row {
+            background: #f8fafc;
+            border-radius: 12px;
+            margin: 16px 8px 0 8px !important;
+            padding: 4px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-row .border-divider {
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .gender-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 999px;
+        }
+
+        .btn-edit-profile {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: #fff;
+            border: 0;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .btn-edit-profile:hover {
+            color: #fff;
+            opacity: 0.92;
+        }
+    </style>
+
+    <div class="profile-container">
+        <div class="gym-card">
+            <div class="card-content text-center">
+
+                <h2 class="fw-bold mb-4"
+                    style="color: #4f46e5; font-family: 'Oswald', sans-serif; letter-spacing: 2px;">
+                    <%= (systemSettings && systemSettings.gym_name) || 'GYM BRO' %>
+                </h2>
+
+                <% if (locals.success) { %>
+                    <div class="alert alert-success py-2 text-center border-0"
+                        style="font-size: 0.9rem; background-color: rgba(25, 135, 84, 0.2); color: #47cf73;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Cập nhật hồ sơ thành công!
+                    </div>
+                    <% } %>
+                        <% if (locals.error==='invalid_profile' ) { %>
+                            <div class="alert alert-danger py-2 text-center border-0" style="font-size: 0.9rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Thông tin hồ sơ không hợp lệ. Vui
+                                lòng kiểm tra lại.
+                            </div>
+                            <% } %>
+
+                                <% if (member.avatar_url) { %>
+                                    <div class="text-center mb-3">
+                                        <img src="<%= member.avatar_url %>" alt="<%= member.fullname %>"
+                                            class="rounded-circle shadow"
+                                            style="width:120px; height:120px; object-fit:cover; background:#f1f5f9; border:3px solid #4f46e5;">
+                                    </div>
+                                    <% } %>
+
+                                        <div class="qr-box shadow-lg">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= member.phone %>"
+                                                alt="QR Code">
+                                        </div>
+
+                                        <div class="text-start mt-4 px-3">
+                                            <div class="row">
+                                                <div class="col-7">
+                                                    <div class="info-label">Họ và Tên</div>
+                                                    <div class="info-value">
+                                                        <%= member.fullname %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-5 text-end">
+                                                    <div class="info-label">Mã thẻ</div>
+                                                    <div class="info-value" style="color: #4f46e5;">#<%= member.id %>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mt-2">
+                                                <div class="col-7">
+                                                    <div class="info-label">Căn cước / Quê quán</div>
+                                                    <div class="info-value" style="font-size: 0.95rem;">
+                                                        <%= member.cccd || '---' %> <br>
+                                                            <span class="info-value-sub">
+                                                                <%= member.hometown || '---' %>
+                                                            </span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-5 text-end">
+                                                    <div class="info-label">Liên hệ</div>
+                                                    <div class="info-value" style="font-size: 0.95rem;">
+                                                        <%= member.phone %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row stats-row">
+                                            <div class="col-4 stat-box">
+                                                <div class="info-label">Chiều cao</div>
+                                                <div class="stat-value">
+                                                    <%= member.height ? member.height : '--' %><span
+                                                            class="unit">cm</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 stat-box border-divider">
+                                                <div class="info-label">Cân nặng</div>
+                                                <div class="stat-value">
+                                                    <%= member.weight ? member.weight : '--' %><span
+                                                            class="unit">kg</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 stat-box">
+                                                <div class="info-label">Ngày sinh</div>
+                                                <div class="stat-value" style="font-size:1.05rem;">
+                                                    <% if (member.birth_date) { const bd=member.birth_date instanceof
+                                                        Date ? member.birth_date : new Date(member.birth_date); const
+                                                        pad=n=> String(n).padStart(2, '0');
+                                                        %><%= pad(bd.getDate()) + '/' + pad(bd.getMonth()+1) + '/' +
+                                                            bd.getFullYear() %>
+                                                            <% } else if (member.birth_year) { %>
+                                                                <%= member.birth_year %>
+                                                                    <% } else { %>--<% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="mt-4 mb-3" style="border-color: #e2e8f0;">
+
+                                        <div class="d-flex justify-content-between align-items-center px-3 mb-2">
+                                            <span class="gender-badge">
+                                                <i class="bi bi-gender-ambiguous me-1"></i>
+                                                <%= member.gender %>
+                                            </span>
+                                            <button class="btn-edit-profile btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#editProfileModal">
+                                                <i class="bi bi-pencil-square"></i> Cập nhật hồ sơ
+                                            </button>
+                                        </div>
+
             </div>
-
-            <div class="text-start mt-4 px-3">
-                <div class="row">
-                    <div class="col-7">
-                        <div class="info-label">Họ và Tên</div>
-                        <div class="info-value"><%= member.fullname %></div>
-                    </div>
-                    <div class="col-5 text-end">
-                        <div class="info-label">Mã thẻ</div>
-                        <div class="info-value" style="color: #4f46e5;">#<%= member.id %></div>
-                    </div>
-                </div>
-
-                <div class="row mt-2">
-                    <div class="col-7">
-                        <div class="info-label">Căn cước / Quê quán</div>
-                        <div class="info-value" style="font-size: 0.95rem;">
-                            <%= member.cccd || '---' %> <br>
-                            <span class="info-value-sub"><%= member.hometown || '---' %></span>
-                        </div>
-                    </div>
-                    <div class="col-5 text-end">
-                        <div class="info-label">Liên hệ</div>
-                        <div class="info-value" style="font-size: 0.95rem;"><%= member.phone %></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row stats-row">
-                <div class="col-4 stat-box">
-                    <div class="info-label">Chiều cao</div>
-                    <div class="stat-value"><%= member.height ? member.height : '--' %><span class="unit">cm</span></div>
-                </div>
-                <div class="col-4 stat-box border-divider">
-                    <div class="info-label">Cân nặng</div>
-                    <div class="stat-value"><%= member.weight ? member.weight : '--' %><span class="unit">kg</span></div>
-                </div>
-                <div class="col-4 stat-box">
-                    <div class="info-label">Ngày sinh</div>
-                    <div class="stat-value" style="font-size:1.05rem;">
-                        <% if (member.birth_date) {
-                            const bd = member.birth_date instanceof Date ? member.birth_date : new Date(member.birth_date);
-                            const pad = n => String(n).padStart(2, '0');
-                        %><%= pad(bd.getDate()) + '/' + pad(bd.getMonth()+1) + '/' + bd.getFullYear() %><%
-                        } else if (member.birth_year) { %><%= member.birth_year %><% } else { %>--<% } %>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="mt-4 mb-3" style="border-color: #e2e8f0;">
-
-            <div class="d-flex justify-content-between align-items-center px-3 mb-2">
-                <span class="gender-badge">
-                    <i class="bi bi-gender-ambiguous me-1"></i> <%= member.gender %>
-                </span>
-                <button class="btn-edit-profile btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                    <i class="bi bi-pencil-square"></i> Cập nhật hồ sơ
-                </button>
-            </div>
-
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg" style="background:#ffffff; color:#0f172a; border:1px solid #e2e8f0;">
-            <div class="modal-header" style="border-bottom:1px solid #e2e8f0;">
-                <h5 class="modal-title fw-bold text-uppercase" style="color: #4f46e5; letter-spacing: 1px;">
-                    Cập nhật hồ sơ hội viên
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="/my-profile/edit" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg" style="background:#ffffff; color:#0f172a; border:1px solid #e2e8f0;">
+                <div class="modal-header" style="border-bottom:1px solid #e2e8f0;">
+                    <h5 class="modal-title fw-bold text-uppercase" style="color: #4f46e5; letter-spacing: 1px;">
+                        Cập nhật hồ sơ hội viên
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/my-profile/edit" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-                    <h6 class="pb-2 mb-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Ảnh đại diện</h6>
-                    <div class="row align-items-center mb-3">
-                        <div class="col-auto">
-                            <% if (member.avatar_url) { %>
-                                <img src="<%= member.avatar_url %>" alt="avatar"
-                                     class="rounded-circle" style="width:64px; height:64px; object-fit:cover; background:#222;">
-                            <% } else { %>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center"
-                                     style="width:64px; height:64px; background:#e2e8f0; color:#999;">
-                                    <i class="bi bi-person fs-3"></i>
-                                </div>
-                            <% } %>
+                        <h6 class="pb-2 mb-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Ảnh đại
+                            diện</h6>
+                        <div class="row align-items-center mb-3">
+                            <div class="col-auto">
+                                <% if (member.avatar_url) { %>
+                                    <img src="<%= member.avatar_url %>" alt="avatar" class="rounded-circle"
+                                        style="width:64px; height:64px; object-fit:cover; background:#222;">
+                                    <% } else { %>
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width:64px; height:64px; background:#e2e8f0; color:#999;">
+                                            <i class="bi bi-person fs-3"></i>
+                                        </div>
+                                        <% } %>
+                            </div>
+                            <div class="col">
+                                <input type="file" name="avatar_file" class="form-control"
+                                    accept="image/jpeg,image/png,image/webp">
+                                <div class="form-text" style="color:#64748b;">JPG/PNG/WEBP, tối đa 2 MB. Để trống để giữ
+                                    ảnh cũ.</div>
+                            </div>
                         </div>
-                        <div class="col">
-                            <input type="file" name="avatar_file" class="form-control" accept="image/jpeg,image/png,image/webp">
-                            <div class="form-text" style="color:#64748b;">JPG/PNG/WEBP, tối đa 2 MB. Để trống để giữ ảnh cũ.</div>
-                        </div>
-                    </div>
-                    
-                    <h6 class="pb-2 mb-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Thông tin cơ bản</h6>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Họ và Tên *</label>
-                            <input type="text" name="fullname" class="form-control" value="<%= member.fullname %>" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Số điện thoại *</label>
-                            <input type="tel" name="phone" class="form-control <%= locals.error === 'duplicate_phone' ? 'border-danger shadow-none' : '' %>" value="<%= member.phone %>" required>
-                            <% if (locals.error === 'duplicate_phone') { %>
-                                <div class="text-danger mt-1 small fw-bold">Số điện thoại đã tồn tại!</div>
-                            <% } %>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Giới tính *</label>
-                            <select name="gender" class="form-select">
-                                <option value="Nam" <%= member.gender === 'Nam' ? 'selected' : '' %>>Nam</option>
-                                <option value="Nữ" <%= member.gender === 'Nữ' ? 'selected' : '' %>>Nữ</option>
-                            </select>
+                        <h6 class="pb-2 mb-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Thông tin
+                            cơ bản</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Họ và Tên
+                                    *</label>
+                                <input type="text" name="fullname" class="form-control" value="<%= member.fullname %>"
+                                    required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Số điện thoại
+                                    *</label>
+                                <input type="tel" name="phone"
+                                    class="form-control <%= locals.error === 'duplicate_phone' ? 'border-danger shadow-none' : '' %>"
+                                    value="<%= member.phone %>" required>
+                                <% if (locals.error==='duplicate_phone' ) { %>
+                                    <div class="text-danger mt-1 small fw-bold">Số điện thoại đã tồn tại!</div>
+                                    <% } %>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Ngày sinh</label>
-                            <input type="date" name="birth_date" class="form-control"
-                                   value="<%
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Giới tính
+                                    *</label>
+                                <select name="gender" class="form-select">
+                                    <option value="Nam" <%=member.gender==='Nam' ? 'selected' : '' %>>Nam</option>
+                                    <option value="Nữ" <%=member.gender==='Nữ' ? 'selected' : '' %>>Nữ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Ngày sinh</label>
+                                <input type="date" name="birth_date" class="form-control" value="<%
                                        const bd = member.birth_date;
                                        if (bd instanceof Date) {
                                            const pad = n => String(n).padStart(2, '0');
@@ -264,64 +318,71 @@
                                            %><%= String(bd).slice(0,10) %><%
                                        }
                                    %>">
-                            <small class="text-muted">Để hệ thống tự gửi quà sinh nhật</small>
+                            </div>
                         </div>
-                    </div>
 
-                    <h6 class="pb-2 mb-3 mt-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Chỉ số cơ thể</h6>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Chiều cao (cm)</label>
-                            <input type="number" step="0.1" name="height" class="form-control" value="<%= member.height %>" placeholder="VD: 175">
+                        <h6 class="pb-2 mb-3 mt-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Chỉ
+                            số cơ thể</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Chiều cao
+                                    (cm)</label>
+                                <input type="number" step="0.1" name="height" class="form-control"
+                                    value="<%= member.height %>" placeholder="VD: 175">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Cân nặng
+                                    (kg)</label>
+                                <input type="number" step="0.1" name="weight" class="form-control"
+                                    value="<%= member.weight %>" placeholder="VD: 68.5">
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Cân nặng (kg)</label>
-                            <input type="number" step="0.1" name="weight" class="form-control" value="<%= member.weight %>" placeholder="VD: 68.5">
-                        </div>
-                    </div>
 
-                    <h6 class="pb-2 mb-3 mt-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Định danh cá nhân</h6>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Số CCCD</label>
-                            <input type="text" name="cccd" class="form-control" value="<%= member.cccd %>">
+                        <h6 class="pb-2 mb-3 mt-3 fw-bold" style="color:#4f46e5; border-bottom:1px solid #e2e8f0;">Định
+                            danh cá nhân</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Số CCCD</label>
+                                <input type="text" name="cccd" class="form-control" value="<%= member.cccd %>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase" style="color:#475569;">Quê quán</label>
+                                <input type="text" name="hometown" class="form-control" value="<%= member.hometown %>">
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small text-uppercase" style="color:#475569;">Quê quán</label>
-                            <input type="text" name="hometown" class="form-control" value="<%= member.hometown %>">
+                        <div class="mb-4">
+                            <label class="form-label small text-uppercase" style="color:#475569;">Địa chỉ hiện
+                                tại</label>
+                            <input type="text" name="address" class="form-control" value="<%= member.address %>">
                         </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small text-uppercase" style="color:#475569;">Địa chỉ hiện tại</label>
-                        <input type="text" name="address" class="form-control" value="<%= member.address %>">
-                    </div>
-                    
-                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top:1px solid #e2e8f0;">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn fw-bold px-4 text-white" style="background:linear-gradient(135deg,#4f46e5,#06b6d4);border:0;">LƯU HỒ SƠ</button>
-                    </div>
-                </form>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top:1px solid #e2e8f0;">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn fw-bold px-4 text-white"
+                                style="background:linear-gradient(135deg,#4f46e5,#06b6d4);border:0;">LƯU HỒ SƠ</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<% if (locals.error === 'duplicate_phone' || locals.error === 'invalid_profile') { %>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var myModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
-        myModal.show();
-        window.history.replaceState({}, document.title, "/my-profile");
-    });
-</script>
-<% } %>
+    <% if (locals.error==='duplicate_phone' || locals.error==='invalid_profile' ) { %>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var myModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+                myModal.show();
+                window.history.replaceState({}, document.title, "/my-profile");
+            });
+        </script>
+        <% } %>
 
-<% if (locals.success) { %>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        window.history.replaceState({}, document.title, "/my-profile");
-    });
-</script>
-<% } %>
+            <% if (locals.success) { %>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        window.history.replaceState({}, document.title, "/my-profile");
+                    });
+                </script>
+                <% } %>
 
-<%- include('partials/footer') %>
+                    <%- include('partials/footer') %>
