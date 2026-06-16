@@ -172,13 +172,9 @@
     },
     "forgot": {
         "title_tab": "Forgot password - GYM BRO",
-        "subtitle": "FORGOT YOUR PASSWORD?",
-        "instructions": "Enter your registered phone number. Your request will be sent to the admin, and you'll receive a temporary password at the front desk.",
+        "subtitle": "RECOVER YOUR PASSWORD",
         "phone": "Phone number",
         "phone_ph": "0xxxxxxxxx",
-        "note": "Note (optional)",
-        "note_ph": "e.g. need to recover before 6pm today",
-        "submit": "Submit request",
         "back": "Back to sign in"
     },
     "contact_result": {

@@ -186,6 +186,21 @@ CREATE TABLE IF NOT EXISTS password_reset_requests (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
+-- password_otp: mã OTP xác thực quên mật khẩu (hết hạn sau 5 phút)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS password_otp (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    member_id    INT NOT NULL,
+    otp_code     VARCHAR(6) NOT NULL,
+    expires_at   DATETIME NOT NULL,
+    verified     TINYINT(1) NOT NULL DEFAULT 0,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_otp_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    INDEX idx_otp_member (member_id),
+    INDEX idx_otp_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
 -- contact_messages: form Liên hệ trên landing page
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS contact_messages (

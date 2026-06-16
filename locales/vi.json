@@ -172,13 +172,9 @@
     },
     "forgot": {
         "title_tab": "Quên mật khẩu - GYM BRO",
-        "subtitle": "FORGOT YOUR PASSWORD?",
-        "instructions": "Nhập số điện thoại đã đăng ký. Yêu cầu sẽ được gửi tới quản trị viên, và bạn sẽ nhận được mật khẩu tạm thời tại quầy lễ tân.",
+        "subtitle": "KHÔI PHỤC MẬT KHẨU",
         "phone": "Số điện thoại",
         "phone_ph": "0xxxxxxxxx",
-        "note": "Ghi chú (tuỳ chọn)",
-        "note_ph": "VD: cần lấy lại tài khoản trước 18h hôm nay",
-        "submit": "Gửi yêu cầu",
         "back": "Quay lại đăng nhập"
     },
     "contact_result": {
