@@ -230,7 +230,7 @@
                             <div class="price-breakdown bg-light p-3 rounded mb-3 border" id="checkoutPriceBreakdown" style="<%= hasDiscount ? '' : 'display: none;' %>">
                                 <div class="d-flex justify-content-between text-secondary mb-2 small">
                                     <span>Tạm tính</span>
-                                    <span id="chkSubtotal" class="fw-semibold"><%= Number(invoice.price + invoice.discount_amount).toLocaleString('vi-VN') %>đ</span>
+                                    <span id="chkSubtotal" class="fw-semibold"><%= (Number(invoice.price) + Number(invoice.discount_amount)).toLocaleString('vi-VN') %>đ</span>
                                 </div>
                                 <div class="d-flex justify-content-between text-success small">
                                     <span>Giảm giá</span>
