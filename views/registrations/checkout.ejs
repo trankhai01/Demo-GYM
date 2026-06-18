@@ -116,8 +116,9 @@
                                                 <i class="bi bi-box-arrow-up-right"></i> Mở trang thanh toán payOS
                                             </a>
                                         <% } %>
-                                        <div class="alert alert-info text-start mb-0">
-                                            <i class="bi bi-arrow-repeat me-1"></i> Đang chờ payOS xác nhận. Trang sẽ tự cập nhật khi thanh toán thành công.
+                                        <div class="d-flex align-items-center justify-content-center gap-2 text-white-50 small mb-0 py-2 border border-secondary rounded bg-black">
+                                            <div class="spinner-border spinner-border-sm text-warning" role="status" style="width: 1rem; height: 1rem;"></div>
+                                            <span class="fw-medium">Đang chờ thanh toán...</span>
                                         </div>
                                     <% } else { %>
                                         <div class="bg-white p-4 rounded d-inline-block mb-3 shadow text-secondary">
