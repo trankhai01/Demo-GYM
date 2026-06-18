@@ -65,7 +65,7 @@ router.get('/available-trainers', requireLogin, (req, res) => {
                     AND b.end_time > ?
                ) THEN 0 ELSE 1 END AS is_available
         FROM trainers t
-        WHERE t.status = ?
+        WHERE t.status = ? OR t.status IS NULL
         ORDER BY is_available DESC, t.fullname
     `;
     db.query(sql, [STATUS.BOOKING.BOOKED, range.endSql, range.startSql, STATUS.TRAINER.ACTIVE], (err, rows) => {
