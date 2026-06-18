@@ -7,6 +7,7 @@ const systemSettings = require('../lib/systemSettings');
 const payosPayment = require('../lib/payosPayment');
 const auditLog = require('../lib/auditLog');
 const registrationUpgrade = require('../lib/registrationUpgrade');
+const { computeDiscount } = require('./discount');
 
 router.use(requireMember);
 
@@ -323,6 +324,198 @@ router.post('/checkout/cancel/:id', (req, res) => {
                             res.redirect('/?notice=membership_cancelled#packages');
                         });
                     });
+                }
+            );
+        });
+    });
+});
+
+router.post('/checkout/:id/apply-discount', (req, res) => {
+    const invoiceId = Number(req.params.id);
+    const memberId = req.session.user.id;
+    const discountCode = String(req.body.code || '').trim().toUpperCase();
+
+    if (!discountCode) {
+        return res.json({ ok: false, error: 'Vui lòng nhập mã ưu đãi.' });
+    }
+
+    db.getConnection((err, conn) => {
+        if (err) return res.json({ ok: false, error: 'Lỗi kết nối database.' });
+
+        const fail = (msg) => {
+            conn.rollback(() => {
+                conn.release();
+                res.json({ ok: false, error: msg });
+            });
+        };
+
+        conn.beginTransaction((txErr) => {
+            if (txErr) {
+                conn.release();
+                return res.json({ ok: false, error: 'Lỗi giao dịch.' });
+            }
+
+            conn.query(
+                `SELECT r.id, r.price, r.discount_code_id, r.discount_amount, r.payment_status
+                 FROM registrations r
+                 WHERE r.id = ? AND r.member_id = ? FOR UPDATE`,
+                [invoiceId, memberId],
+                (regErr, regRows) => {
+                    if (regErr) return fail('Lỗi tải hóa đơn.');
+                    if (!regRows || regRows.length === 0) return fail('Không tìm thấy hóa đơn.');
+
+                    const invoice = regRows[0];
+                    if (invoice.payment_status !== STATUS.PAYMENT.PENDING) {
+                        return fail('Hóa đơn đã được thanh toán, không thể áp dụng mã.');
+                    }
+
+                    conn.query(
+                        'SELECT * FROM discount_codes WHERE code = ? FOR UPDATE',
+                        [discountCode],
+                        (dcErr, dcRows) => {
+                            if (dcErr) return fail('Lỗi kiểm tra mã ưu đãi.');
+                            if (!dcRows || dcRows.length === 0) return fail('Mã ưu đãi không tồn tại.');
+
+                            const dc = dcRows[0];
+                            const basePrice = Number(invoice.price) + Number(invoice.discount_amount);
+                            
+                            const result = computeDiscount(dc, basePrice, memberId);
+                            if (!result.ok) return fail(result.error);
+
+                            const discountAmount = result.discount_amount;
+                            const finalPrice = Math.max(0, basePrice - discountAmount);
+
+                            const releaseOldDiscount = (cb) => {
+                                if (!invoice.discount_code_id) return cb();
+                                conn.query(
+                                    "UPDATE discount_codes SET used_count = GREATEST(used_count - 1, 0) WHERE id = ?",
+                                    [invoice.discount_code_id],
+                                    cb
+                                );
+                            };
+
+                            releaseOldDiscount((errOld) => {
+                                if (errOld) return fail('Lỗi giải phóng mã ưu đãi cũ.');
+
+                                conn.query(
+                                    "UPDATE discount_codes SET used_count = used_count + 1 WHERE id = ?",
+                                    [dc.id],
+                                    (errNew) => {
+                                        if (errNew) return fail('Lỗi áp dụng mã ưu đãi mới.');
+
+                                        conn.query(
+                                            `UPDATE registrations
+                                             SET price = ?, discount_code_id = ?, discount_amount = ?
+                                             WHERE id = ?`,
+                                            [finalPrice, dc.id, discountAmount, invoiceId],
+                                            (errUpdateReg) => {
+                                                if (errUpdateReg) return fail('Lỗi cập nhật hóa đơn.');
+
+                                                conn.query(
+                                                    "DELETE FROM payos_payments WHERE registration_id = ?",
+                                                    [invoiceId],
+                                                    (errDeletePayOS) => {
+                                                        if (errDeletePayOS) return fail('Lỗi cập nhật thông tin thanh toán.');
+
+                                                        conn.commit((commitErr) => {
+                                                            if (commitErr) return fail('Lỗi lưu thay đổi.');
+                                                            conn.release();
+                                                            res.json({
+                                                                ok: true,
+                                                                message: 'Áp dụng mã ưu đãi thành công!',
+                                                                discount_amount: discountAmount,
+                                                                final_price: finalPrice
+                                                            });
+                                                        });
+                                                    }
+                                                );
+                                            }
+                                        );
+                                    }
+                                );
+                            });
+                        }
+                    );
+                }
+            );
+        });
+    });
+});
+
+router.post('/checkout/:id/remove-discount', (req, res) => {
+    const invoiceId = Number(req.params.id);
+    const memberId = req.session.user.id;
+
+    db.getConnection((err, conn) => {
+        if (err) return res.json({ ok: false, error: 'Lỗi kết nối database.' });
+
+        const fail = (msg) => {
+            conn.rollback(() => {
+                conn.release();
+                res.json({ ok: false, error: msg });
+            });
+        };
+
+        conn.beginTransaction((txErr) => {
+            if (txErr) {
+                conn.release();
+                return res.json({ ok: false, error: 'Lỗi giao dịch.' });
+            }
+
+            conn.query(
+                `SELECT r.id, r.price, r.discount_code_id, r.discount_amount, r.payment_status
+                 FROM registrations r
+                 WHERE r.id = ? AND r.member_id = ? FOR UPDATE`,
+                [invoiceId, memberId],
+                (regErr, regRows) => {
+                    if (regErr) return fail('Lỗi tải hóa đơn.');
+                    if (!regRows || regRows.length === 0) return fail('Không tìm thấy hóa đơn.');
+
+                    const invoice = regRows[0];
+                    if (invoice.payment_status !== STATUS.PAYMENT.PENDING) {
+                        return fail('Hóa đơn đã được thanh toán, không thể hủy mã.');
+                    }
+                    if (!invoice.discount_code_id) {
+                        return fail('Hóa đơn chưa áp dụng mã ưu đãi.');
+                    }
+
+                    const basePrice = Number(invoice.price) + Number(invoice.discount_amount);
+
+                    conn.query(
+                        "UPDATE discount_codes SET used_count = GREATEST(used_count - 1, 0) WHERE id = ?",
+                        [invoice.discount_code_id],
+                        (errOld) => {
+                            if (errOld) return fail('Lỗi giải phóng mã ưu đãi cũ.');
+
+                            conn.query(
+                                `UPDATE registrations
+                                 SET price = ?, discount_code_id = NULL, discount_amount = 0
+                                 WHERE id = ?`,
+                                [basePrice, invoiceId],
+                                (errUpdateReg) => {
+                                    if (errUpdateReg) return fail('Lỗi cập nhật hóa đơn.');
+
+                                    conn.query(
+                                        "DELETE FROM payos_payments WHERE registration_id = ?",
+                                        [invoiceId],
+                                        (errDeletePayOS) => {
+                                            if (errDeletePayOS) return fail('Lỗi cập nhật thông tin thanh toán.');
+
+                                            conn.commit((commitErr) => {
+                                                if (commitErr) return fail('Lỗi lưu thay đổi.');
+                                                conn.release();
+                                                res.json({
+                                                    ok: true,
+                                                    message: 'Hủy mã ưu đãi thành công!',
+                                                    final_price: basePrice
+                                                });
+                                            });
+                                        }
+                                    );
+                                }
+                            );
+                        }
+                    );
                 }
             );
         });

@@ -143,6 +143,11 @@
                         <td>
                             <% if (inv.package_id) { %>
                                 <span class="inv-kind"><i class="bi bi-ticket-perforated"></i><%= inv.package_name || 'Gói tập' %></span>
+                                <% if (Number(inv.product_qty || 0) > 0) { %>
+                                    <div class="mt-1">
+                                        <span class="inv-kind pos"><i class="bi bi-bag-check"></i>+ <%= Number(inv.product_qty) %> SP</span>
+                                    </div>
+                                <% } %>
                             <% } else { %>
                                 <span class="inv-kind pos"><i class="bi bi-bag-check"></i>POS <%= Number(inv.product_qty || 0) %> SP</span>
                             <% } %>

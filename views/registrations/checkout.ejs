@@ -16,6 +16,24 @@
                     <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">SĐT:</span> <%= invoice.member_phone || '—' %></p>
                     <hr class="border-secondary">
                     <p class="text-white mb-2"><span class="text-secondary d-inline-block" style="width: 100px;">Gói tập:</span> <%= invoice.package_name || 'Mua lẻ sản phẩm' %></p>
+
+                    <% if (locals.details && details.length > 0) { %>
+                        <hr class="border-secondary">
+                        <h6 class="text-white-50 text-uppercase mb-3 small">Sản phẩm đính kèm</h6>
+                        <ul class="list-unstyled text-white mb-3 ps-0">
+                            <% details.forEach(item => { %>
+                                <li class="d-flex justify-content-between mb-2 small">
+                                    <span>
+                                        <i class="bi bi-box-seam me-1 text-secondary"></i>
+                                        <%= item.product_name %>
+                                        <span class="text-muted">x<%= item.quantity %></span>
+                                    </span>
+                                    <span><%= Number(item.price * item.quantity).toLocaleString('vi-VN') %>đ</span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+
                     <p class="text-white mb-4"><span class="text-secondary d-inline-block" style="width: 100px;">Trạng thái:</span>
                         <% if (invoice.payment_status === STATUS.PAYMENT.SUCCESS) { %>
                             <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i>Đã thanh toán</span>

@@ -209,7 +209,29 @@
                             <% } %>
                         </div>
 
-                        <div class="mt-5">
+                        <!-- Mã ưu đãi -->
+                        <div class="mt-4 border-top pt-4">
+                            <div class="eyebrow mb-2">Mã ưu đãi</div>
+                            <div class="input-group mb-2">
+                                <input type="text" id="discountInput" class="form-control" placeholder="Nhập mã ưu đãi" 
+                                       value="<%= invoice.discount_code_id ? 'Đã áp dụng mã' : '' %>"
+                                       <%= invoice.discount_code_id ? 'disabled' : '' %> style="text-transform:uppercase;">
+                                <% if (invoice.discount_code_id) { %>
+                                    <button class="btn btn-outline-danger shadow-sm fw-bold" type="button" id="btnRemoveDiscount">Hủy</button>
+                                <% } else { %>
+                                    <button class="btn btn-outline-primary shadow-sm fw-bold" type="button" id="btnApplyDiscount">Áp dụng</button>
+                                <% } %>
+                            </div>
+                            <div id="discountStatus" class="small">
+                                <% if (invoice.discount_code_id && Number(invoice.discount_amount) > 0) { %>
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle-fill"></i> Đã giảm -<%= Number(invoice.discount_amount).toLocaleString('vi-VN') %>đ
+                                    </span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 border-top pt-4">
                             <div class="text-secondary fw-bold text-uppercase small mb-2">Tổng thanh toán</div>
                             <div class="total"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</div>
                         </div>
@@ -304,6 +326,69 @@
                     }
                 } catch (err) {}
             }, 3000);
+
+            // Xử lý áp dụng/hủy mã ưu đãi
+            const btnApply = document.getElementById('btnApplyDiscount');
+            const btnRemove = document.getElementById('btnRemoveDiscount');
+            const discountInput = document.getElementById('discountInput');
+            const discountStatus = document.getElementById('discountStatus');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (btnApply) {
+                btnApply.addEventListener('click', async () => {
+                    const code = discountInput.value.trim();
+                    if (!code) return alert('Vui lòng nhập mã ưu đãi.');
+
+                    btnApply.disabled = true;
+                    try {
+                        const res = await fetch('/membership/checkout/<%= invoice.id %>/apply-discount', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-csrf-token': csrfToken
+                            },
+                            body: JSON.stringify({ code })
+                        });
+                        const data = await res.json();
+                        if (data.ok) {
+                            discountStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> ${data.message}</span>`;
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            discountStatus.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ${data.error}</span>`;
+                            btnApply.disabled = false;
+                        }
+                    } catch (err) {
+                        alert('Có lỗi xảy ra, vui lòng thử lại.');
+                        btnApply.disabled = false;
+                    }
+                });
+            }
+
+            if (btnRemove) {
+                btnRemove.addEventListener('click', async () => {
+                    btnRemove.disabled = true;
+                    try {
+                        const res = await fetch('/membership/checkout/<%= invoice.id %>/remove-discount', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-csrf-token': csrfToken
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.ok) {
+                            discountStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> ${data.message}</span>`;
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            discountStatus.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ${data.error}</span>`;
+                            btnRemove.disabled = false;
+                        }
+                    } catch (err) {
+                        alert('Có lỗi xảy ra, vui lòng thử lại.');
+                        btnRemove.disabled = false;
+                    }
+                });
+            }
         </script>
     <% } %>
 </body>

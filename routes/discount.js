@@ -180,6 +180,26 @@ router.post('/api/validate', express.json(), (req, res) => {
     });
 });
 
+function formatDateIsoOnly(dateVal) {
+    if (!dateVal) return null;
+    if (dateVal instanceof Date) {
+        const y = dateVal.getFullYear();
+        const m = String(dateVal.getMonth() + 1).padStart(2, '0');
+        const d = String(dateVal.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    const str = String(dateVal).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        return str.slice(0, 10);
+    }
+    const parsed = new Date(dateVal);
+    if (isNaN(parsed.getTime())) return null;
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 function computeDiscount(dc, amount, memberId) {
     const invoiceAmount = Number(amount);
     const discountValue = Number(dc.discount_value);
@@ -188,8 +208,10 @@ function computeDiscount(dc, amount, memberId) {
     if (dc.discount_type === 'percent' && discountValue > 100) return { ok: false, error: 'Giá trị mã ưu đãi không hợp lệ.' };
     if (dc.status !== STATUS.DISCOUNT.ACTIVE) return { ok: false, error: 'Mã đã ngừng hoạt động.' };
     const today = new Date().toISOString().slice(0, 10);
-    if (dc.valid_from && today < String(dc.valid_from).slice(0, 10)) return { ok: false, error: 'Mã chưa tới hạn áp dụng.' };
-    if (dc.valid_to && today > String(dc.valid_to).slice(0, 10)) return { ok: false, error: 'Mã đã hết hạn.' };
+    const validFrom = formatDateIsoOnly(dc.valid_from);
+    const validTo = formatDateIsoOnly(dc.valid_to);
+    if (validFrom && today < validFrom) return { ok: false, error: 'Mã chưa tới hạn áp dụng.' };
+    if (validTo && today > validTo) return { ok: false, error: 'Mã đã hết hạn.' };
     if (dc.usage_limit !== null && Number(dc.used_count) >= Number(dc.usage_limit)) return { ok: false, error: 'Mã đã hết lượt sử dụng.' };
     if (invoiceAmount < Number(dc.min_amount || 0)) return { ok: false, error: `Hóa đơn cần tối thiểu ${Number(dc.min_amount).toLocaleString('vi-VN')}đ.` };
     if (dc.member_id && memberId && Number(dc.member_id) !== Number(memberId)) return { ok: false, error: 'Mã chỉ dành riêng cho hội viên khác.' };
