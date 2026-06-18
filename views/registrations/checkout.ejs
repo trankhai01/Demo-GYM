@@ -42,16 +42,21 @@
                         <% } %>
                     </p>
 
-                    <% if (Number(invoice.discount_amount) > 0) { %>
-                        <div class="alert alert-success py-2 mb-3 small">
-                            <i class="bi bi-ticket-perforated"></i> Đã áp mã ưu đãi —
-                            giảm <strong><%= Number(invoice.discount_amount).toLocaleString('vi-VN') %>đ</strong>
+                    <div class="bg-black p-3 rounded border border-secondary mb-3">
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>Tạm tính:</span>
+                            <span class="text-white"><%= Number(invoice.price + invoice.discount_amount).toLocaleString('vi-VN') %>đ</span>
                         </div>
-                    <% } %>
-
-                    <div class="bg-black p-3 rounded text-center border border-danger">
-                        <p class="text-secondary mb-1 text-uppercase small">Cần thu khách (VNĐ)</p>
-                        <h2 class="text-danger fw-bold m-0" style="font-family: 'Oswald', sans-serif;"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</h2>
+                        <% if (Number(invoice.discount_amount) > 0) { %>
+                            <div class="d-flex justify-content-between text-success mb-2 small">
+                                <span>Giảm giá:</span>
+                                <span>-<%= Number(invoice.discount_amount).toLocaleString('vi-VN') %>đ</span>
+                            </div>
+                        <% } %>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                            <span class="text-white-50 small text-uppercase">Cần thu khách</span>
+                            <span class="text-danger fw-bold fs-4" style="font-family: 'Oswald', sans-serif;"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -222,18 +222,23 @@
                                     <button class="btn btn-outline-primary shadow-sm fw-bold" type="button" id="btnApplyDiscount">Áp dụng</button>
                                 <% } %>
                             </div>
-                            <div id="discountStatus" class="small">
-                                <% if (invoice.discount_code_id && Number(invoice.discount_amount) > 0) { %>
-                                    <span class="text-success">
-                                        <i class="bi bi-check-circle-fill"></i> Đã giảm -<%= Number(invoice.discount_amount).toLocaleString('vi-VN') %>đ
-                                    </span>
-                                <% } %>
-                            </div>
+                            <div id="discountStatus" class="small mt-1"></div>
                         </div>
 
                         <div class="mt-4 border-top pt-4">
+                            <% const hasDiscount = invoice.discount_code_id && Number(invoice.discount_amount) > 0; %>
+                            <div class="price-breakdown bg-light p-3 rounded mb-3 border" id="checkoutPriceBreakdown" style="<%= hasDiscount ? '' : 'display: none;' %>">
+                                <div class="d-flex justify-content-between text-secondary mb-2 small">
+                                    <span>Tạm tính</span>
+                                    <span id="chkSubtotal" class="fw-semibold"><%= Number(invoice.price + invoice.discount_amount).toLocaleString('vi-VN') %>đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between text-success small">
+                                    <span>Giảm giá</span>
+                                    <span id="chkDiscount" class="fw-semibold">-<%= Number(invoice.discount_amount).toLocaleString('vi-VN') %>đ</span>
+                                </div>
+                            </div>
                             <div class="text-secondary fw-bold text-uppercase small mb-2">Tổng thanh toán</div>
-                            <div class="total"><%= Number(invoice.price).toLocaleString('vi-VN') %>đ</div>
+                            <div class="total"><span id="chkTotal"><%= Number(invoice.price).toLocaleString('vi-VN') %></span>đ</div>
                         </div>
                     </section>
                 </div>
