@@ -41,7 +41,7 @@ const FAQ = [
     { q: 'Cách đặt lịch tập', a: 'Đăng nhập → vào mục "Lịch tập" trên sidebar → chọn ô giờ trống → chọn HLV (nếu muốn) → đặt buổi.' },
     { q: 'Quên mật khẩu', a: 'Tại trang Đăng nhập có link "Quên mật khẩu?". Nhập số điện thoại đã đăng ký và đợi quản trị viên reset.' },
     { q: 'Hủy buổi tập', a: 'Vào lịch tập, click vào buổi đã đặt, bấm nút "Hủy buổi". Có thể hủy đến trước giờ tập.' },
-    { q: 'Đăng ký gói tập', a: 'Liên hệ trực tiếp lễ tân hoặc nhắn tin để được hỗ trợ. Mỗi hội viên chỉ duy trì 1 gói tập đang hoạt động tại 1 thời điểm.' },
+    { q: 'Đăng ký gói tập', a: 'Hội viên có thể tự đăng ký hoặc nâng cấp gói tập trực tiếp trên trang cá nhân (Dashboard) và thanh toán bằng cách quét mã QR chuyển khoản payOS. Mỗi hội viên chỉ duy trì 1 gói tập đang hoạt động tại 1 thời điểm.' },
     { q: 'Cách check-in', a: 'Quét mã hoặc nhập số điện thoại tại quầy lễ tân. Hệ thống tự động ghi nhận giờ vào và giờ ra.' }
 ];
 
@@ -51,7 +51,7 @@ const FAQ_EN = [
     { q: 'How to book a session', a: 'Sign in → click "Schedule" in the sidebar → pick an empty slot → choose a trainer (optional) → confirm.' },
     { q: 'Forgot password', a: 'On the Sign-in page click "Forgot password?". Enter your registered phone and wait for the admin to reset it.' },
     { q: 'Cancel a session', a: 'Open the schedule, click on a booked session, and press "Cancel". You can cancel anytime before the session starts.' },
-    { q: 'Sign up for a package', a: 'Contact the front desk or send a message. Each member keeps only one active package at a time.' },
+    { q: 'Sign up for a package', a: 'Members can self-register or upgrade their package directly on their Dashboard and pay securely via payOS QR transfer. Each member keeps only one active package at a time.' },
     { q: 'How to check in', a: 'Scan the QR or enter your phone at the front desk. The system records check-in/out automatically.' }
 ];
 
