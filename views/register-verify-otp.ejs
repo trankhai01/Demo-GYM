@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác thực đăng ký - GYM BRO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --gb-primary: #4f46e5;
+        --gb-primary-600: #4338ca;
+        --gb-accent: #06b6d4;
+        --gb-bg: #f8fafc;
+        --gb-surface: #ffffff;
+        --gb-text: #0f172a;
+      }
+      body {
+        background: linear-gradient(135deg, #eef2ff 0%, #ecfeff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Inter", "Segoe UI", sans-serif;
+        color: var(--gb-text);
+      }
+      .verify-card {
+        width: 460px;
+        padding: 40px;
+        border-radius: 16px;
+        background: var(--gb-surface);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+      }
+      .brand-name {
+        font-family: "Oswald", sans-serif;
+        font-weight: 700;
+        font-size: 2.4rem;
+        letter-spacing: 3px;
+        text-align: center;
+        background: linear-gradient(90deg, var(--gb-primary), var(--gb-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .btn-gym {
+        background: linear-gradient(90deg, var(--gb-primary), var(--gb-accent));
+        color: white;
+        font-weight: 700;
+        padding: 12px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: 0.3s;
+        border-radius: 8px;
+        border: none;
+      }
+      .btn-gym:hover { filter: brightness(0.95); color: white; }
+      .otp-inputs {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin: 24px 0;
+      }
+      .otp-inputs input {
+        width: 48px; height: 56px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        color: var(--gb-primary-600);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+      }
+      .otp-inputs input:focus {
+        border-color: var(--gb-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      }
+      .countdown {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 12px;
+      }
+      .countdown strong { color: var(--gb-primary); }
+    </style>
+  </head>
+  <body>
+    <div class="verify-card">
+      <div class="text-center mb-3">
+        <h1 class="brand-name mb-0"><%= (locals.systemSettings && systemSettings.gym_name) || 'GYM BRO' %></h1>
+        <p class="text-muted small">XÁC THỰC EMAIL ĐĂNG KÝ</p>
+      </div>
+
+      <p class="text-muted small text-center mb-4">
+        Mã xác thực (OTP) đã được gửi đến email: <br>
+        <strong><%= email %></strong>
+      </p>
+
+      <% if (locals.error) { %>
+        <div class="alert alert-danger text-center p-2 mb-3" style="font-size: 0.9rem; border-radius: 8px;">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          <%= error %>
+        </div>
+      <% } %>
+
+      <form id="formVerify" action="/register/verify-otp" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="otp" id="hiddenOtp" />
+
+        <div class="otp-inputs" id="otpInputs">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" required autofocus />
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required />
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required />
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required />
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required />
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required />
+        </div>
+
+        <div class="countdown" id="countdown">
+          Mã hết hạn sau <strong id="countdownTimer">5:00</strong>
+        </div>
+
+        <button type="submit" class="btn btn-gym w-100 shadow mt-4">
+          <i class="bi bi-shield-check"></i> Xác nhận đăng ký
+        </button>
+      </form>
+
+      <div class="text-center mt-4">
+        <a href="/register" style="color: var(--gb-primary); font-size: 0.9rem; text-decoration: none;">
+          <i class="bi bi-arrow-left"></i> Quay lại đăng ký
+        </a>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        const otpInputs = document.querySelectorAll('#otpInputs input');
+        const formVerify = document.getElementById('formVerify');
+        const hiddenOtp = document.getElementById('hiddenOtp');
+
+        otpInputs.forEach((inp, i) => {
+          inp.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value && i < otpInputs.length - 1) otpInputs[i + 1].focus();
+          });
+          inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !this.value && i > 0) otpInputs[i - 1].focus();
+          });
+          inp.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+            pasted.split('').forEach((ch, idx) => { if (otpInputs[idx]) otpInputs[idx].value = ch; });
+            if (pasted.length > 0) otpInputs[Math.min(pasted.length, 5)].focus();
+          });
+        });
+
+        formVerify.addEventListener('submit', function(e) {
+          const otp = Array.from(otpInputs).map(i => i.value).join('');
+          if (otp.length !== 6) {
+            e.preventDefault();
+            alert('Vui lòng nhập đủ 6 chữ số OTP.');
+            return;
+          }
+          hiddenOtp.value = otp;
+        });
+
+        // Countdown Timer
+        let seconds = 300; // 5 minutes
+        const timerEl = document.getElementById('countdownTimer');
+        const countdownInterval = setInterval(() => {
+          seconds--;
+          const m = Math.floor(seconds / 60);
+          const s = seconds % 60;
+          timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+          if (seconds <= 0) {
+            clearInterval(countdownInterval);
+            timerEl.textContent = '0:00';
+            alert('Mã OTP đã hết hạn, vui lòng đăng ký lại.');
+            window.location.href = '/register';
+          }
+        }, 1000);
+      })();
+    </script>
+  </body>
+</html>

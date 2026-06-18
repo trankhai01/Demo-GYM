@@ -10,6 +10,10 @@ node_modules/
 *.swp
 .idea/
 
-# User-uploaded ảnh — không commit, nhưng giữ thư mục bằng .gitkeep
+# Temp files / Cookies
+cookies*.txt
+*.log
+
+# User-uploaded ảnh 
 public/uploads/*/*
 !public/uploads/*/.gitkeep

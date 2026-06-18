@@ -72,8 +72,11 @@
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <div class="mb-3">
                 <label class="form-label"><%= t('register.fullname') %></label>
-                <input type="text" name="fullname" class="form-control"
+                <input type="text" name="fullname" class="form-control <%= (locals.errors && errors.fullname) ? 'is-invalid' : '' %>"
                        value="<%= locals.fullname || '' %>" required />
+                <% if (locals.errors && errors.fullname) { %>
+                  <div class="invalid-feedback"><%= errors.fullname %></div>
+                <% } %>
               </div>
               <div class="mb-3">
                 <label class="form-label"><%= t('register.gender') %></label>
@@ -84,14 +87,20 @@
               </div>
               <div class="mb-3">
                 <label class="form-label"><%= t('register.phone') %></label>
-                <input type="tel" name="phone" class="form-control"
+                <input type="tel" name="phone" class="form-control <%= (locals.errors && errors.phone) ? 'is-invalid' : '' %>"
                        value="<%= locals.phone || '' %>" required />
+                <% if (locals.errors && errors.phone) { %>
+                  <div class="invalid-feedback"><%= errors.phone %></div>
+                <% } %>
               </div>
               <div class="mb-3">
                 <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control"
+                <input type="email" name="email" class="form-control <%= (locals.errors && errors.email) ? 'is-invalid' : '' %>"
                        placeholder="email@gmail.com"
-                       value="<%= locals.email || '' %>" />
+                       value="<%= locals.email || '' %>" required />
+                <% if (locals.errors && errors.email) { %>
+                  <div class="invalid-feedback"><%= errors.email %></div>
+                <% } %>
               </div>
 
               <% if (typeof error !== 'undefined' && error) { %>
@@ -100,7 +109,10 @@
 
               <div class="mb-3">
                 <label class="form-label"><%= t('register.password') %></label>
-                <input type="password" name="password" class="form-control" required />
+                <input type="password" name="password" class="form-control <%= (locals.errors && errors.password) ? 'is-invalid' : '' %>" required />
+                <% if (locals.errors && errors.password) { %>
+                  <div class="invalid-feedback"><%= errors.password %></div>
+                <% } %>
               </div>
               <button type="submit" class="btn btn-gym w-100">
                 <%= t('register.submit') %>
